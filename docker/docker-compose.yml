@@ -1,0 +1,107 @@
+version: "3.5"
+services:
+  zk-1:
+    image: confluentinc/cp-zookeeper:7.3.0
+    hostname: zk-1
+    ports:
+      - "2181:2181"
+    container_name: zk-1
+    volumes:
+      - ./data/zk-1/log:/var/lib/zookeeper/log
+      - ./data/zk-1/data:/var/lib/zookeeper/data
+    networks:
+      - confluent
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: "zk-1:2888:3888"
+
+  kafka-1:
+    image: confluentinc/cp-enterprise-kafka:7.3.0
+    hostname: kafka-1
+    ports:
+      - "9092:9092"
+    container_name: kafka-1
+    networks:
+      - confluent
+    volumes:
+      - ./data/kafka-1:/var/lib/kafka/data
+    environment:
+      KAFKA_BROKER_ID: 101
+      KAFKA_ZOOKEEPER_CONNECT: "zk-1:2181"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka-1:9092"
+      KAFKA_AUTO_LEADER_REBALANCE_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=DEBUG,kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      # Needs more setup
+      # KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
+      CONFLUENT_SUPPORT_METRICS_ENABLE: "false"
+      # CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      # CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "kafka-1:9092"
+      # CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
+      # CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: "PLAIN"
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:7.3.0
+    hostname: control-center
+    container_name: control-center
+    restart: always
+    networks:
+      - confluent
+    ports:
+      - "9021:9021"
+    volumes:
+      - ./data/control-center:/data
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: kafka-1:9092
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: zk-1:2181
+      CONTROL_CENTER_DATA_DIR: "/data"
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_REPLICATION: 1
+      CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_NUM_STREAM_THREADS: 3
+      CONTROL_CENTER_STREAMS_CONSUMER_REQUEST_TIMEOUT_MS: "960032"
+      #CONTROL_CENTER_CONNECT_CLUSTER: "connect:8083"
+      #CONTROL_CENTER_KSQL_URL: "http://ksql-server:8088"
+      #CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://localhost:8088"
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+  postgres:
+    image: postgres:14.5
+    hostname: postgres
+    container_name: postgres
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - confluent
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=states
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - PGDATA=/tmp
+
+  pgadmin4:
+    image: dpage/pgadmin4:latest
+    hostname: pgadmin4
+    container_name: pgadmin4
+    volumes:
+      - ./data/pgadmin4:/var/lib/pgadmin
+    networks:
+      - confluent
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@giraone.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - 8888:80
+
+networks:
+  confluent:

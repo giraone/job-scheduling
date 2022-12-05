@@ -1,0 +1,4 @@
+<!-- see https://github.com/spring-projects/spring-boot/issues/29603 -->
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/base.xml"/>
+</configuration>

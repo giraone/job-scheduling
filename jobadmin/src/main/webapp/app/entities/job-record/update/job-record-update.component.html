@@ -1,0 +1,203 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" role="form" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2 id="jhi-job-record-heading" data-cy="JobRecordCreateUpdateHeading" jhiTranslate="jobadminApp.jobRecord.home.createOrEditLabel">
+        Create or edit a Job Record
+      </h2>
+
+      <div>
+        <jhi-alert-error></jhi-alert-error>
+
+        <div class="row mb-3" [hidden]="editForm.get('id')!.value == null">
+          <label class="form-label" jhiTranslate="global.field.id" for="field_id">ID</label>
+          <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+        </div>
+
+        <div class="row mb-3">
+          <label
+            class="form-label"
+            jhiTranslate="jobadminApp.jobRecord.jobAcceptedTimestamp"
+            for="field_jobAcceptedTimestamp"
+            [ngbTooltip]="'jobadminApp.jobRecord.help.jobAcceptedTimestamp' | translate"
+            >Job Accepted Timestamp</label
+          >
+          <div class="d-flex">
+            <input
+              id="field_jobAcceptedTimestamp"
+              data-cy="jobAcceptedTimestamp"
+              type="datetime-local"
+              class="form-control"
+              name="jobAcceptedTimestamp"
+              formControlName="jobAcceptedTimestamp"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+          <div
+            *ngIf="
+              editForm.get('jobAcceptedTimestamp')!.invalid &&
+              (editForm.get('jobAcceptedTimestamp')!.dirty || editForm.get('jobAcceptedTimestamp')!.touched)
+            "
+          >
+            <small
+              class="form-text text-danger"
+              *ngIf="editForm.get('jobAcceptedTimestamp')?.errors?.required"
+              jhiTranslate="entity.validation.required"
+            >
+              This field is required.
+            </small>
+            <small
+              class="form-text text-danger"
+              [hidden]="!editForm.get('jobAcceptedTimestamp')?.errors?.ZonedDateTimelocal"
+              jhiTranslate="entity.validation.ZonedDateTimelocal"
+            >
+              This field should be a date and time.
+            </small>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label
+            class="form-label"
+            jhiTranslate="jobadminApp.jobRecord.lastEventTimestamp"
+            for="field_lastEventTimestamp"
+            [ngbTooltip]="'jobadminApp.jobRecord.help.lastEventTimestamp' | translate"
+            >Last Event Timestamp</label
+          >
+          <div class="d-flex">
+            <input
+              id="field_lastEventTimestamp"
+              data-cy="lastEventTimestamp"
+              type="datetime-local"
+              class="form-control"
+              name="lastEventTimestamp"
+              formControlName="lastEventTimestamp"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+          <div
+            *ngIf="
+              editForm.get('lastEventTimestamp')!.invalid &&
+              (editForm.get('lastEventTimestamp')!.dirty || editForm.get('lastEventTimestamp')!.touched)
+            "
+          >
+            <small
+              class="form-text text-danger"
+              *ngIf="editForm.get('lastEventTimestamp')?.errors?.required"
+              jhiTranslate="entity.validation.required"
+            >
+              This field is required.
+            </small>
+            <small
+              class="form-text text-danger"
+              [hidden]="!editForm.get('lastEventTimestamp')?.errors?.ZonedDateTimelocal"
+              jhiTranslate="entity.validation.ZonedDateTimelocal"
+            >
+              This field should be a date and time.
+            </small>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label
+            class="form-label"
+            jhiTranslate="jobadminApp.jobRecord.lastRecordUpdateTimestamp"
+            for="field_lastRecordUpdateTimestamp"
+            [ngbTooltip]="'jobadminApp.jobRecord.help.lastRecordUpdateTimestamp' | translate"
+            >Last Record Update Timestamp</label
+          >
+          <div class="d-flex">
+            <input
+              id="field_lastRecordUpdateTimestamp"
+              data-cy="lastRecordUpdateTimestamp"
+              type="datetime-local"
+              class="form-control"
+              name="lastRecordUpdateTimestamp"
+              formControlName="lastRecordUpdateTimestamp"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+          <div
+            *ngIf="
+              editForm.get('lastRecordUpdateTimestamp')!.invalid &&
+              (editForm.get('lastRecordUpdateTimestamp')!.dirty || editForm.get('lastRecordUpdateTimestamp')!.touched)
+            "
+          >
+            <small
+              class="form-text text-danger"
+              *ngIf="editForm.get('lastRecordUpdateTimestamp')?.errors?.required"
+              jhiTranslate="entity.validation.required"
+            >
+              This field is required.
+            </small>
+            <small
+              class="form-text text-danger"
+              [hidden]="!editForm.get('lastRecordUpdateTimestamp')?.errors?.ZonedDateTimelocal"
+              jhiTranslate="entity.validation.ZonedDateTimelocal"
+            >
+              This field should be a date and time.
+            </small>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label
+            class="form-label"
+            jhiTranslate="jobadminApp.jobRecord.status"
+            for="field_status"
+            [ngbTooltip]="'jobadminApp.jobRecord.help.status' | translate"
+            >Status</label
+          >
+          <select class="form-control" name="status" formControlName="status" id="field_status" data-cy="status">
+            <option [ngValue]="null">{{ 'jobadminApp.JobStatusEnum.null' | translate }}</option>
+            <option *ngFor="let jobStatusEnum of jobStatusEnumValues" [value]="jobStatusEnum">
+              {{ 'jobadminApp.JobStatusEnum.' + jobStatusEnum | translate }}
+            </option>
+          </select>
+          <div *ngIf="editForm.get('status')!.invalid && (editForm.get('status')!.dirty || editForm.get('status')!.touched)">
+            <small class="form-text text-danger" *ngIf="editForm.get('status')?.errors?.required" jhiTranslate="entity.validation.required">
+              This field is required.
+            </small>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="jobadminApp.jobRecord.process" for="field_process">Process</label>
+          <select class="form-control" id="field_process" data-cy="process" name="process" formControlName="process">
+            <option *ngIf="!editForm.get('process')!.value" [ngValue]="null" selected></option>
+            <option
+              [ngValue]="processOption.id === editForm.get('process')!.value?.id ? editForm.get('process')!.value : processOption"
+              *ngFor="let processOption of processesSharedCollection; trackBy: trackProcessById"
+            >
+              {{ processOption.id }}
+            </option>
+          </select>
+        </div>
+        <div *ngIf="editForm.get(['process'])!.invalid && (editForm.get(['process'])!.dirty || editForm.get(['process'])!.touched)">
+          <small
+            class="form-text text-danger"
+            *ngIf="editForm.get(['process'])?.errors?.required"
+            jhiTranslate="entity.validation.required"
+          >
+            This field is required.
+          </small>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,50 @@
+logging:
+  level:
+    root: WARN
+    com.giraone: DEBUG
+    # for debugging producer/acknowledges
+    org.apache.kafka.clients.producer.internals: DEBUG
+    org.springframework.data.r2dbc: DEBUG
+    # io.r2dbc.postgresql.QUERY: DEBUG
+    # io.r2dbc.postgresql.PARAM: DEBUG
+    # set the 4 lines to error to suppress large config list output on startup
+    org.apache.kafka.common.config.AbstractConfig: ERROR
+    org.apache.kafka.clients.admin.AdminClientConfig: ERROR
+    org.apache.kafka.clients.producer.ProducerConfig: ERROR
+    org.apache.kafka.clients.consumer.ConsumerConfig: ERROR
+    # Suppress "Node 0 disconnected." (INFO) messages and "Broker may not be available" messages (WARN).
+    org.apache.kafka.clients.NetworkClient: ERROR
+    # Ignore INFO/DEBUG for Spring test classes
+    org.springframework.test: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ['health', 'loggers']
+
+spring:
+  application:
+    name: materialize
+  kafka:
+    consumer:
+      group-id: test-reader
+  r2dbc:
+    url: r2dbc:tc:postgresql:///states?TC_IMAGE_TAG=14.5
+    properties:
+      lock_timeout: 30000
+      statement_timeout: 30000
+      idle_in_transaction_session_timeout: 30000
+      connectTimeout: PT60S
+
+# Useful, when the db should be populated with data from src/test/resources/test/migration/V999_*.sql
+# See https://github.com/nkonev/r2dbc-migrate-example/tree/master/src/test/resources
+#r2dbc:
+#  migrate:
+#    resources-paths:
+#      - classpath:/db/migration/*.sql
+#      - classpath:/test/migration/*.sql
+
+application:
+  topic-insert: 'job-accepted'
+  topics-update: 'job-scheduled'

@@ -1,0 +1,40 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <div *ngIf="process">
+      <h2 data-cy="processDetailsHeading"><span jhiTranslate="jobadminApp.process.detail.title">Process</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span jhiTranslate="global.field.id">ID</span></dt>
+        <dd>
+          <span>{{ process.id }}</span>
+        </dd>
+        <dt><span jhiTranslate="jobadminApp.process.name" [ngbTooltip]="'jobadminApp.process.help.name' | translate">Name</span></dt>
+        <dd>
+          <span>{{ process.name }}</span>
+        </dd>
+        <dt>
+          <span jhiTranslate="jobadminApp.process.activation" [ngbTooltip]="'jobadminApp.process.help.activation' | translate"
+            >Activation</span
+          >
+        </dt>
+        <dd>
+          <span jhiTranslate="{{ 'jobadminApp.ActivationEnum.' + process.activation }}">{{ process.activation }}</span>
+        </dd>
+      </dl>
+
+      <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+      </button>
+
+      <button type="button" [routerLink]="['/process', process.id, 'edit']" class="btn btn-primary">
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+      </button>
+    </div>
+  </div>
+</div>

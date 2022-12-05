@@ -1,0 +1,28 @@
+logging:
+  level:
+    root: WARN
+    com.giraone: DEBUG
+    # for debugging producer/acknowledges
+    org.apache.kafka.clients.producer.internals: DEBUG
+    # set the 4 lines to warn to suppress large config list output on startup
+    org.apache.kafka.common.config.AbstractConfig: ERROR
+    org.apache.kafka.clients.admin.AdminClientConfig: ERROR
+    org.apache.kafka.clients.producer.ProducerConfig: ERROR
+    org.apache.kafka.clients.consumer.ConsumerConfig: ERROR
+    # Suppress "Node 0 disconnected." (INFO) messages and "Broker may not be available" messages (WARN).
+    # org.apache.kafka.clients.NetworkClient: DEBUG
+    # Ignore INFO/DEBUG for Spring test classes
+    org.springframework.test: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ['health', 'loggers', 'metrics']
+
+spring:
+  application:
+    name: receiver
+
+application:
+  job-accepted-topic: 'job-accepted'

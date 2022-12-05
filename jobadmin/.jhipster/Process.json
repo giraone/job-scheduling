@@ -1,0 +1,37 @@
+{
+  "applications": "*",
+  "changelogDate": "20221201145231",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "process",
+  "fields": [
+    {
+      "fieldName": "key",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"],
+      "javadoc": "Alias/Key of process."
+    },
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"],
+      "javadoc": "Name of process."
+    },
+    {
+      "fieldName": "activation",
+      "fieldType": "ActivationEnum",
+      "fieldTypeJavadoc": "Paused / Running",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "ACTIVE,PAUSED",
+      "javadoc": "Is process active or paused?"
+    }
+  ],
+  "fluentMethods": true,
+  "javadoc": "Process (the job type).",
+  "jpaMetamodelFiltering": false,
+  "name": "Process",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [],
+  "service": "serviceClass"
+}

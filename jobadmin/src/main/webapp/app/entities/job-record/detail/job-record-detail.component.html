@@ -1,0 +1,70 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <div *ngIf="jobRecord">
+      <h2 data-cy="jobRecordDetailsHeading"><span jhiTranslate="jobadminApp.jobRecord.detail.title">Job Record</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span jhiTranslate="global.field.id">ID</span></dt>
+        <dd>
+          <span>{{ jobRecord.id }}</span>
+        </dd>
+        <dt>
+          <span
+            jhiTranslate="jobadminApp.jobRecord.jobAcceptedTimestamp"
+            [ngbTooltip]="'jobadminApp.jobRecord.help.jobAcceptedTimestamp' | translate"
+            >Job Accepted Timestamp</span
+          >
+        </dt>
+        <dd>
+          <span>{{ jobRecord.jobAcceptedTimestamp | formatMediumDatetime }}</span>
+        </dd>
+        <dt>
+          <span
+            jhiTranslate="jobadminApp.jobRecord.lastEventTimestamp"
+            [ngbTooltip]="'jobadminApp.jobRecord.help.lastEventTimestamp' | translate"
+            >Last Event Timestamp</span
+          >
+        </dt>
+        <dd>
+          <span>{{ jobRecord.lastEventTimestamp | formatMediumDatetime }}</span>
+        </dd>
+        <dt>
+          <span
+            jhiTranslate="jobadminApp.jobRecord.lastRecordUpdateTimestamp"
+            [ngbTooltip]="'jobadminApp.jobRecord.help.lastRecordUpdateTimestamp' | translate"
+            >Last Record Update Timestamp</span
+          >
+        </dt>
+        <dd>
+          <span>{{ jobRecord.lastRecordUpdateTimestamp | formatMediumDatetime }}</span>
+        </dd>
+        <dt>
+          <span jhiTranslate="jobadminApp.jobRecord.status" [ngbTooltip]="'jobadminApp.jobRecord.help.status' | translate">Status</span>
+        </dt>
+        <dd>
+          <span jhiTranslate="{{ 'jobadminApp.JobStatusEnum.' + jobRecord.status }}">{{ jobRecord.status }}</span>
+        </dd>
+        <dt><span jhiTranslate="jobadminApp.jobRecord.process">Process</span></dt>
+        <dd>
+          <div *ngIf="jobRecord.process">
+            <a [routerLink]="['/process', jobRecord.process?.id, 'view']">{{ jobRecord.process?.id }}</a>
+          </div>
+        </dd>
+      </dl>
+
+      <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+      </button>
+
+      <button type="button" [routerLink]="['/job-record', jobRecord.id, 'edit']" class="btn btn-primary">
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+      </button>
+    </div>
+  </div>
+</div>

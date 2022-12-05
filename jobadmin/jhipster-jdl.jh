@@ -1,0 +1,68 @@
+// --- --- --- ENUMERATIONS --- --- ---
+
+/** Enum for Job-Status */
+enum JobStatusEnum {
+ /* Accepted by receiver. */
+ ACCEPTED,
+ /* Scheduled to be processed by agent. */
+ SCHEDULED,
+ /* Paused, because Process is paused. */
+ PAUSED,
+ /* Processing in agent failed. */
+ FAILED,
+ /* Processing completed by agent. */
+ COMPLETED,
+ /* Requestor notified. */
+ NOTIFIED,
+ /* Result fetched. */
+ DELIVERED
+}
+
+/** Paused / Running */
+enum ActivationEnum {
+ /* Process active. */
+ ACTIVE,
+ /* Process paused. */
+ PAUSED
+}
+
+// --- --- --- ENTITIES --- --- ---
+
+/** A single materialized job record. */
+@dto(mapstruct)
+entity JobRecord {
+  /** Timestamp, when job was accepted. */
+  jobAcceptedTimestamp Instant required,
+  /** Timestamp of last status change. */
+  lastEventTimestamp Instant required,
+  /** Timestamp of last status change in materialized record. */
+  lastRecordUpdateTimestamp Instant required,
+  /** Job status. */
+  status JobStatusEnum required
+}
+
+/** Process (the job type). */
+@dto(mapstruct)
+entity Process {
+  /** Alias/Key of process. */
+  key String required,
+  /** Name of process. */
+  name String required,
+  /** Is process active or paused? */
+  activation ActivationEnum required
+}
+
+// --- --- --- RELATIONSHIPS --- --- ---
+
+relationship ManyToOne {
+  /** Process to which job belongs. */
+  JobRecord{process required} to Process
+}
+
+// --- --- --- MISC --- --- ---
+
+// Set pagination options
+paginate JobRecord with pagination
+paginate Process with pagination
+
+

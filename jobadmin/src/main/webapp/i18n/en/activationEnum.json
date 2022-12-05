@@ -1,0 +1,9 @@
+{
+  "jobadminApp": {
+    "ActivationEnum": {
+      "null": "",
+      "ACTIVE": "ACTIVE",
+      "PAUSED": "PAUSED"
+    }
+  }
+}

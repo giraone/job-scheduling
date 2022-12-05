@@ -1,0 +1,222 @@
+#
+# See https://cloud.spring.io/spring-cloud-stream-binder-kafka/spring-cloud-stream-binder-kafka.html#_configuration_options_2
+# See https://docs.spring.io/spring-cloud-stream-binder-kafka/docs/3.0.10.RELEASE/reference/html/spring-cloud-stream-binder-kafka.html#_configuration_options_2
+# See https://docs.confluent.io/current/streams/developer-guide/config-streams.html
+#
+
+server:
+  port: 8070
+
+logging:
+  level:
+    ROOT: INFO
+    # set the 3 lines to warn to suppress large config list output on startup
+    org.apache.kafka.clients.admin.AdminClientConfig: WARN
+    org.apache.kafka.clients.producer.ProducerConfig: WARN
+    org.apache.kafka.clients.consumer.ConsumerConfig: WARN
+    # Suppress "Node 0 disconnected." (INFO) messages and "Broker may not be available" messages (WARN).
+    org.apache.kafka.clients.NetworkClient: ERROR
+
+spring:
+  application:
+    name: schedule
+  kafka:
+    bootstrap-servers: 'localhost:9092'
+    jaas:
+      enabled: false
+    security:
+      protocol: PLAINTEXT
+    properties:
+      sasl:
+        mechanism: PLAIN
+    # Needed for sendBridge, when Message is used to set a string key
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+  cloud:
+    # which steps are performed?
+    function:
+      definition: 'processSchedule;processResume;processAgentA01;processAgentA02,processAgentA03,processResumeB01,processResumeB02,processNotify'
+    stream:
+      instance-count: 1 # for local development 1 (is Default)
+      bindings:
+        # PROCESSOR processSchedule - - - - - - - - - - - - - - - - - - - -
+        processSchedule-in-0:
+          destination: ${application.topics.queueAccepted.topic}
+          consumer: # consumer properties on each function (processor) level
+            concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
+        processSchedule-A01:
+          destination: ${application.topics.queueScheduledA01.topic}
+        processSchedule-A02:
+          destination: ${application.topics.queueScheduledA02.topic}
+        processSchedule-A03:
+          destination: ${application.topics.queueScheduledA03.topic}
+        processSchedule-B01:
+          destination: ${application.topics.queuePausedB01.topic}
+        processSchedule-B02:
+          destination: ${application.topics.queuePausedB02.topic}
+        processSchedule-out-error:
+          destination: ${application.topics.queueAccepted.error}
+        # PROCESSOR processResume - - - - - - - - - - - - - - - - - - - -
+        processResumeB01-in-0:
+          destination: ${application.topics.queuePausedB01.topic}
+          consumer: # consumer properties on each function (processor) level
+            concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
+        processResumeB01-A01:
+          destination: ${application.topics.queueScheduledA01.topic}
+        processResumeB01-A02:
+          destination: ${application.topics.queueScheduledA02.topic}
+        processResumeB01-A03:
+          destination: ${application.topics.queueScheduledA03.topic}
+        processResumeB02-in-0:
+          destination: ${application.topics.queuePausedB02.topic}
+          consumer: # consumer properties on each function (processor) level
+            concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
+        processResumeB02-A01:
+          destination: ${application.topics.queueScheduledA01.topic}
+        processResumeB02-A02:
+          destination: ${application.topics.queueScheduledA02.topic}
+        processResumeB02-A03:
+          destination: ${application.topics.queueScheduledA03.topic}
+        # PROCESSOR processAgentA01 - - - - - - - - - - - - - - - - - - - -
+        processAgentA01-in-0:
+          destination: ${application.topics.queueScheduledA01.topic}
+          consumer: # consumer properties on each function (processor) level
+            concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
+        processAgentA01-out-0:
+          destination: ${application.topics.queueCompleted.topic}
+        processAgentA01-out-failed:
+          destination: ${application.topics.queueFailedA01.topic}
+        processAgentA01-out-error:
+          destination: ${application.topics.queueScheduledA01.error}
+        # PROCESSOR processAgentA02 - - - - - - - - - - - - - - - - - - - -
+        processAgentA02-in-0:
+          destination: ${application.topics.queueScheduledA02.topic}
+          consumer: # consumer properties on each function (processor) level
+            concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
+        processAgentA02-out-0:
+          destination: ${application.topics.queueCompleted.topic}
+        processAgentA02-out-failed:
+          destination: ${application.topics.queueFailedA02.topic}
+        processAgentA02-out-error:
+          destination: ${application.topics.queueScheduledA02.error}
+        # PROCESSOR processAgentA03 - - - - - - - - - - - - - - - - - - - -
+        processAgentA03-in-0:
+          destination: ${application.topics.queueScheduledA03.topic}
+          consumer: # consumer properties on each function (processor) level
+            concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
+        processAgentA03-out-0:
+          destination: ${application.topics.queueCompleted.topic}
+        processAgentA03-out-failed:
+          destination: ${application.topics.queueFailedA03.topic}
+        processAgentA03-out-error:
+          destination: ${application.topics.queueScheduledA03.error}
+        # PROCESSOR processNotify - - - - - - - - - - - - - - - - - - - -
+        processNotify-in-0:
+          destination: ${application.topics.queueCompleted.topic}
+          consumer: # consumer properties on each function (processor) level
+            concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
+        processNotify-out-0:
+          destination: ${application.topics.queueNotified.topic}
+        processNotify-out-error:
+          destination: ${application.topics.queueCompleted.error}
+      kafka:
+        streams:
+          binder:
+            auto-create-topics: false # We do not want topic auto creation (is disabled in our cluster)
+            functions:
+              # if we use multiple processors, the application-id MUST BE SET (and unique in cluster)!
+              processSchedule:
+                application-id: ${application.id.processSchedule}
+              processAgentA01:
+                application-id: ${application.id.processAgentA01}
+              processAgentA02:
+                application-id: ${application.id.processAgentA02}
+              processAgentA03:
+                application-id: ${application.id.processAgentA03}
+              processResumeB01:
+                application-id: ${application.id.processResumeB01}
+              processResumeB02:
+                application-id: ${application.id.processResumeB02}
+              processNotify:
+                application-id: ${application.id.processNotify}
+            # we use DLQs if the JSON cannot be deserialized (sendtodlq|logAndContinue)
+            deserialization-exception-handler: logAndContinue
+            required-acks: -1  # all in-sync-replicas
+            replication-factor: 1 # our replication factor in local dev mode
+            configuration: # Standard Kafka Streams configuration properties (consumer and producer) on binder level
+              commit.interval.ms: 1000 # the definition here at the binder level works
+              default:
+                # Define producer exception handler (can be done here globally, but easier in Java)
+                # production.exception.handler: de.datev.pws.loon.dcp.exceptions.CustomProductionExceptionHandler
+                key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+            # producer-properties: # Standard Kafka Streams configuration properties (producer only) on binder level
+            # consumer-properties: # Standard Kafka Streams configuration properties (consumer only) on binder level
+            # When bindings for processors are stopped through actuator, then this processor will not participate in the health check by default.
+            # Set this property to true, to enable health check for all processors including the ones that are currently stopped through bindings actuator endpoint.
+            # Default: false
+            includeStoppedProcessorsForHealthCheck: true
+        binder:
+          producer-properties:
+            # the serializers for streamBridge.send, when using org.springframework.messaging.Message objects
+            key.serializer: org.apache.kafka.common.serialization.StringSerializer
+            # the message payload is already serialized to a byte array by Spring itself (StreamBridge.send)
+            value.serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ['health', 'info', 'bindings', 'logfile', 'metrics', 'configprops', 'env', 'kafkastreamstopology']
+  endpoint:
+    health:
+      show-details: ALWAYS
+  health:
+    binders:
+      enabled: true # is default
+
+application:
+  job-admin-host: 'localhost:8093'
+  job-admin-path: '/api/processes/{id}'
+
+  topics:
+    queueAccepted:
+      topic: job-accepted
+      error: job-accepted-err
+    queueScheduledA01:
+      topic: job-scheduled-A01
+      error: job-scheduled-err
+    queueScheduledA02:
+      topic: job-scheduled-A02
+      error: job-scheduled-err
+    queueScheduledA03:
+      topic: job-scheduled-A03
+      error: job-scheduled-err
+    queuePausedB01:
+      topic: job-paused-B01
+      error: job-paused-err
+    queuePausedB02:
+      topic: job-paused-B02
+      error: job-paused-err
+    queueCompleted:
+      topic: job-completed
+      error: job-completed-err
+    queueFailedA01:
+      topic: job-failed-A01
+      error: job-failed-err
+    queueFailedA02:
+      topic: job-failed-A03
+      error: job-failed-err
+    queueFailedA03:
+      topic: job-failed-A03
+      error: job-failed-err
+    queueNotified:
+      topic: job-notified
+  id:
+    # the id may be used as the prefix for changelog (KTable) topics, so it has to be configurable
+    processSchedule: processSchedule
+    processAgentA01: processAgentA01
+    processAgentA02: processAgentA02
+    processAgentA03: processAgentA03
+    processResumeB01: processResumeB01
+    processResumeB02: processResumeB02
+    processNotify: processNotify

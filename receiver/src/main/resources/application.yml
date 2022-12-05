@@ -1,0 +1,34 @@
+logging:
+  level:
+    root: WARN
+    com.giraone: INFO
+    # for debugging producer/acknowledges
+    # org.apache.kafka.clients.producer.internals: DEBUG
+    # set the 4 lines to warn/error to suppress large config list output on startup
+    org.apache.kafka.common.config.AbstractConfig: WARN
+    org.apache.kafka.clients.admin.AdminClientConfig: WARN
+    org.apache.kafka.clients.producer.ProducerConfig: WARN
+    org.apache.kafka.clients.consumer.ConsumerConfig: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ['health', 'loggers']
+
+server:
+  port: 8090
+
+spring:
+  application:
+    name: receiver
+  kafka:
+    bootstrap-servers: 'localhost:9092'
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 10
+
+application:
+  job-accepted-topic: 'job-accepted'

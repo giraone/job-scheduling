@@ -1,0 +1,52 @@
+{
+  "applications": "*",
+  "changelogDate": "20221201145230",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "job_record",
+  "fields": [
+    {
+      "fieldName": "jobAcceptedTimestamp",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"],
+      "javadoc": "Timestamp, when job was accepted."
+    },
+    {
+      "fieldName": "lastEventTimestamp",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"],
+      "javadoc": "Timestamp of last status change."
+    },
+    {
+      "fieldName": "lastRecordUpdateTimestamp",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"],
+      "javadoc": "Timestamp of last status change in materialized record."
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "JobStatusEnum",
+      "fieldTypeJavadoc": "Enum for Job-Status",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "ACCEPTED,SCHEDULED,PAUSED,FAILED,COMPLETED,NOTIFIED,DELIVERED",
+      "javadoc": "Job status."
+    }
+  ],
+  "fluentMethods": true,
+  "javadoc": "A single materialized job record.",
+  "jpaMetamodelFiltering": false,
+  "name": "JobRecord",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [
+    {
+      "javadoc": "Process to which job belongs.",
+      "otherEntityName": "process",
+      "otherEntityRelationshipName": "jobRecord",
+      "relationshipName": "process",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    }
+  ],
+  "service": "serviceClass"
+}

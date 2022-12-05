@@ -1,0 +1,44 @@
+logging:
+  level:
+    root: WARN
+    com.giraone: DEBUG
+    # set the 4 lines to warn to suppress large config list output on startup
+    org.apache.kafka.common.config.AbstractConfig: WARN
+    org.apache.kafka.clients.admin.AdminClientConfig: WARN
+    org.apache.kafka.clients.producer.ProducerConfig: WARN
+    org.apache.kafka.clients.consumer.ConsumerConfig: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ['health', 'loggers', 'metrics']
+
+server:
+  port: 8091
+
+spring:
+  application:
+    name: materialize
+  kafka:
+    bootstrap-servers: 'localhost:9092'
+    consumer:
+      group-id: event-reader
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  r2dbc:
+    # pool properties must be given in URL; poolName must be given with registerJmx=true
+    url: r2dbc:pool:postgresql://localhost:5432/states?initialSize=20&maxSize=50&poolName=pool&registerJmx=true
+    username: user
+    password: password
+    properties:
+      # Postgres properties
+      lock_timeout: 30000
+      statement_timeout: 30000
+      idle_in_transaction_session_timeout: 30000
+      # R2DBC properties
+      connectTimeout: PT60S
+application:
+  topic-insert: 'job-accepted'
+  topics-update: 'job-scheduled-A01,job-scheduled-A02,job-scheduled-A03,job-failed-A01,job-failed-A02,job-failed-A03,job-paused-B01,job-paused-B02,job-completed,job-notified,job-delivered'

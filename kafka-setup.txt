@@ -1,0 +1,43 @@
+# Kafka Client nutzen
+
+export BROKER="localhost:9092"
+
+export BROKER="cluster1.kafka.dev.dvint.de:9093"
+export KAFKA_OPTS=-Djava.security.auth.login.config=WSLLOK1_jaas.conf
+export CACERTS=/home/remote/t08225a/certs/cacerts
+
+export TOPIC=shared.test.default.pws.loon.berechnung-freigabe-rechtsform
+export TOPIC=shared.test.default.pws.loon.rechtsform.bbs.outbox
+export TOPIC=shared.test.mdo.omd.client
+
+$KAFKA/bin/kafka-console-consumer.sh --bootstrap-server "$BROKER" \
+ --property print.key=true --consumer-property "security.protocol=SASL_SSL" --consumer-property "sasl.mechanism=PLAIN" \
+  --consumer-property "ssl.truststore.location=$CACERTS" \
+  --consumer-property "ssl.truststore.password=changeit" --topic $TOPIC --from-beginning 
+
+## Lokale Topics anlegen für EDI-IO
+
+$KAFKA/bin/kafka-topics.sh --zookeeper localhost --list
+$KAFKA/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+$KAFKA/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic job-new
+
+## Kommandos
+
+echo "{}" | $KAFKA/bin/kafka-console-producer.sh --property print.key=true --bootstrap-server localhost:9092 --topic $TOPIC
+
+jq -rc . x.json | $KAFKA/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic $TOPIC
+
+cat x.json | $KAFKA/bin/kafka-console-producer.sh  --bootstrap-server "$BROKER" \
+  --property "parse.key=true" --property "key.separator=|" \
+  --topic $TOPIC
+  
+$KAFKA/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic $TOPIC --from-beginning
+  
+## Connect
+$KAFKA/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic connect.configs
+$KAFKA/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic connect.offsets
+$KAFKA/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic connect.status
+$KAFKA/bin/kafka-configs.sh --bootstrap-server localhost:9092 --entity-type topics --alter --add-config cleanup.policy=compact --entity-name connect.configs
+$KAFKA/bin/kafka-configs.sh --bootstrap-server localhost:9092 --entity-type topics --alter --add-config cleanup.policy=compact --entity-name connect.offsets
+$KAFKA/bin/kafka-configs.sh --bootstrap-server localhost:9092 --entity-type topics --alter --add-config cleanup.policy=compact --entity-name connect.status
+
