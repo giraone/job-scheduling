@@ -39,16 +39,17 @@ public class ProcessorApplication {
         } catch (UnknownHostException e) {
             LOGGER.warn("The host name could not be determined, using `localhost` as fallback");
         }
-        LOGGER.info("\n----------------------------------------------------------\n" +
-                "\t~~~ Application '{}' is running! Access URLs:\n" +
-                "\t~~~ - Local:      {}://localhost:{}{}\n" +
-                "\t~~~ - External:   {}://{}:{}{}\n" +
-                "\t~~~ Java version:      {} / {}\n" +
-                "\t~~~ Processors:        {}\n" +
-                "\t~~~ Profile(s):        {}\n" +
-                "\t~~~ Default charset:   {}\n" +
-                "\t~~~ File encoding:     {}\n" +
-                "----------------------------------------------------------",
+        LOGGER.info("""
+                ----------------------------------------------------------
+                \t~~~ Application '{}' is running! Access URLs:
+                \t~~~ - Local:      {}://localhost:{}{}
+                \t~~~ - External:   {}://{}:{}{}
+                \t~~~ Java version:      {} / {}
+                \t~~~ Processors:        {}
+                \t~~~ Profile(s):        {}
+                \t~~~ Default charset:   {}
+                \t~~~ File encoding:     {}
+                ----------------------------------------------------------""",
             env.getProperty("spring.application.name"),
             protocol,
             serverPort,

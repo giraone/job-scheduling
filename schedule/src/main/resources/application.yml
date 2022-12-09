@@ -21,6 +21,12 @@ spring:
   application:
     name: schedule
   kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
     bootstrap-servers: 'localhost:9092'
     jaas:
       enabled: false
@@ -29,20 +35,21 @@ spring:
     properties:
       sasl:
         mechanism: PLAIN
-    # Needed for sendBridge, when Message is used to set a string key
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
   cloud:
-    # which steps are performed?
-    function:
-      definition: 'processSchedule;processResume;processAgentA01;processAgentA02,processAgentA03,processResumeB01,processResumeB02,processNotify'
     stream:
+      kafka:
+        binder:
+          auto-create-topics: false
+      # which steps are performed?
+      function.definition: 'processSchedule;processAgentA01;processAgentA02,processAgentA03,processResumeB01,processResumeB02,processNotify'
       instance-count: 1 # for local development 1 (is Default)
       bindings:
         # PROCESSOR processSchedule - - - - - - - - - - - - - - - - - - - -
         processSchedule-in-0:
+          group: ${application.id.processSchedule}
           destination: ${application.topics.queueAccepted.topic}
           consumer: # consumer properties on each function (processor) level
+            auto-startup: true
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
         processSchedule-A01:
           destination: ${application.topics.queueScheduledA01.topic}
@@ -56,10 +63,12 @@ spring:
           destination: ${application.topics.queuePausedB02.topic}
         processSchedule-out-error:
           destination: ${application.topics.queueAccepted.error}
-        # PROCESSOR processResume - - - - - - - - - - - - - - - - - - - -
+        # PROCESSOR processResumeB01 - - - - - - - - - - - - - - - - - - - -
         processResumeB01-in-0:
+          group: ${application.id.processResumeB01}
           destination: ${application.topics.queuePausedB01.topic}
           consumer: # consumer properties on each function (processor) level
+            auto-startup: false # !!! No auto startup
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
         processResumeB01-A01:
           destination: ${application.topics.queueScheduledA01.topic}
@@ -67,9 +76,12 @@ spring:
           destination: ${application.topics.queueScheduledA02.topic}
         processResumeB01-A03:
           destination: ${application.topics.queueScheduledA03.topic}
+        # PROCESSOR processResumeB02 - - - - - - - - - - - - - - - - - - - -
         processResumeB02-in-0:
+          group: ${application.id.processResumeB02}
           destination: ${application.topics.queuePausedB02.topic}
           consumer: # consumer properties on each function (processor) level
+            auto-startup: false # !!! No auto startup
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
         processResumeB02-A01:
           destination: ${application.topics.queueScheduledA01.topic}
@@ -79,8 +91,10 @@ spring:
           destination: ${application.topics.queueScheduledA03.topic}
         # PROCESSOR processAgentA01 - - - - - - - - - - - - - - - - - - - -
         processAgentA01-in-0:
+          group: ${application.id.processAgentA01}
           destination: ${application.topics.queueScheduledA01.topic}
           consumer: # consumer properties on each function (processor) level
+            auto-startup: true
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
         processAgentA01-out-0:
           destination: ${application.topics.queueCompleted.topic}
@@ -90,8 +104,10 @@ spring:
           destination: ${application.topics.queueScheduledA01.error}
         # PROCESSOR processAgentA02 - - - - - - - - - - - - - - - - - - - -
         processAgentA02-in-0:
+          group: ${application.id.processAgentA02}
           destination: ${application.topics.queueScheduledA02.topic}
           consumer: # consumer properties on each function (processor) level
+            auto-startup: true
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
         processAgentA02-out-0:
           destination: ${application.topics.queueCompleted.topic}
@@ -101,8 +117,10 @@ spring:
           destination: ${application.topics.queueScheduledA02.error}
         # PROCESSOR processAgentA03 - - - - - - - - - - - - - - - - - - - -
         processAgentA03-in-0:
+          group: ${application.id.processAgentA03}
           destination: ${application.topics.queueScheduledA03.topic}
           consumer: # consumer properties on each function (processor) level
+            auto-startup: true
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
         processAgentA03-out-0:
           destination: ${application.topics.queueCompleted.topic}
@@ -112,55 +130,15 @@ spring:
           destination: ${application.topics.queueScheduledA03.error}
         # PROCESSOR processNotify - - - - - - - - - - - - - - - - - - - -
         processNotify-in-0:
-          destination: ${application.topics.queueCompleted.topic}
+          group: ${application.id.processNotify}
+          destination: ${application.topics.queueNotified.topic}
           consumer: # consumer properties on each function (processor) level
+            auto-startup: true
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
         processNotify-out-0:
           destination: ${application.topics.queueNotified.topic}
         processNotify-out-error:
-          destination: ${application.topics.queueCompleted.error}
-      kafka:
-        streams:
-          binder:
-            auto-create-topics: false # We do not want topic auto creation (is disabled in our cluster)
-            functions:
-              # if we use multiple processors, the application-id MUST BE SET (and unique in cluster)!
-              processSchedule:
-                application-id: ${application.id.processSchedule}
-              processAgentA01:
-                application-id: ${application.id.processAgentA01}
-              processAgentA02:
-                application-id: ${application.id.processAgentA02}
-              processAgentA03:
-                application-id: ${application.id.processAgentA03}
-              processResumeB01:
-                application-id: ${application.id.processResumeB01}
-              processResumeB02:
-                application-id: ${application.id.processResumeB02}
-              processNotify:
-                application-id: ${application.id.processNotify}
-            # we use DLQs if the JSON cannot be deserialized (sendtodlq|logAndContinue)
-            deserialization-exception-handler: logAndContinue
-            required-acks: -1  # all in-sync-replicas
-            replication-factor: 1 # our replication factor in local dev mode
-            configuration: # Standard Kafka Streams configuration properties (consumer and producer) on binder level
-              commit.interval.ms: 1000 # the definition here at the binder level works
-              default:
-                # Define producer exception handler (can be done here globally, but easier in Java)
-                # production.exception.handler: de.datev.pws.loon.dcp.exceptions.CustomProductionExceptionHandler
-                key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-            # producer-properties: # Standard Kafka Streams configuration properties (producer only) on binder level
-            # consumer-properties: # Standard Kafka Streams configuration properties (consumer only) on binder level
-            # When bindings for processors are stopped through actuator, then this processor will not participate in the health check by default.
-            # Set this property to true, to enable health check for all processors including the ones that are currently stopped through bindings actuator endpoint.
-            # Default: false
-            includeStoppedProcessorsForHealthCheck: true
-        binder:
-          producer-properties:
-            # the serializers for streamBridge.send, when using org.springframework.messaging.Message objects
-            key.serializer: org.apache.kafka.common.serialization.StringSerializer
-            # the message payload is already serialized to a byte array by Spring itself (StreamBridge.send)
-            value.serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+          destination: ${application.topics.queueNotified.error}
 
 management:
   endpoints:

@@ -1,10 +1,10 @@
 package com.giraone.jobs.schedule.processor;
 
+import com.giraone.jobs.events.AbstractJobEvent;
 import com.giraone.jobs.events.JobAcceptedEvent;
 import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
 import com.giraone.jobs.schedule.constants.UtilsAndConstants;
-import com.giraone.jobs.schedule.model.PausedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -20,7 +20,7 @@ public class ProcessorSchedule {
         this.pausedDecider = pausedDecider;
     }
 
-    public JobScheduledEvent streamProcess(JobAcceptedEvent jobAcceptedEvent) {
+    public AbstractJobEvent streamProcess(JobAcceptedEvent jobAcceptedEvent) {
 
         LOGGER.debug(">>> ProcessorSchedule.streamProcess {}", jobAcceptedEvent);
 
@@ -30,14 +30,15 @@ public class ProcessorSchedule {
             throw new IllegalArgumentException("Forced runtime exception because ID-NULL");
         }
 
-        String processKey = jobAcceptedEvent.getProcessKey();
-        Integer pausedBucket = pausedDecider.isProcessPaused(processKey);
+        final String processKey = jobAcceptedEvent.getProcessKey();
+        final Integer pausedBucket = pausedDecider.isProcessPaused(processKey);
         if (pausedBucket != null) {
-            JobPausedEvent jobPausedEvent = new JobPausedEvent(pausedBucket, jobAcceptedEvent);
-            throw new PausedException("Process " + processKey + " is paused. Moving job "
-                + jobAcceptedEvent.getId() + " to paused bucket " + pausedBucket + " in topic!", jobPausedEvent);
+            final JobPausedEvent jobPausedEvent = new JobPausedEvent(pausedBucket, jobAcceptedEvent);
+            LOGGER.debug(">>> Process {} is paused. Moving job {} to paused bucket {} in topic!",
+                processKey, jobPausedEvent.getMessageKey(), jobPausedEvent.getBucketSuffix());
+            return jobPausedEvent;
+        } else {
+            return new JobScheduledEvent(jobAcceptedEvent);
         }
-
-        return new JobScheduledEvent(jobAcceptedEvent);
     }
 }

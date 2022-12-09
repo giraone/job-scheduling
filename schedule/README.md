@@ -4,12 +4,11 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 
 ## TODO
 
-- [x] Pausiert wird nur im *accepted* Status. Dann geht es nicht nach `scheduled`, sondern nach `paused`.
-- [x] Resume geht mit Alternative "periodisch".
-- [ ] Key der Messages? Immer Auftrags-ID?
-- [ ] Stream-Partitioner aktuell Hash auf Key. Die verfahren sollten auf verschiedene Partitionen aufgeteilt sein,
-  aber idealerweise alle Events eines Key immer im gleichen Partitions-Index. Das würde Trouble-Shooting erleichtern.
-- [ ] Der Rest-Call zu `jobadmin` wird im Test nur ge-mocked. Besser wäre ein Test mit MockServer.
+- [x] Pausing is added in state *accepted*. Here the job event are either passed to topic `scheduled` or `paused`.
+- [ ] Pause/Resume added
+- [ ] Partition key - see https://spring.io/blog/2021/02/03/demystifying-spring-cloud-stream-producers-with-apache-kafka-partitions
+- [ ] Message key
+- [ ] Testing the REST call to `jobadmin` is currently only mocked. An integration test with *MockServer* should be added.
 
 ## Topologie
 
@@ -74,66 +73,9 @@ o.s.c.s.b.k.p.KafkaTopicProvisioner      : Auto creation of topics is disabled.
 o.a.k.s.p.i.StreamsPartitionAssignor     : Source topic xxx is missing/unknown during rebalance, please make sure all source topics have been pre-created before starting the Streams application. Returning error INCOMPLETE_SOURCE_TOPIC_METADATA
 ```
 
-### Partition support on the outbound (see 2.12)
-
-The partitioner must be created on the output:
-
-```yaml
-spring:
-  cloud:
-    stream:
-      kafka:
-        streams:
-          binder:
-           processSchedule-out-0:
-             producer: # producer properties on each function (output) level
-               streamPartitionerBeanName: streamPartitionerDefault
-           processAgent-in-0:
-             producer: # producer properties on each function (output) level
-               streamPartitionerBeanName: streamPartitionerDefault
-```
-
 ## Hints on Exception Handling
 
-### Deserialization Errors 
-
-See
-- [Apache Kafka Streams documentation on handling deserialization errors](https://docs.confluent.io/platform/current/streams/faq.html#streams-faq-failure-handling-deserialization-errors)
-- [Spring Cloud Stream documentation on handling deserialization errors](https://docs.spring.io/spring-cloud-stream-binder-kafka/docs/3.1.4/reference/html/spring-cloud-stream-binder-kafka.html#_handling_deserialization_exceptions_in_the_binder)
-- [Blog on Stream Processing with Spring Cloud Stream and Apache Kafka Streams. Part 4 - Error Handling](https://spring.io/blog/2019/12/05/stream-processing-with-spring-cloud-stream-and-apache-kafka-streams-part-4-error-handling)
-
-Setup the DLQ. This can be done
-
-- globally
-- for each consumer
-
-```yaml
-spring:
-  cloud:
-    stream:
-      kafka:
-        streams:
-          binder:
-            # Setup DLQ globally
-            deserialization-exception-handler: sendtodlq
-          bindings:
-            processSchedule-in-0:
-              consumer:
-                # Setup DLQ for each consumer
-                deserialization-exception-handler: sendtodlq
-                dlqName: ${application.topic.topicAccepted}.dlq
-            processAgent-in-0:    
-              consumer:
-                # Setup DLQ for each consumer
-                deserialization-exception-handler: sendtodlq
-                dlqName: ${application.topic.topicScheduled}.dlq
-```
-
 ### Production Errors
-
-See
-- [Apache Kafka Streams documentation on default production handler](https://docs.confluent.io/platform/current/streams/developer-guide/config-streams.html#default-production-exception-handler)
-- [Spring Cloud Stream documentation on handling production errors](https://cloud.spring.io/spring-cloud-static/spring-cloud-stream-binder-kafka/3.0.0.RELEASE/reference/html/spring-cloud-stream-binder-kafka.html#:~:text=as%20outlined%20above.-,2.13.2.%20Using%20customizer%20to%20register%20a%20production%20exception%20handler,-In%20the%20error)
 
 One have to distinguish between
 1. Exception when interacting with the broker, e.g. problems in producing event
@@ -186,8 +128,6 @@ public class EventProcessor {
     }
 }
 ```
-
-The documentation is in [https://cloud.spring.io/spring-cloud-static/spring-cloud-stream-binder-kafka](https://cloud.spring.io/spring-cloud-static/spring-cloud-stream-binder-kafka/3.0.4.RELEASE/reference/html/spring-cloud-stream-binder-kafka.html#_streamsbuilderfactorybean_customizer).
 
 ---
 
@@ -279,15 +219,10 @@ curl -d '{"state":"PAUSED"}' -H "Content-Type: application/json" -X POST http://
 curl -d '{"state":"RESUMED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processSchedule-in-0
 ```
 
-## Infos und Tutorials
-
-### Kafka Streams
-
-- [Learn Stream Processing With Kafka Streams - Stateless operations](https://betterprogramming.pub/learn-stream-processing-with-kafka-streams-stateless-operations-2111080e6c53)
-- [How to Use Stateful Operations in Kafka Streams](https://betterprogramming.pub/how-to-use-stateful-operations-in-kafka-streams-1cff4da41329)
+## Infos and Tutorials
 
 ### Spring Cloud Streams
 
-- [Configuration Options - wichtig für application.yml Settings](https://docs.spring.io/spring-cloud-stream/docs/3.1.4/reference/html/spring-cloud-stream.html#_configuration_options)
+- [Configuration Options - important for application.yml Settings](https://docs.spring.io/spring-cloud-stream/docs/3.2.6/reference/html/spring-cloud-stream.html#_configuration_options)
 - [Stream Processing with Spring Cloud Stream and Apache Kafka Streams (6 Parts)](https://spring.io/blog/2019/12/09/stream-processing-with-spring-cloud-stream-and-apache-kafka-streams-part-6-state-stores-and-interactive-queries)
 - [Testing](https://docs.spring.io/spring-cloud-stream/docs/current/reference/html/spring-cloud-stream.html#_testing)

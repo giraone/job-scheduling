@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.5</version>
+    <version>2.7.6</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
   <groupId>com.giraone.jobs</groupId>
@@ -16,10 +16,9 @@
 
   <properties>
     <java.version>17</java.version>
-    <spring-cloud-train.version>2021.0.5</spring-cloud-train.version>
     <spring-cloud-stream.version>3.2.6</spring-cloud-stream.version>
-    <jackson.version>2.14.0</jackson.version>
-    <!-- nur für kafka-streams-test-utils - muss zur spring kafka version passen -->
+    <jackson.version>2.14.1</jackson.version>
+    <!-- only for kafka-streams-test-utils - must match the spring kafka version -->
     <kafka.version>3.3.1</kafka.version>
     <wiremock.version>2.35.0</wiremock.version>
     <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
@@ -31,13 +30,6 @@
         <groupId>com.fasterxml.jackson</groupId>
         <artifactId>jackson-bom</artifactId>
         <version>${jackson.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-dependencies</artifactId>
-        <version>${spring-cloud-train.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -61,30 +53,10 @@
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka-streams</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-stream</artifactId>
+      <artifactId>spring-cloud-starter-stream-kafka</artifactId>
     </dependency>
-    <!-- This is our core binder -->
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-stream-binder-kafka-streams</artifactId>
-      <exclusions>
-        <!-- Avoids SLF4J: Class path contains multiple SLF4J bindings. -->
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-reload4j</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <!-- This needed only because we use the StreamBridge -->
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-stream-binder-kafka</artifactId>
-    </dependency>
+    <!-- We perform manual serialization / deserialization -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
@@ -93,7 +65,6 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
     </dependency>
-
     <!-- Jackson Time Serialization -->
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -135,7 +106,7 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- Test Solution für Kafka Streams Binder (@EmbeddedKafka/EmbeddedKafkaBroker und KafkaTestUtils) -->
+    <!-- for Kafka tests based on @EmbeddedKafka/EmbeddedKafkaBroker und KafkaTestUtils -->
     <dependency>
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka-test</artifactId>
@@ -163,8 +134,17 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
+        <configuration>
+          <!-- Force alphabetical order to have a reproducible build -->
+          <runOrder>alphabetical</runOrder>
+          <reportsDirectory>${junit.utReportFolder}</reportsDirectory>
+        </configuration>
+      </plugin>
       <!-- Test coverage with Jacoco -->
-      <!-- Use default report location else sonar can not show test coverage -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
@@ -185,16 +165,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven-surefire-plugin.version}</version>
-        <configuration>
-          <!-- Force alphabetical order to have a reproducible build -->
-          <runOrder>alphabetical</runOrder>
-          <reportsDirectory>${junit.utReportFolder}</reportsDirectory>
-        </configuration>
-      </plugin>
       <!-- add sources to artifactory build -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -206,6 +176,14 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <!-- mvn versions:update-parent && mvn versions:update-properties && mvn versions:use-latest-versions -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <configuration>
+          <rulesUri>file:///${project.basedir}/mvn-versions-rules.xml</rulesUri>
+        </configuration>
       </plugin>
     </plugins>
   </build>

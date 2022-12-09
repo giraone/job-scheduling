@@ -3,10 +3,11 @@ package com.giraone.jobs.schedule.processor;
 import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
 import com.giraone.jobs.schedule.constants.UtilsAndConstants;
-import com.giraone.jobs.schedule.model.StillPausedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 public class ProcessorResume {
@@ -19,7 +20,7 @@ public class ProcessorResume {
         this.pausedDecider = pausedDecider;
     }
 
-    public JobScheduledEvent streamProcess(JobPausedEvent jobPausedEvent) {
+    public Optional<JobScheduledEvent> streamProcess(JobPausedEvent jobPausedEvent) {
 
         LOGGER.debug(">>> ProcessorResume.streamProcess {}", jobPausedEvent);
 
@@ -29,11 +30,11 @@ public class ProcessorResume {
             throw new IllegalArgumentException("Forced runtime exception because id is null");
         }
 
-        String processKey = jobPausedEvent.getProcessKey();
-        Integer pausedBucket = pausedDecider.isProcessPaused(processKey);
+        final String processKey = jobPausedEvent.getProcessKey();
+        final Integer pausedBucket = pausedDecider.isProcessPaused(processKey);
         if (pausedBucket != null) {
-            throw new StillPausedException("Process " + processKey + " is still paused.", jobPausedEvent);
+            return Optional.empty();
         }
-        return new JobScheduledEvent(jobPausedEvent);
+        return Optional.of(new JobScheduledEvent(jobPausedEvent));
     }
 }
