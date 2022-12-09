@@ -7,8 +7,8 @@ services:
       - "2181:2181"
     container_name: zk-1
     volumes:
-      - ./data/zk-1/log:/var/lib/zookeeper/log
-      - ./data/zk-1/data:/var/lib/zookeeper/data
+      - $CONTAINER_DATA/zk-1/log:/var/lib/zookeeper/log
+      - $CONTAINER_DATA/zk-1/data:/var/lib/zookeeper/data
     networks:
       - confluent
     environment:
@@ -28,7 +28,7 @@ services:
     networks:
       - confluent
     volumes:
-      - ./data/kafka-1:/var/lib/kafka/data
+      - $CONTAINER_DATA/kafka-1:/var/lib/kafka/data
     environment:
       KAFKA_BROKER_ID: 101
       KAFKA_ZOOKEEPER_CONNECT: "zk-1:2181"
@@ -56,7 +56,7 @@ services:
     ports:
       - "9021:9021"
     volumes:
-      - ./data/control-center:/data
+      - $CONTAINER_DATA/control-center:/data
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: kafka-1:9092
       CONTROL_CENTER_ZOOKEEPER_CONNECT: zk-1:2181
@@ -78,7 +78,7 @@ services:
     hostname: postgres
     container_name: postgres
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - $CONTAINER_DATA/postgres:/var/lib/postgresql/data
     networks:
       - confluent
     ports:
@@ -94,7 +94,7 @@ services:
     hostname: pgadmin4
     container_name: pgadmin4
     volumes:
-      - ./data/pgadmin4:/var/lib/pgadmin
+      - $CONTAINER_DATA/pgadmin4:/var/lib/pgadmin
     networks:
       - confluent
     environment:

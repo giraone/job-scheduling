@@ -1,6 +1,7 @@
 #!/bin/bash
 
-mkdir -p data/control-center
-mkdir -p data/kafka-1
-mkdir -p data/zk-1/data/*
-mkdir -p data/zk-1/log/
+mkdir -m 777 ${CONTAINER_DATA}/control-center
+mkdir -m 777 ${CONTAINER_DATA}/kafka-1
+mkdir -m 777 ${CONTAINER_DATA}/zk-1
+mkdir -m 777 ${CONTAINER_DATA}/zk-1/data
+mkdir -m 777 ${CONTAINER_DATA}/zk-1/log
