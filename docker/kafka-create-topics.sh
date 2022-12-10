@@ -8,6 +8,7 @@ for topic in job-accepted job-accepted-err \
 	     job-notified job-notified-err \
 	     job-delivered; do
 
+  echo "Create $topic"
   docker exec -it kafka-1 kafka-topics \
     --bootstrap-server kafka-1:9092 \
     --create \

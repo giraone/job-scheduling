@@ -3,8 +3,8 @@ package com.giraone.jobs.events;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.giraone.jobs.schedule.common.CustomInstantSerializer;
-import com.giraone.jobs.schedule.common.TolerantInstantDeserializer;
+import com.giraone.jobs.common.CustomInstantSerializer;
+import com.giraone.jobs.common.TolerantInstantDeserializer;
 
 import java.io.Serializable;
 import java.time.Instant;

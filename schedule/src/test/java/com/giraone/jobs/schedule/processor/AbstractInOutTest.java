@@ -1,7 +1,7 @@
 package com.giraone.jobs.schedule.processor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.giraone.jobs.schedule.common.ObjectMapperBuilder;
+import com.giraone.jobs.common.ObjectMapperBuilder;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;

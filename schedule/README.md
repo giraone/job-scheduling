@@ -46,9 +46,9 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
   
 ## Simple runtime tests
 
-1. Create the topics: `../docker/setup_kafka_topic.sh`
-2. Write an input event into `job-accepted`: `jq -rc . src/test/resources/testdata/accepted-in.json | $KAFKA/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic accepted`
-3. Read an output event from `job-scheduled-A01`: `$KAFKA/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic scheduled --from-beginning`.
+1. Create the topics: `../docker/kafka-create-topics.sh`
+2. Write 2 input event for `job-accepted`: `../docker/generate-events.sh 1`
+3. Read an output event from `job-scheduled-A01`: `../docker/kafka-create-topics.sh job-scheduled-A01`.
    This should display something like `{"requestId":"017ef6f360d5","startTime":"2022-02-14T07:37:32.245521","JobAcceptedEvent":{"name":"Hello"},"calculatedValue1":5}`
 
 ## Hints on the solution

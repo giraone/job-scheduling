@@ -1,7 +1,7 @@
 package com.giraone.jobs.schedule.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.giraone.jobs.schedule.common.ObjectMapperBuilder;
+import com.giraone.jobs.common.ObjectMapperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -1,4 +1,4 @@
-package com.giraone.jobs.schedule.common;
+package com.giraone.jobs.common;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;

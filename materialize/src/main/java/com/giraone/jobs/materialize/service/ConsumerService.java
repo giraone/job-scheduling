@@ -138,7 +138,7 @@ public class ConsumerService implements CommandLineRunner {
         }
     }
 
-    private Mono<DatabaseResult> storeStateForNewJob(JobAcceptedEvent jobAcceptedEvent, Instant now, String processId) {
+    private Mono<DatabaseResult> storeStateForNewJob(JobAcceptedEvent jobAcceptedEvent, Instant now, String processKey) {
 
         if (LOGGER.isDebugEnabled()) {
             int latency = jobAcceptedEvent.getEventTimestamp() != null
@@ -147,7 +147,7 @@ public class ConsumerService implements CommandLineRunner {
             LOGGER.debug("INSERT id={}, eventTimestamp={} to state={}, nanoLatency={}",
                 jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), JobRecord.STATE_accepted, latency);
         }
-        return stateRecordService.insert(jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), Instant.now(), processId)
+        return stateRecordService.insert(jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), Instant.now(), processKey)
             .map(stateRecord -> new DatabaseResult(jobAcceptedEvent.getId(), true, DatabaseOperation.insert));
     }
 

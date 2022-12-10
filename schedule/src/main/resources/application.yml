@@ -27,6 +27,7 @@ spring:
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+      start-offset: earliest
     bootstrap-servers: 'localhost:9092'
     jaas:
       enabled: false
@@ -41,7 +42,7 @@ spring:
         binder:
           auto-create-topics: false
       # which steps are performed?
-      function.definition: 'processSchedule;processAgentA01;processAgentA02,processAgentA03,processResumeB01,processResumeB02,processNotify'
+      function.definition: 'processSchedule;processAgentA01;processAgentA02;processAgentA03;processResumeB01;processResumeB02;processNotify'
       instance-count: 1 # for local development 1 (is Default)
       bindings:
         # PROCESSOR processSchedule - - - - - - - - - - - - - - - - - - - -

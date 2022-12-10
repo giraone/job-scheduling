@@ -7,7 +7,7 @@ import com.giraone.jobs.events.JobCompletedEvent;
 import com.giraone.jobs.events.JobNotifiedEvent;
 import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
-import com.giraone.jobs.schedule.common.ObjectMapperBuilder;
+import com.giraone.jobs.common.ObjectMapperBuilder;
 import com.giraone.jobs.schedule.config.ApplicationProperties;
 import com.giraone.jobs.schedule.exceptions.DocumentedErrorOutput;
 import com.giraone.jobs.schedule.stopper.DefaultProcessingStopperImpl;
@@ -206,6 +206,7 @@ public class EventProcessor {
         try {
             messageIn = mapper.readValue(messageInBody, cls);
         } catch (IOException e) {
+            LOGGER.warn("Cannot deserialize {}: {}", new String(messageInBody), e.getMessage());
             throw new RuntimeException(e);
         }
         return messageIn;

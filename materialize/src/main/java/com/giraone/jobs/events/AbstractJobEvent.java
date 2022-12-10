@@ -1,6 +1,10 @@
 package com.giraone.jobs.events;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.giraone.jobs.common.CustomInstantSerializer;
+import com.giraone.jobs.common.TolerantInstantDeserializer;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -8,6 +12,8 @@ import java.time.Instant;
 public abstract class AbstractJobEvent implements Serializable {
 
     private long id;
+    @JsonDeserialize(using = TolerantInstantDeserializer.class)
+    @JsonSerialize(using = CustomInstantSerializer.class)
     private Instant eventTimestamp;
     private String processKey;
 
