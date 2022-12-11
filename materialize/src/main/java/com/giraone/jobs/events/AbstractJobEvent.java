@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.giraone.jobs.common.CustomInstantSerializer;
 import com.giraone.jobs.common.TolerantInstantDeserializer;
+import com.github.f4b6a3.tsid.Tsid;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -28,7 +29,7 @@ public abstract class AbstractJobEvent implements Serializable {
 
     @JsonIgnore
     public String getMessageKey() {
-        return String.format("%8x", id);
+        return Tsid.from(id).toString();
     }
 
     public abstract String getStatus();

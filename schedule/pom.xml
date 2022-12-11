@@ -18,6 +18,7 @@
     <java.version>17</java.version>
     <spring-cloud-stream.version>3.2.6</spring-cloud-stream.version>
     <jackson.version>2.14.1</jackson.version>
+    <tsid.version>5.0.2</tsid.version>
     <!-- only for kafka-streams-test-utils - must match the spring kafka version -->
     <kafka.version>3.3.1</kafka.version>
     <wiremock.version>2.35.0</wiremock.version>
@@ -69,6 +70,12 @@
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jsr310</artifactId>
+    </dependency>
+    <!-- ID generator -->
+    <dependency>
+      <groupId>com.github.f4b6a3</groupId>
+      <artifactId>tsid-creator</artifactId>
+      <version>${tsid.version}</version>
     </dependency>
 
     <!-- Tooling Dependencies -->
