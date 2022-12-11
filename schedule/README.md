@@ -4,7 +4,14 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 
 ## TODO
 
+### Global
+
+- [ ] Migrate event ID to String (TSID). Only within the database it should be a long value.
+
+### Schedule
+
 - [x] Pausing is added in state *accepted*. Here the job event are either passed to topic `scheduled` or `paused`.
+- [ ] Change from poll to @Schedule
 - [ ] Pause/Resume added
 - [ ] Partition key - see https://spring.io/blog/2021/02/03/demystifying-spring-cloud-stream-producers-with-apache-kafka-partitions
 - [ ] Message key
@@ -93,7 +100,7 @@ This can be done in the configuration on each function:
                 application-id: ${application.id.processSchedule}
                 configuration:
                   # Define producer exception handler
-                  default.production.exception.handler: exceptions.de.datev.ediio.vera.CustomProductionExceptionHandler
+                  default.production.exception.handler: <package>:CustomProductionExceptionHandler
 ```
 
 or in the code

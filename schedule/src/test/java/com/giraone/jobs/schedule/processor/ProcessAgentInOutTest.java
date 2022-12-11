@@ -3,33 +3,28 @@ package com.giraone.jobs.schedule.processor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.giraone.jobs.events.JobCompletedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
-import com.giraone.jobs.schedule.config.TestConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
 
+import static com.giraone.jobs.schedule.config.TestConfig.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // See https://blog.mimacom.com/testing-apache-kafka-with-spring-boot-junit5/
-
 @EmbeddedKafka(
     controlledShutdown = true,
     topics = {
-        TestConfig.TOPIC_scheduled,
-        TestConfig.TOPIC_scheduled_ERR,
-        TestConfig.TOPIC_completed
+        TOPIC_scheduled_A02,
+        TOPIC_scheduled_ERR,
+        TOPIC_completed
     },
-    bootstrapServersProperty = "spring.kafka.bootstrap-servers",
-    partitions = 3
+    bootstrapServersProperty = "spring.kafka.bootstrap-servers"
 )
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @DirtiesContext
@@ -41,58 +36,50 @@ class ProcessAgentInOutTest extends AbstractInOutTest {
     @BeforeAll
     public void setup() {
         super.setup();
-        embeddedKafka.consumeFromEmbeddedTopics(consumer, TestConfig.TOPIC_completed, TestConfig.TOPIC_scheduled_ERR);
+        embeddedKafka.consumeFromEmbeddedTopics(consumer, TOPIC_scheduled_ERR, TOPIC_completed);
     }
 
     @Test
     void testProcessWorks() throws JsonProcessingException, InterruptedException {
 
         LOGGER.info("{} testProcessWorks START", getClass().getName());
-        DefaultKafkaProducerFactory<String, String> pf = buildDefaultKafkaProducerFactory();
 
-        try {
-            KafkaTemplate<String, String> template = new KafkaTemplate<>(pf, true);
-            JobScheduledEvent JobScheduledEvent = new JobScheduledEvent(12L, "A01", Instant.now(), "");
-            template.send(TestConfig.TOPIC_scheduled, JobScheduledEvent.getMessageKey(), objectMapper.writeValueAsString(JobScheduledEvent));
-            Thread.sleep(TestConfig.DEFAULT_SLEEP_AFTER_PRODUCE_TIME);
+        // act
+        JobScheduledEvent jobScheduledEvent = new JobScheduledEvent(12L, "A01", Instant.now(), "");
+        produce(jobScheduledEvent, TOPIC_scheduled_A01);
 
-            ConsumerRecord<String, String> consumerRecord = KafkaTestUtils.getSingleRecord(
-                consumer, TestConfig.TOPIC_completed, TestConfig.DEFAULT_CONSUMER_POLL_TIME);
-            LOGGER.info("{}} testProcessWorks POLL TOPIC RETURNED key={} value={}",
-                getClass().getName(), consumerRecord.key(), consumerRecord.value());
-            assertThat(consumerRecord.key()).isNotNull();
-            assertThat(consumerRecord.value()).isNotNull();
-            assertThat(consumerRecord.value()).contains("\"id\":12");
-            assertThat(consumerRecord.value()).contains("\"processKey\":1");
+        // assert
+        ConsumerRecord<String, String> consumerRecord = pollTopic(TOPIC_completed);
+        assertThat(consumerRecord.key()).isNotNull();
+        assertThat(consumerRecord.value()).isNotNull();
+        assertThat(consumerRecord.value()).contains("\"id\":12");
+        assertThat(consumerRecord.value()).contains("\"processKey\":\"A01\"");
 
-            JobCompletedEvent JobCompletedEvent = objectMapper.readValue(consumerRecord.value(), JobCompletedEvent.class);
-            assertThat(JobCompletedEvent.getMessageKey()).isNotNull();
-            assertThat(JobCompletedEvent.getPayload()).contains("/0000000c-");
-        } finally {
-            pf.destroy();
-        }
+        JobCompletedEvent JobCompletedEvent = objectMapper.readValue(consumerRecord.value(), JobCompletedEvent.class);
+        assertThat(JobCompletedEvent.getMessageKey()).isNotNull();
+        assertThat(JobCompletedEvent.getPayload()).startsWith("https://link/00000012");
     }
 
     @Test
-    void testRuntimeException() throws InterruptedException {
+    void testDeserializeException() throws JsonProcessingException, InterruptedException {
+
+        LOGGER.info("{} testDeserializeException START", getClass().getName());
+        // act
+        produce("x", TOPIC_scheduled_A01);
+        // assert
+        ConsumerRecord<String, String> consumerRecord = pollTopic(TOPIC_scheduled_ERR);
+        assertThat(consumerRecord.value()).contains("Exception");
+    }
+
+    @Test
+    void testRuntimeException() throws JsonProcessingException, InterruptedException {
 
         LOGGER.info("{} testRuntimeException START", getClass().getName());
-        DefaultKafkaProducerFactory<String, String> pf = buildDefaultKafkaProducerFactory();
-
-        try {
-            KafkaTemplate<String, String> template = new KafkaTemplate<>(pf, true);
-            template.send(TestConfig.TOPIC_scheduled, "req-id-runtime-err", "{}");
-            Thread.sleep(TestConfig.DEFAULT_SLEEP_AFTER_PRODUCE_TIME);
-            ConsumerRecord<String, String> consumerRecord = KafkaTestUtils.getSingleRecord(
-                consumer, TestConfig.TOPIC_scheduled_ERR, TestConfig.DEFAULT_CONSUMER_POLL_TIME);
-
-            assertThat(consumerRecord).isNotNull();
-            LOGGER.info("{} testRuntimeException POLL TOPIC_ERR RETURNED key={} value={}",
-                getClass().getName(), consumerRecord.key(), consumerRecord.value());
-            assertThat(consumerRecord.key()).isNotNull();
-            assertThat(consumerRecord.value()).contains("Exception");
-        } finally {
-            pf.destroy();
-        }
+        // act
+        JobScheduledEvent event = new JobScheduledEvent(); // id is null
+        produce(event, TOPIC_scheduled_A01);
+        // assert
+        ConsumerRecord<String, String> consumerRecord = pollTopic(TOPIC_scheduled_ERR);
+        assertThat(consumerRecord.value()).contains("Exception");
     }
 }

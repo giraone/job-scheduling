@@ -1,13 +1,13 @@
 package com.giraone.jobs.schedule.processor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.giraone.jobs.common.ObjectMapperBuilder;
 import com.giraone.jobs.events.AbstractJobEvent;
 import com.giraone.jobs.events.JobAcceptedEvent;
 import com.giraone.jobs.events.JobCompletedEvent;
 import com.giraone.jobs.events.JobNotifiedEvent;
 import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
-import com.giraone.jobs.common.ObjectMapperBuilder;
 import com.giraone.jobs.schedule.config.ApplicationProperties;
 import com.giraone.jobs.schedule.exceptions.DocumentedErrorOutput;
 import com.giraone.jobs.schedule.stopper.DefaultProcessingStopperImpl;
@@ -32,7 +32,7 @@ import java.util.function.Function;
 
 /**
  * The central class where all processing logic starts. This class should not contain any
- * details of the processing, but the technical aspects, e.g.
+ * details of the processing (these are placed in the Processor* classes), but the technical aspects, e.g.
  * <ul>
  *     <li>Whether a Kafka or a Kafka Streams (KStream, KeyValue) binder is used.</li>
  *     <li>The central error handling.</li>
@@ -93,8 +93,11 @@ public class EventProcessor {
     @Bean
     public Consumer<byte[]> processSchedule() {
         return in ->
-            performSchedule().accept(
-                deserialize(in, JobAcceptedEvent.class)
+            tryCatchForConsumer(
+                in,
+                (messageBytesIn) -> deserialize(messageBytesIn, JobAcceptedEvent.class),
+                (jobInput) -> performSchedule().accept(jobInput),
+                PROCESS_schedule
             );
     }
 
@@ -104,10 +107,10 @@ public class EventProcessor {
             sendToDynamicTarget(event, jobEvent -> {
                 if (event instanceof JobScheduledEvent) {
                     final JobScheduledEvent jobScheduledEvent1 = (JobScheduledEvent) event;
-                    return PROCESS_agent + "-" + jobScheduledEvent1.getAgentSuffix() + "-in-0";
+                    return PROCESS_schedule + "-" + jobScheduledEvent1.getAgentSuffix();
                 } else {
                     final JobPausedEvent jobPausedEvent = (JobPausedEvent) event;
-                    return PROCESS_resume + "-" + jobPausedEvent.getBucketSuffix() + "in-0";
+                    return PROCESS_schedule + "-" + jobPausedEvent.getBucketSuffix();
                 }
             });
         };
@@ -118,16 +121,22 @@ public class EventProcessor {
     @Bean
     public Consumer<byte[]> processResumeB01() {
         return in ->
-            performResume(PROCESS_resume_B01).accept(
-                deserialize(in, JobPausedEvent.class)
+            tryCatchForConsumer(
+                in,
+                (messageBytesIn) -> deserialize(messageBytesIn, JobPausedEvent.class),
+                (jobInput) -> performResume(PROCESS_resume_B01).accept(jobInput),
+                PROCESS_resume_B01
             );
     }
 
     @Bean
     public Consumer<byte[]> processResumeB02() {
         return in ->
-            performResume(PROCESS_resume_B02).accept(
-                deserialize(in, JobPausedEvent.class)
+            tryCatchForConsumer(
+                in,
+                (messageBytesIn) -> deserialize(messageBytesIn, JobPausedEvent.class),
+                (jobInput) -> performResume(PROCESS_resume_B02).accept(jobInput),
+                PROCESS_resume_B02
             );
     }
 
@@ -136,7 +145,7 @@ public class EventProcessor {
             Optional<JobScheduledEvent> jobScheduledEvent = processorResume.streamProcess(jobPausedEvent);
             if (jobScheduledEvent.isPresent()) {
                 LOGGER.info(">>> Re-scheduling {} {}", processName, jobScheduledEvent);
-                sendToDynamicTarget(jobScheduledEvent.get(), p -> PROCESS_schedule);
+                sendToDynamicTarget(jobScheduledEvent.get(), jobEvent -> processName + "-" + jobEvent.getProcessKey());
             }
         };
     }
@@ -146,24 +155,33 @@ public class EventProcessor {
     @Bean
     public Consumer<byte[]> processAgentA01() {
         return in ->
-            performAgent(PROCESS_agent_A01).accept(
-                deserialize(in, JobScheduledEvent.class)
+            tryCatchForConsumer(
+                in,
+                (messageBytesIn) -> deserialize(messageBytesIn, JobScheduledEvent.class),
+                (jobInput) -> performAgent(PROCESS_agent_A01).accept(jobInput),
+                PROCESS_agent_A01
             );
     }
 
     @Bean
     public Consumer<byte[]> processAgentA02() {
         return in ->
-            performAgent(PROCESS_agent_A02).accept(
-                deserialize(in, JobScheduledEvent.class)
+            tryCatchForConsumer(
+                in,
+                (messageBytesIn) -> deserialize(messageBytesIn, JobScheduledEvent.class),
+                (jobInput) -> performAgent(PROCESS_agent_A02).accept(jobInput),
+                PROCESS_agent_A02
             );
     }
 
     @Bean
     public Consumer<byte[]> processAgentA03() {
         return in ->
-            performAgent(PROCESS_agent_A03).accept(
-                deserialize(in, JobScheduledEvent.class)
+            tryCatchForConsumer(
+                in,
+                (messageBytesIn) -> deserialize(messageBytesIn, JobScheduledEvent.class),
+                (jobInput) -> performAgent(PROCESS_agent_A03).accept(jobInput),
+                PROCESS_agent_A03
             );
     }
 
@@ -173,10 +191,10 @@ public class EventProcessor {
             sendToDynamicTarget(event, jobEvent -> {
                 if (event instanceof JobCompletedEvent) {
                     LOGGER.info(">>> COMPLETED {} {} {}", processName, event.getProcessKey(), event.getMessageKey());
-                    return PROCESS_notify + "-in-0";
+                    return PROCESS_agent + event.getProcessKey() + "-out-0";
                 } else {
                     LOGGER.info(">>> FAILED {} {} {}", processName, event.getProcessKey(), event.getMessageKey());
-                    return null; // TODO: failed handling
+                    return PROCESS_agent + event.getProcessKey() + "-out-failed";
                 }
             });
         };
@@ -186,11 +204,13 @@ public class EventProcessor {
 
     @Bean
     public Function<byte[], Message<byte[]>> processNotify() {
-        return in -> serialize(
-            performNotify().apply(
-                deserialize(in, JobCompletedEvent.class)
-            )
-        );
+        return in ->
+            tryCatchForProcessor(
+                in,
+                (messageBytesIn) -> deserialize(messageBytesIn, JobCompletedEvent.class),
+                (jobInput) -> serializeWithMessageKey(performNotify().apply(jobInput)),
+                "processNotify"
+            );
     }
 
     private Function<JobCompletedEvent, JobNotifiedEvent> performNotify() {
@@ -200,6 +220,62 @@ public class EventProcessor {
     //------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Perform deserialization, processing, serialization, send with message header
+     * @param messageValue the message input as a byte array
+     * @param deserializer the deserialization function resulting in an AbstractJobEvent
+     * @param processor the processor with an AbstractJobEvent as the input and a Message as the output
+     * @param processName the processor name for finding the corresponding error topic
+     * @return an outbound job or null, if no outbound job should be sent (e.g. on error or when dynamic topics are used)
+     * @param <T> the concrete job class of the inbound job
+     */
+    protected <T extends AbstractJobEvent> Message<byte[]> tryCatchForProcessor(
+        byte[] messageValue,
+        Function<byte[], T> deserializer,
+        Function<T, Message<byte[]>> processor,
+        String processName) {
+
+        final T jobInput;
+        try {
+            jobInput = deserializer.apply(messageValue);
+        } catch (Exception e) {
+            handleProcessingException(processName, "error", messageValue, e);
+            return null;
+        }
+        final String messageKey = jobInput.getMessageKey();
+        final Message<byte[]> result;
+        try {
+            result = processor.apply(jobInput);
+        } catch (Exception e) {
+            handleProcessingException(processName, messageKey, messageValue, e);
+            return null;
+        }
+        return result;
+    }
+
+    protected <T extends AbstractJobEvent> boolean tryCatchForConsumer(
+        byte[] messageValue,
+        Function<byte[], T> deserializer,
+        Consumer<T> consumer,
+        String processName) {
+
+        final T jobInput;
+        try {
+            jobInput = deserializer.apply(messageValue);
+        } catch (Exception e) {
+            handleProcessingException(processName, "error", messageValue, e);
+            return false;
+        }
+        final String messageKey = jobInput.getMessageKey();
+        try {
+            consumer.accept(jobInput);
+        } catch (Exception e) {
+            handleProcessingException(processName, messageKey, messageValue, e);
+            return false;
+        }
+        return true;
+    }
 
     protected <T> T deserialize(byte[] messageInBody, Class<T> cls) {
         T messageIn;
@@ -212,13 +288,18 @@ public class EventProcessor {
         return messageIn;
     }
 
-    protected Message<byte[]> serialize(AbstractJobEvent jobEvent) {
+    protected byte[] serialize(AbstractJobEvent jobEvent) {
         final byte[] messageOutBody;
         try {
             messageOutBody = mapper.writeValueAsBytes(jobEvent);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return messageOutBody;
+    }
+
+    protected Message<byte[]> serializeWithMessageKey(AbstractJobEvent jobEvent) {
+        final byte[] messageOutBody = serialize(jobEvent);
         return MessageBuilder.withPayload(messageOutBody)
             .setHeader(KafkaHeaders.MESSAGE_KEY, jobEvent.getMessageKey())
             .build();
@@ -237,8 +318,11 @@ public class EventProcessor {
         boolean ok = streamBridge.send(bindingName, message);
         if (!ok) {
             LOGGER.error(">>> Cannot send event to out binding \"{}\"!", bindingName);
+            return false;
+        } else {
+            LOGGER.debug("SENT TO destination TOPIC of binding {}", bindingName);
         }
-        return false;
+        return true;
     }
 
     //------------------------------------------------------------------------------------------------------------------

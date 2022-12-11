@@ -1,6 +1,8 @@
 package com.giraone.jobs.receiver.service;
 
 import com.giraone.jobs.receiver.config.ApplicationProperties;
+import com.github.f4b6a3.tsid.Tsid;
+import com.github.f4b6a3.tsid.TsidCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
@@ -17,6 +19,7 @@ public class ProducerService {
 
     private final String topic;
     private final ReactiveKafkaProducerTemplate<String, String> reactiveKafkaProducerTemplate;
+
     private final AtomicLong counterSent = new AtomicLong();
     private final AtomicLong counterFailed = new AtomicLong();
 
@@ -34,7 +37,8 @@ public class ProducerService {
 
     public Mono<String> send(String event) {
 
-        final String messageKey = String.format("%8x", System.nanoTime());
+        final Tsid tsid = TsidCreator.getTsid256();
+        final String messageKey = tsid.toString();
         return reactiveKafkaProducerTemplate
             .send(topic, messageKey, event)
             .doOnError(e -> {

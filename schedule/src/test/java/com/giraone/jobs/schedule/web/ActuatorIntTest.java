@@ -1,19 +1,22 @@
 package com.giraone.jobs.schedule.web;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 /**
  * Test the actuator end points.
- * TODO: more tests needed!
  */
+@EmbeddedKafka(
+    controlledShutdown = true,
+    bootstrapServersProperty = "spring.kafka.bootstrap-servers"
+)
 @SpringBootTest
 @AutoConfigureWebTestClient
 // This is needed in SCS with Kafka Binder - otherwise one get Application Context error
@@ -26,8 +29,6 @@ class ActuatorIntTest {
 
     @DisplayName("Test GET /actuator/health")
     @Test
-    @Disabled
-        // TODO: Beim Testen aktuell "DOWN"
     void testThat_actuator_health_isUp() {
 
         // act/assert
@@ -35,7 +36,8 @@ class ActuatorIntTest {
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isOk()
-            .expectHeader().contentType("application/vnd.spring-boot.actuator.v3+json")
+            //.expectHeader().contentType("application/vnd.spring-boot.actuator.v3+json")
+            .expectHeader().contentType("application/json")
             .expectBody()
             .jsonPath("$.status").isNotEmpty()
             .jsonPath("$.status").isEqualTo("UP")

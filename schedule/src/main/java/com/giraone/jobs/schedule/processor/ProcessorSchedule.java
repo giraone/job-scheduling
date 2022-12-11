@@ -31,8 +31,8 @@ public class ProcessorSchedule {
         }
 
         final String processKey = jobAcceptedEvent.getProcessKey();
-        final Integer pausedBucket = pausedDecider.isProcessPaused(processKey);
-        if (pausedBucket != null) {
+        final int pausedBucket = pausedDecider.isProcessPaused(processKey);
+        if (pausedBucket > 0) {
             final JobPausedEvent jobPausedEvent = new JobPausedEvent(pausedBucket, jobAcceptedEvent);
             LOGGER.debug(">>> Process {} is paused. Moving job {} to paused bucket {} in topic!",
                 processKey, jobPausedEvent.getMessageKey(), jobPausedEvent.getBucketSuffix());

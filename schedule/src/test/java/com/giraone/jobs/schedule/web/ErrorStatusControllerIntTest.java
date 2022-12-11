@@ -20,7 +20,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @AutoConfigureWebTestClient
 // This is needed in SCS with Kafka Binder - otherwise one get Application Context error
 // with "Multiple functions found, but function definition property is not set."
-@ActiveProfiles({"test", "processSchedule"})
+@ActiveProfiles({"test", "processScheduleA01"})
 @SuppressWarnings("squid:S100") // Method naming
 class ErrorStatusControllerIntTest {
 
@@ -31,7 +31,7 @@ class ErrorStatusControllerIntTest {
     void assertThat_endpoint_works() {
 
         // act/assert
-        webTestClient.get().uri("/admin-api/error-status/processSchedule")
+        webTestClient.get().uri("/admin-api/error-status/processScheduleA01")
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isOk()

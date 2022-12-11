@@ -27,7 +27,8 @@ public class PausedDecider {
         this.jobAdminClient = jobAdminClient;
     }
 
-    public Integer isProcessPaused(String processKey) {
+    // 0 = not paused, > 0 index of bucket
+    public int isProcessPaused(String processKey) {
 
         final long now = System.currentTimeMillis();
         Integer ret;
@@ -36,7 +37,7 @@ public class PausedDecider {
             boolean paused = ActivationEnum.PAUSED.equals(process != null ? process.getActivation() : ActivationEnum.PAUSED);
             LOGGER.info(">>> IS-PAUSED {}={}", process.getId(), paused);
             // TODO: Dynamic bucket
-            ret = paused ? 1 : null;
+            ret = paused ? 1 : 0;
             lastDecision.put(processKey, ret);
             lastDecisionTimeMillis = now;
         } else {

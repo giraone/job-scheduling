@@ -1,5 +1,5 @@
 {
   "id": "1",
-  "verfahrenIid": "1",
-  "erzeugungszeitpunkt": "2022-11-16T07:00:00.000000"
+  "processKey": "A01",
+  "eventTimestamp": "2022-11-16T07:00:00.000000"
 }

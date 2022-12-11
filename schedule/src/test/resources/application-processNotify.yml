@@ -1,4 +1,4 @@
 spring:
   cloud:
-    function:
-      definition: 'processNotify'
+    stream:
+      function.definition: 'processNotify'

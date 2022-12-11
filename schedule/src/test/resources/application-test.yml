@@ -1,14 +1,12 @@
 logging:
   level:
     ROOT: WARN
-    de.datev: INFO
+    com.giraone.jobs: DEBUG
     # set the 4 lines to warn to suppress large config list output on startup
     org.apache.kafka.common.config.AbstractConfig: ERROR
     org.apache.kafka.clients.admin.AdminClientConfig: ERROR
     org.apache.kafka.clients.producer.ProducerConfig: ERROR
     org.apache.kafka.clients.consumer.ConsumerConfig: ERROR
-    # Suppress "Processed 0 total records, ran 0 punctuators, ..." messages
-    org.apache.kafka.streams.processor.internals.StreamThread: WARN
     # Suppress "Node 0 disconnected." messages
     org.apache.kafka.clients.NetworkClient: WARN
 

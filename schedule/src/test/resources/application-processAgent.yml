@@ -1,4 +1,4 @@
 spring:
   cloud:
-    function:
-      definition: 'processAgent'
+    stream:
+      function.definition: 'processAgent'

@@ -30,7 +30,7 @@ public abstract class AbstractJobEvent implements Serializable {
 
     @JsonIgnore
     public String getMessageKey() {
-        return String.format("%8x", id);
+        return String.format("%08d", id);
     }
 
     public abstract String getStatus();

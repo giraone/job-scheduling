@@ -1,4 +1,4 @@
 spring:
   cloud:
-    function:
-      definition: 'processSchedule'
+    stream:
+      function.definition: 'processSchedule'
