@@ -20,6 +20,7 @@
     <java.version>17</java.version>
     <reactor.kafka.version>1.3.14</reactor.kafka.version>
     <r2dbc-migrate.version>2.7.8</r2dbc-migrate.version>
+    <tsid.version>5.0.2</tsid.version>
     <!-- Test dependency versions -->
     <assertj.version>3.23.1</assertj.version>
     <testcontainers.version>1.17.6</testcontainers.version>
@@ -69,6 +70,13 @@
       <groupId>name.nkonev.r2dbc-migrate</groupId>
       <artifactId>r2dbc-migrate-spring-boot-starter</artifactId>
       <version>${r2dbc-migrate.version}</version>
+    </dependency>
+
+    <!-- ID generator -->
+    <dependency>
+      <groupId>com.github.f4b6a3</groupId>
+      <artifactId>tsid-creator</artifactId>
+      <version>${tsid.version}</version>
     </dependency>
 
     <!-- Jackson Time Serialization -->
