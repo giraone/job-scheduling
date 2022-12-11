@@ -46,6 +46,12 @@ public class ReceiverApplication {
             LOGGER.error("You have misconfigured your application! It should not " +
                 "run with both the 'dev' and 'cloud' profiles at the same time.");
         }
+
+        final String nodeIndexString = System.getenv("CF_INSTANCE_INDEX");
+        if (nodeIndexString != null) {
+            LOGGER.info("Setting TSID node (tsidcreator.node) from CF_INSTANCE_INDEX to {}.", nodeIndexString);
+            System.setProperty("tsidcreator.node", nodeIndexString);
+        }
     }
 
     /**
