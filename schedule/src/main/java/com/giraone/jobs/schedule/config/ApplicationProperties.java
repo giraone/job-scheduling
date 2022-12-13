@@ -46,10 +46,8 @@ public class ApplicationProperties {
     private Topics topics;
     private Id id;
 
-    private long pausedDeciderQueryWaitSeconds = 10;
-
+    private LoadProcessStatus loadProcessStatus;
     private String jobAdminHost;
-    private String jobAdminPathById;
     private String jobAdminPathAll;
     private int jobAdminBlockSeconds = 30;
 
@@ -121,5 +119,20 @@ public class ApplicationProperties {
          * 0 means no retry, 1 means once retry
          */
         private int attempts = RETRY_DEFAULT_NUMBER_OF_ATTEMPTS;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @ToString
+    public static final class LoadProcessStatus {
+        /**
+         * Milliseconds to wait between each reload of process status (paused, active) from job-admin service
+         */
+        private long fixedRateMs;
+        /**
+         * Initial wait time after start to load process status (paused, active) from job-admin service
+         */
+        private long initialDelayMs;
     }
 }

@@ -19,3 +19,11 @@ spring:
     properties:
       sasl:
         mechanism: PLAIN
+
+application:
+  loadProcessStatus:
+    fixedRateMs: 30000
+    # No scheduling during tests
+    initialDelayMs: 1000000000
+  # Port must match to integration test code e.g. in PausedDeciderIntTest.java
+  job-admin-host: 'localhost:8432'

@@ -6,17 +6,16 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 
 ### Global
 
-- [ ] Migrate event ID to String (TSID). Only within the database it should be a long value.
+- [x] All events have *message keys* based on [TSID](https://github.com/f4b6a3/tsid-creator)
+- [ ] Migrate event ID from type long to String (TSID). Only within the database it should be a long value.
 - [ ] JobAdmin has to manage the buckets, no only the active/paused boolean
 
 ### Schedule
 
 - [x] Pausing is added in state *accepted*. Here the job event are either passed to topic `scheduled` or `paused`.
-- [ ] Change from poll to @Schedule
-- [ ] Pause/Resume added
+- [x] The job states are fetched periodically using `@Schedule` in [PausedDecider.java](src/main/java/com/giraone/jobs/schedule/processor/PausedDecider.java)
 - [ ] Partition key - see https://spring.io/blog/2021/02/03/demystifying-spring-cloud-stream-producers-with-apache-kafka-partitions
-- [ ] Message key
-- [ ] Testing the REST call to `jobadmin` is currently only mocked. An integration test with *MockServer* should be added.
+- [x] The REST call to `jobadmin` for fetching the process states (paused, active) is tested with an integration test based on [WireMock](https://wiremock.org).
 
 ## Topologie
 

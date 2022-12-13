@@ -147,8 +147,10 @@ management:
       enabled: true # is default
 
 application:
+  loadProcessStatus:
+    fixedRateMs: 30000
+    initialDelayMs: 1000
   job-admin-host: 'localhost:8093'
-  job-admin-pathById: '/api/processes/{id}'
   job-admin-pathAll: '/api/processes'
 
   topics:

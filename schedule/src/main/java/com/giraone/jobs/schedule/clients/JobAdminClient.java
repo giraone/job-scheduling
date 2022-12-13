@@ -6,12 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import java.net.URI;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -25,36 +20,15 @@ public class JobAdminClient extends AbstractClient {
         this.jobAdminWebClient = jobAdminWebClient;
     }
 
-    public Mono<ProcessDTO> getProcess(String id) {
-
-        return this.jobAdminWebClient.get()
-            .uri(uriBuilder -> buildUri(uriBuilder, id))
-            .retrieve()
-            .bodyToMono(ProcessDTO.class)
-            .doOnError(err ->
-                log.error("SUBSYSTEM CALL-ERROR [jobAdmin]: id={}", id, err)
-            );
-    }
     public Flux<ProcessDTO> getProcesses() {
 
         return this.jobAdminWebClient.get()
-            .uri(uriBuilder -> uriBuilder.path(applicationProperties.getJobAdminPathById()).build())
+            .uri(uriBuilder -> uriBuilder.path(applicationProperties.getJobAdminPathAll()).build())
             .retrieve()
             .bodyToFlux(ProcessDTO.class)
             .doOnError(err ->
                 log.error("SUBSYSTEM CALL-ERROR [jobAdmin]", err)
             );
-    }
-
-    private URI buildUri(UriBuilder uriBuilder, String id) {
-
-        final String urlTemplate = applicationProperties.getJobAdminPathById();
-        Map<String, Object> params = Map.of("id", id);
-        final URI ret = uriBuilder
-            .path(urlTemplate)
-            .build(params);
-        log.debug("SUBSYSTEM URL [jobAdmin] = {}", ret);
-        return ret;
     }
 }
 

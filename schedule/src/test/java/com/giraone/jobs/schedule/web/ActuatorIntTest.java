@@ -19,8 +19,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 )
 @SpringBootTest
 @AutoConfigureWebTestClient
-// This is needed in SCS with Kafka Binder - otherwise one get Application Context error
-// with "Multiple functions found, but function definition property is not set."
 @ActiveProfiles({"test"})
 class ActuatorIntTest {
 
