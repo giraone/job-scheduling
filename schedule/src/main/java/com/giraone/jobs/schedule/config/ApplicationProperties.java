@@ -49,7 +49,8 @@ public class ApplicationProperties {
     private long pausedDeciderQueryWaitSeconds = 10;
 
     private String jobAdminHost;
-    private String jobAdminPath;
+    private String jobAdminPathById;
+    private String jobAdminPathAll;
     private int jobAdminBlockSeconds = 30;
 
     @PostConstruct

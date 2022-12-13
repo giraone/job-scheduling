@@ -148,7 +148,8 @@ management:
 
 application:
   job-admin-host: 'localhost:8093'
-  job-admin-path: '/api/processes/{id}'
+  job-admin-pathById: '/api/processes/{id}'
+  job-admin-pathAll: '/api/processes'
 
   topics:
     queueAccepted:

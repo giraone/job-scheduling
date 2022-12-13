@@ -6,6 +6,7 @@ import com.giraone.jobs.schedule.model.ActivationEnum;
 import com.giraone.jobs.schedule.model.ProcessDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -25,6 +26,16 @@ public class PausedDecider {
     public PausedDecider(ApplicationProperties applicationProperties, JobAdminClient jobAdminClient) {
         this.applicationProperties = applicationProperties;
         this.jobAdminClient = jobAdminClient;
+    }
+
+    @Scheduled(fixedRate = 30000)
+    public void scheduleReload() throws InterruptedException {
+
+        Map<String, Integer> pausedMap = new HashMap<>();
+        int bucket = 1; // TODO
+        jobAdminClient.getProcesses().subscribe(processDTO -> {
+           pausedMap.put(processDTO.getId(), processDTO.getActivation().equals(ActivationEnum.PAUSED) ? bucket : 0);
+        });
     }
 
     // 0 = not paused, > 0 index of bucket

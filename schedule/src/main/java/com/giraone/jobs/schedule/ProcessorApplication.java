@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.StringUtils;
 
 import java.net.InetAddress;
@@ -12,6 +13,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 
 @SpringBootApplication
+@EnableScheduling
 public class ProcessorApplication {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessorApplication.class);

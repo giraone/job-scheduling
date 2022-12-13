@@ -7,6 +7,7 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 ### Global
 
 - [ ] Migrate event ID to String (TSID). Only within the database it should be a long value.
+- [ ] JobAdmin has to manage the buckets, no only the active/paused boolean
 
 ### Schedule
 
