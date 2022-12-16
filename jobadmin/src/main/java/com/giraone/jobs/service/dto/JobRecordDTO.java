@@ -43,6 +43,12 @@ public class JobRecordDTO implements Serializable {
     @Schema(description = "Job status.", required = true)
     private JobStatusEnum status;
 
+    /**
+     * Paused bucket key
+     */
+    @Schema(description = "Paused bucket key")
+    private String pausedBucketKey;
+
     private ProcessDTO process;
 
     public Long getId() {
@@ -85,6 +91,14 @@ public class JobRecordDTO implements Serializable {
         this.status = status;
     }
 
+    public String getPausedBucketKey() {
+        return pausedBucketKey;
+    }
+
+    public void setPausedBucketKey(String pausedBucketKey) {
+        this.pausedBucketKey = pausedBucketKey;
+    }
+
     public ProcessDTO getProcess() {
         return process;
     }
@@ -123,6 +137,7 @@ public class JobRecordDTO implements Serializable {
             ", lastEventTimestamp='" + getLastEventTimestamp() + "'" +
             ", lastRecordUpdateTimestamp='" + getLastRecordUpdateTimestamp() + "'" +
             ", status='" + getStatus() + "'" +
+            ", pausedBucketKey='" + getPausedBucketKey() + "'" +
             ", process=" + getProcess() +
             "}";
     }

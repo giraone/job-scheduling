@@ -38,7 +38,9 @@ entity JobRecord {
   /** Timestamp of last status change in materialized record. */
   lastRecordUpdateTimestamp Instant required,
   /** Job status. */
-  status JobStatusEnum required
+  status JobStatusEnum required,
+  /** Paused bucket key **/
+  pausedBucketKey String
 }
 
 /** Process (the job type). */

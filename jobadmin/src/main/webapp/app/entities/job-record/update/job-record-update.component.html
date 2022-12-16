@@ -161,6 +161,24 @@
         </div>
 
         <div class="row mb-3">
+          <label
+            class="form-label"
+            jhiTranslate="jobadminApp.jobRecord.pausedBucketKey"
+            for="field_pausedBucketKey"
+            [ngbTooltip]="'jobadminApp.jobRecord.help.pausedBucketKey' | translate"
+            >Paused Bucket Key</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            name="pausedBucketKey"
+            id="field_pausedBucketKey"
+            data-cy="pausedBucketKey"
+            formControlName="pausedBucketKey"
+          />
+        </div>
+
+        <div class="row mb-3">
           <label class="form-label" jhiTranslate="jobadminApp.jobRecord.process" for="field_process">Process</label>
           <select class="form-control" id="field_process" data-cy="process" name="process" formControlName="process">
             <option *ngIf="!editForm.get('process')!.value" [ngValue]="null" selected></option>

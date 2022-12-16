@@ -50,6 +50,14 @@
         <dd>
           <span jhiTranslate="{{ 'jobadminApp.JobStatusEnum.' + jobRecord.status }}">{{ jobRecord.status }}</span>
         </dd>
+        <dt>
+          <span jhiTranslate="jobadminApp.jobRecord.pausedBucketKey" [ngbTooltip]="'jobadminApp.jobRecord.help.pausedBucketKey' | translate"
+            >Paused Bucket Key</span
+          >
+        </dt>
+        <dd>
+          <span>{{ jobRecord.pausedBucketKey }}</span>
+        </dd>
         <dt><span jhiTranslate="jobadminApp.jobRecord.process">Process</span></dt>
         <dd>
           <div *ngIf="jobRecord.process">

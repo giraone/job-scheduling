@@ -8,6 +8,7 @@ export interface IJobRecord {
   lastEventTimestamp?: dayjs.Dayjs;
   lastRecordUpdateTimestamp?: dayjs.Dayjs;
   status?: JobStatusEnum;
+  pausedBucketKey?: string | null;
   process?: IProcess;
 }
 
@@ -18,6 +19,7 @@ export class JobRecord implements IJobRecord {
     public lastEventTimestamp?: dayjs.Dayjs,
     public lastRecordUpdateTimestamp?: dayjs.Dayjs,
     public status?: JobStatusEnum,
+    public pausedBucketKey?: string | null,
     public process?: IProcess
   ) {}
 }

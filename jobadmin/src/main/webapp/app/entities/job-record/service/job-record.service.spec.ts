@@ -30,6 +30,7 @@ describe('JobRecord Service', () => {
       lastEventTimestamp: currentDate,
       lastRecordUpdateTimestamp: currentDate,
       status: JobStatusEnum.ACCEPTED,
+      pausedBucketKey: 'AAAAAAA',
     };
   });
 
@@ -86,6 +87,7 @@ describe('JobRecord Service', () => {
           lastEventTimestamp: currentDate.format(DATE_TIME_FORMAT),
           lastRecordUpdateTimestamp: currentDate.format(DATE_TIME_FORMAT),
           status: 'BBBBBB',
+          pausedBucketKey: 'BBBBBB',
         },
         elemDefault
       );
@@ -111,6 +113,7 @@ describe('JobRecord Service', () => {
         {
           lastEventTimestamp: currentDate.format(DATE_TIME_FORMAT),
           lastRecordUpdateTimestamp: currentDate.format(DATE_TIME_FORMAT),
+          pausedBucketKey: 'BBBBBB',
         },
         new JobRecord()
       );
@@ -141,6 +144,7 @@ describe('JobRecord Service', () => {
           lastEventTimestamp: currentDate.format(DATE_TIME_FORMAT),
           lastRecordUpdateTimestamp: currentDate.format(DATE_TIME_FORMAT),
           status: 'BBBBBB',
+          pausedBucketKey: 'BBBBBB',
         },
         elemDefault
       );
@@ -199,7 +203,7 @@ describe('JobRecord Service', () => {
       });
 
       it('should add only unique JobRecord to an array', () => {
-        const jobRecordArray: IJobRecord[] = [{ id: 123 }, { id: 456 }, { id: 60781 }];
+        const jobRecordArray: IJobRecord[] = [{ id: 123 }, { id: 456 }, { id: 17919 }];
         const jobRecordCollection: IJobRecord[] = [{ id: 123 }];
         expectedResult = service.addJobRecordToCollectionIfMissing(jobRecordCollection, ...jobRecordArray);
         expect(expectedResult).toHaveLength(3);

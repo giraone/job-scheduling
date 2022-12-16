@@ -30,6 +30,7 @@ export class JobRecordUpdateComponent implements OnInit {
     lastEventTimestamp: [null, [Validators.required]],
     lastRecordUpdateTimestamp: [null, [Validators.required]],
     status: [null, [Validators.required]],
+    pausedBucketKey: [],
     process: [null, Validators.required],
   });
 
@@ -99,6 +100,7 @@ export class JobRecordUpdateComponent implements OnInit {
       lastEventTimestamp: jobRecord.lastEventTimestamp ? jobRecord.lastEventTimestamp.format(DATE_TIME_FORMAT) : null,
       lastRecordUpdateTimestamp: jobRecord.lastRecordUpdateTimestamp ? jobRecord.lastRecordUpdateTimestamp.format(DATE_TIME_FORMAT) : null,
       status: jobRecord.status,
+      pausedBucketKey: jobRecord.pausedBucketKey,
       process: jobRecord.process,
     });
 
@@ -129,6 +131,7 @@ export class JobRecordUpdateComponent implements OnInit {
         ? dayjs(this.editForm.get(['lastRecordUpdateTimestamp'])!.value, DATE_TIME_FORMAT)
         : undefined,
       status: this.editForm.get(['status'])!.value,
+      pausedBucketKey: this.editForm.get(['pausedBucketKey'])!.value,
       process: this.editForm.get(['process'])!.value,
     };
   }

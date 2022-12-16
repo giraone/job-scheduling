@@ -30,6 +30,11 @@
       "fieldValidateRules": ["required"],
       "fieldValues": "ACCEPTED,SCHEDULED,PAUSED,FAILED,COMPLETED,NOTIFIED,DELIVERED",
       "javadoc": "Job status."
+    },
+    {
+      "fieldName": "pausedBucketKey",
+      "fieldType": "String",
+      "javadoc": "Paused bucket key"
     }
   ],
   "fluentMethods": true,

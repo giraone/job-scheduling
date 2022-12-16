@@ -68,6 +68,9 @@
           <th scope="col" jhiSortBy="status">
             <span jhiTranslate="jobadminApp.jobRecord.status">Status</span> <fa-icon icon="sort"></fa-icon>
           </th>
+          <th scope="col" jhiSortBy="pausedBucketKey">
+            <span jhiTranslate="jobadminApp.jobRecord.pausedBucketKey">Paused Bucket Key</span> <fa-icon icon="sort"></fa-icon>
+          </th>
           <th scope="col" jhiSortBy="process.id">
             <span jhiTranslate="jobadminApp.jobRecord.process">Process</span> <fa-icon icon="sort"></fa-icon>
           </th>
@@ -83,6 +86,7 @@
           <td>{{ jobRecord.lastEventTimestamp | formatMediumDatetime }}</td>
           <td>{{ jobRecord.lastRecordUpdateTimestamp | formatMediumDatetime }}</td>
           <td jhiTranslate="{{ 'jobadminApp.JobStatusEnum.' + jobRecord.status }}">{{ jobRecord.status }}</td>
+          <td>{{ jobRecord.pausedBucketKey }}</td>
           <td>
             <div *ngIf="jobRecord.process">
               <a [routerLink]="['/process', jobRecord.process?.id, 'view']">{{ jobRecord.process?.id }}</a>

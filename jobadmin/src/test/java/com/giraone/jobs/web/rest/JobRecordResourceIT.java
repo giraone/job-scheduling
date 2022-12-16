@@ -47,6 +47,9 @@ class JobRecordResourceIT {
     private static final JobStatusEnum DEFAULT_STATUS = JobStatusEnum.ACCEPTED;
     private static final JobStatusEnum UPDATED_STATUS = JobStatusEnum.SCHEDULED;
 
+    private static final String DEFAULT_PAUSED_BUCKET_KEY = "AAAAAAAAAA";
+    private static final String UPDATED_PAUSED_BUCKET_KEY = "BBBBBBBBBB";
+
     private static final String ENTITY_API_URL = "/api/job-records";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
 
@@ -78,7 +81,8 @@ class JobRecordResourceIT {
             .jobAcceptedTimestamp(DEFAULT_JOB_ACCEPTED_TIMESTAMP)
             .lastEventTimestamp(DEFAULT_LAST_EVENT_TIMESTAMP)
             .lastRecordUpdateTimestamp(DEFAULT_LAST_RECORD_UPDATE_TIMESTAMP)
-            .status(DEFAULT_STATUS);
+            .status(DEFAULT_STATUS)
+            .pausedBucketKey(DEFAULT_PAUSED_BUCKET_KEY);
         // Add required entity
         Process process;
         if (TestUtil.findAll(em, Process.class).isEmpty()) {
@@ -103,7 +107,8 @@ class JobRecordResourceIT {
             .jobAcceptedTimestamp(UPDATED_JOB_ACCEPTED_TIMESTAMP)
             .lastEventTimestamp(UPDATED_LAST_EVENT_TIMESTAMP)
             .lastRecordUpdateTimestamp(UPDATED_LAST_RECORD_UPDATE_TIMESTAMP)
-            .status(UPDATED_STATUS);
+            .status(UPDATED_STATUS)
+            .pausedBucketKey(UPDATED_PAUSED_BUCKET_KEY);
         // Add required entity
         Process process;
         if (TestUtil.findAll(em, Process.class).isEmpty()) {
@@ -140,6 +145,7 @@ class JobRecordResourceIT {
         assertThat(testJobRecord.getLastEventTimestamp()).isEqualTo(DEFAULT_LAST_EVENT_TIMESTAMP);
         assertThat(testJobRecord.getLastRecordUpdateTimestamp()).isEqualTo(DEFAULT_LAST_RECORD_UPDATE_TIMESTAMP);
         assertThat(testJobRecord.getStatus()).isEqualTo(DEFAULT_STATUS);
+        assertThat(testJobRecord.getPausedBucketKey()).isEqualTo(DEFAULT_PAUSED_BUCKET_KEY);
     }
 
     @Test
@@ -248,7 +254,8 @@ class JobRecordResourceIT {
             .andExpect(jsonPath("$.[*].jobAcceptedTimestamp").value(hasItem(DEFAULT_JOB_ACCEPTED_TIMESTAMP.toString())))
             .andExpect(jsonPath("$.[*].lastEventTimestamp").value(hasItem(DEFAULT_LAST_EVENT_TIMESTAMP.toString())))
             .andExpect(jsonPath("$.[*].lastRecordUpdateTimestamp").value(hasItem(DEFAULT_LAST_RECORD_UPDATE_TIMESTAMP.toString())))
-            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())));
+            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
+            .andExpect(jsonPath("$.[*].pausedBucketKey").value(hasItem(DEFAULT_PAUSED_BUCKET_KEY)));
     }
 
     @Test
@@ -266,7 +273,8 @@ class JobRecordResourceIT {
             .andExpect(jsonPath("$.jobAcceptedTimestamp").value(DEFAULT_JOB_ACCEPTED_TIMESTAMP.toString()))
             .andExpect(jsonPath("$.lastEventTimestamp").value(DEFAULT_LAST_EVENT_TIMESTAMP.toString()))
             .andExpect(jsonPath("$.lastRecordUpdateTimestamp").value(DEFAULT_LAST_RECORD_UPDATE_TIMESTAMP.toString()))
-            .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()));
+            .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()))
+            .andExpect(jsonPath("$.pausedBucketKey").value(DEFAULT_PAUSED_BUCKET_KEY));
     }
 
     @Test
@@ -292,7 +300,8 @@ class JobRecordResourceIT {
             .jobAcceptedTimestamp(UPDATED_JOB_ACCEPTED_TIMESTAMP)
             .lastEventTimestamp(UPDATED_LAST_EVENT_TIMESTAMP)
             .lastRecordUpdateTimestamp(UPDATED_LAST_RECORD_UPDATE_TIMESTAMP)
-            .status(UPDATED_STATUS);
+            .status(UPDATED_STATUS)
+            .pausedBucketKey(UPDATED_PAUSED_BUCKET_KEY);
         JobRecordDTO jobRecordDTO = jobRecordMapper.toDto(updatedJobRecord);
 
         restJobRecordMockMvc
@@ -311,6 +320,7 @@ class JobRecordResourceIT {
         assertThat(testJobRecord.getLastEventTimestamp()).isEqualTo(UPDATED_LAST_EVENT_TIMESTAMP);
         assertThat(testJobRecord.getLastRecordUpdateTimestamp()).isEqualTo(UPDATED_LAST_RECORD_UPDATE_TIMESTAMP);
         assertThat(testJobRecord.getStatus()).isEqualTo(UPDATED_STATUS);
+        assertThat(testJobRecord.getPausedBucketKey()).isEqualTo(UPDATED_PAUSED_BUCKET_KEY);
     }
 
     @Test
@@ -390,7 +400,10 @@ class JobRecordResourceIT {
         JobRecord partialUpdatedJobRecord = new JobRecord();
         partialUpdatedJobRecord.setId(jobRecord.getId());
 
-        partialUpdatedJobRecord.jobAcceptedTimestamp(UPDATED_JOB_ACCEPTED_TIMESTAMP).status(UPDATED_STATUS);
+        partialUpdatedJobRecord
+            .jobAcceptedTimestamp(UPDATED_JOB_ACCEPTED_TIMESTAMP)
+            .status(UPDATED_STATUS)
+            .pausedBucketKey(UPDATED_PAUSED_BUCKET_KEY);
 
         restJobRecordMockMvc
             .perform(
@@ -408,6 +421,7 @@ class JobRecordResourceIT {
         assertThat(testJobRecord.getLastEventTimestamp()).isEqualTo(DEFAULT_LAST_EVENT_TIMESTAMP);
         assertThat(testJobRecord.getLastRecordUpdateTimestamp()).isEqualTo(DEFAULT_LAST_RECORD_UPDATE_TIMESTAMP);
         assertThat(testJobRecord.getStatus()).isEqualTo(UPDATED_STATUS);
+        assertThat(testJobRecord.getPausedBucketKey()).isEqualTo(UPDATED_PAUSED_BUCKET_KEY);
     }
 
     @Test
@@ -426,7 +440,8 @@ class JobRecordResourceIT {
             .jobAcceptedTimestamp(UPDATED_JOB_ACCEPTED_TIMESTAMP)
             .lastEventTimestamp(UPDATED_LAST_EVENT_TIMESTAMP)
             .lastRecordUpdateTimestamp(UPDATED_LAST_RECORD_UPDATE_TIMESTAMP)
-            .status(UPDATED_STATUS);
+            .status(UPDATED_STATUS)
+            .pausedBucketKey(UPDATED_PAUSED_BUCKET_KEY);
 
         restJobRecordMockMvc
             .perform(
@@ -444,6 +459,7 @@ class JobRecordResourceIT {
         assertThat(testJobRecord.getLastEventTimestamp()).isEqualTo(UPDATED_LAST_EVENT_TIMESTAMP);
         assertThat(testJobRecord.getLastRecordUpdateTimestamp()).isEqualTo(UPDATED_LAST_RECORD_UPDATE_TIMESTAMP);
         assertThat(testJobRecord.getStatus()).isEqualTo(UPDATED_STATUS);
+        assertThat(testJobRecord.getPausedBucketKey()).isEqualTo(UPDATED_PAUSED_BUCKET_KEY);
     }
 
     @Test

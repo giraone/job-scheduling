@@ -18,9 +18,11 @@
         "title": "Process"
       },
       "id": "ID",
+      "key": "Key",
       "name": "Name",
       "activation": "Activation",
       "help": {
+        "key": "Alias/Key of process.",
         "name": "Name of process.",
         "activation": "Is process active or paused?"
       }

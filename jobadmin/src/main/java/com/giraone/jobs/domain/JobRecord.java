@@ -51,6 +51,12 @@ public class JobRecord implements Serializable {
     private JobStatusEnum status;
 
     /**
+     * Paused bucket key
+     */
+    @Column(name = "paused_bucket_key")
+    private String pausedBucketKey;
+
+    /**
      * Process to which job belongs.
      */
     @ManyToOne(optional = false)
@@ -124,6 +130,19 @@ public class JobRecord implements Serializable {
         this.status = status;
     }
 
+    public String getPausedBucketKey() {
+        return this.pausedBucketKey;
+    }
+
+    public JobRecord pausedBucketKey(String pausedBucketKey) {
+        this.setPausedBucketKey(pausedBucketKey);
+        return this;
+    }
+
+    public void setPausedBucketKey(String pausedBucketKey) {
+        this.pausedBucketKey = pausedBucketKey;
+    }
+
     public Process getProcess() {
         return this.process;
     }
@@ -165,6 +184,7 @@ public class JobRecord implements Serializable {
             ", lastEventTimestamp='" + getLastEventTimestamp() + "'" +
             ", lastRecordUpdateTimestamp='" + getLastRecordUpdateTimestamp() + "'" +
             ", status='" + getStatus() + "'" +
+            ", pausedBucketKey='" + getPausedBucketKey() + "'" +
             "}";
     }
 }

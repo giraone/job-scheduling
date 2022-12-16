@@ -22,12 +22,14 @@
       "lastEventTimestamp": "Last Event Timestamp",
       "lastRecordUpdateTimestamp": "Last Record Update Timestamp",
       "status": "Status",
+      "pausedBucketKey": "Paused Bucket Key",
       "process": "Process",
       "help": {
         "jobAcceptedTimestamp": "Timestamp, when job was accepted.",
         "lastEventTimestamp": "Timestamp of last status change.",
         "lastRecordUpdateTimestamp": "Timestamp of last status change in materialized record.",
-        "status": "Job status."
+        "status": "Job status.",
+        "pausedBucketKey": "Paused bucket key"
       }
     }
   }
