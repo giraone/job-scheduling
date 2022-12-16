@@ -9,11 +9,14 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 - [x] All events have *message keys* based on [TSID](https://github.com/f4b6a3/tsid-creator)
 - [ ] Migrate event ID from type long to String (TSID). Only within the database it should be a long value.
 - [ ] JobAdmin has to manage the buckets, no only the active/paused boolean
+- [ ] Display buckets in JobAdmin (materialize must handle this)
 
 ### Schedule
 
 - [x] Pausing is added in state *accepted*. Here the job event are either passed to topic `scheduled` or `paused`.
 - [x] The job states are fetched periodically using `@Schedule` in [PausedDecider.java](src/main/java/com/giraone/jobs/schedule/processor/PausedDecider.java)
+- [ ] When a state switches from *active* to *paused*, the processor B01 switches from *running* to *paused*
+- [ ] When a state switches from *paused* to *active*, the processor B01 switches from *paused* to *running*
 - [ ] Partition key - see https://spring.io/blog/2021/02/03/demystifying-spring-cloud-stream-producers-with-apache-kafka-partitions
 - [x] The REST call to `jobadmin` for fetching the process states (paused, active) is tested with an integration test based on [WireMock](https://wiremock.org).
 
@@ -200,30 +203,35 @@ public class EventProcessor {
 
 ```bash
 curl -H "Accept: application/json" -X GET http://localhost:8070/actuator/bindings/processSchedule-in-0
+curl -H "Accept: application/json" -X GET http://localhost:8070/actuator/bindings/processResumeB01-in-0
 ```
 
 ### Stop
 
 ```bash
 curl -d '{"state":"STOPPED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processSchedule-in-0
+curl -d '{"state":"STOPPED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processResumeB01-in-0
 ```
 
 ### Start
 
 ```bash
 curl -d '{"state":"STARTED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processSchedule-in-0
+curl -d '{"state":"STARTED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processResumeB01-in-0
 ```
 
-### Pause - only if `pausable=true`
+### Pause
 
 ```bash
 curl -d '{"state":"PAUSED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processSchedule-in-0
+curl -d '{"state":"PAUSED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processResumeB01-in-0
 ```
 
-### Pause - only if `pausable=true`
+### Pause
 
 ```bash
 curl -d '{"state":"RESUMED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processSchedule-in-0
+curl -d '{"state":"RESUMED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processResumeB01-in-0
 ```
 
 ## Infos and Tutorials
