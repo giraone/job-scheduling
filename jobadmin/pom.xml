@@ -90,6 +90,7 @@
         <properties-maven-plugin.version>1.1.0</properties-maven-plugin.version>
         <sonar-maven-plugin.version>3.9.1.2184</sonar-maven-plugin.version>
         <!-- jhipster-needle-maven-property -->
+        <maven-versions-plugin.version>2.14.0</maven-versions-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -375,6 +376,16 @@
                 <artifactId>modernizer-maven-plugin</artifactId>
             </plugin>
             <!-- jhipster-needle-maven-add-plugin -->
+            
+            <!-- mvn versions:update-parent && mvn versions:update-properties && mvn versions:use-latest-versions -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>${maven-versions-plugin.version}</version>
+                <configuration>
+                    <rulesUri>file:///${project.basedir}/mvn-versions-rules.xml</rulesUri>
+                </configuration>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>

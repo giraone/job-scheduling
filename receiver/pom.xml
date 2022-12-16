@@ -26,6 +26,7 @@
     <reactor-tools.version>3.5.0</reactor-tools.version>
     <!-- Plugin versions and properties -->
     <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
+    <maven-versions-plugin.version>2.14.0</maven-versions-plugin.version>
     <!-- Plugin properties -->
     <junit.utReportFolder>target/test-results/test</junit.utReportFolder>
   </properties>
@@ -172,6 +173,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
+        <version>${maven-versions-plugin.version}</version>
         <configuration>
           <rulesUri>file:///${project.basedir}/mvn-versions-rules.xml</rulesUri>
         </configuration>
