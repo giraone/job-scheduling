@@ -21,7 +21,7 @@ spring:
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
-      start-offset: earliest
+      max-poll-records: 1
     bootstrap-servers: 'localhost:9092'
     jaas:
       enabled: false
@@ -32,6 +32,11 @@ spring:
         mechanism: PLAIN
   cloud:
     stream:
+      default:
+        # this setting dictates whether to commit the offset after each record is processed.
+        ack-each-record: true
+        # Whether to reset offsets on the consumer to the value provided by startOffset.
+        reset-offsets: true
       kafka:
         binder:
           auto-create-topics: false
@@ -63,6 +68,7 @@ spring:
           destination: ${application.topics.queuePausedB01.topic}
           consumer: # consumer properties on each function (processor) level
             auto-startup: false # !!! No auto startup
+            auto-offset-reset: earliest
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
         processResumeB01-A01:
           destination: ${application.topics.queueScheduledA01.topic}
@@ -76,6 +82,7 @@ spring:
           destination: ${application.topics.queuePausedB02.topic}
           consumer: # consumer properties on each function (processor) level
             auto-startup: false # !!! No auto startup
+            auto-offset-reset: earliest
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
         processResumeB02-A01:
           destination: ${application.topics.queueScheduledA01.topic}
