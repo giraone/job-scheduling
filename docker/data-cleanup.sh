@@ -1,5 +1,5 @@
 #!/bin/bash
 
-rm -rf ${CONTAINER_DATA}/control-center
-rm -rf ${CONTAINER_DATA}/kafka-1
-rm -rf ${CONTAINER_DATA}/zk-1
+rm -rf ${CONTAINER_DATA:-./data}/control-center
+rm -rf ${CONTAINER_DATA:-./data}/kafka-1
+rm -rf ${CONTAINER_DATA:-./data}/zk-1
