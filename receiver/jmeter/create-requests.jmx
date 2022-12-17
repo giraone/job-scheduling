@@ -26,6 +26,15 @@
         <stringProp name="HTTPSampler.response_timeout"></stringProp>
       </ConfigTestElement>
       <hashTree/>
+      <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+        <collectionProp name="HeaderManager.headers">
+          <elementProp name="" elementType="Header">
+            <stringProp name="Header.name">Content-Type</stringProp>
+            <stringProp name="Header.value">application/json</stringProp>
+          </elementProp>
+        </collectionProp>
+      </HeaderManager>
+      <hashTree/>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Thread Group" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
@@ -52,9 +61,9 @@ String isoTime = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault()).
 //log.info(&quot;isoTime=&quot; + isoTime);
 vars.put(&quot;isoTime&quot;, isoTime);
 
-long id = System.nanoTime() + ctx.getThreadNum();
-log.info(&quot;id=&quot; + id);
-vars.put(&quot;id&quot;, Long.toString(id));
+long requesterId = System.nanoTime() + ctx.getThreadNum();
+//log.info(&quot;requesterId=&quot; + id);
+vars.put(&quot;requesterId&quot;, Long.toString(requesterId));
 
 String processKey = String.format(&quot;A%02d&quot;, 1 + System.currentTimeMillis() % 3);
 //log.info(&quot;processKey=&quot; + processKey);
@@ -70,7 +79,7 @@ vars.put(&quot;processKey&quot;, processKey);
             <collectionProp name="Arguments.arguments">
               <elementProp name="" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">{&quot;id&quot;: ${id},&quot;processKey&quot;: &quot;${processKey}&quot;,&quot;eventTimestamp&quot;:&quot;${isoTime}&quot;,&quot;payload&quot;:&quot;0123456789&quot;}</stringProp>
+                <stringProp name="Argument.value">{&quot;requesterId&quot;: ${requesterId},&quot;processKey&quot;: &quot;${processKey}&quot;,&quot;eventTimestamp&quot;:&quot;${isoTime}&quot;,&quot;payload&quot;:&quot;0123456789&quot;}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
