@@ -3,9 +3,9 @@
     <span jhiTranslate="jobadminApp.process.home.title">Processes</span>
 
     <div class="d-flex justify-content-end">
-      <button class="btn btn-info me-2" (click)="loadPage()" [disabled]="isLoading">
+      <button class="btn btn-info me-2" (click)="load()" [disabled]="isLoading">
         <fa-icon icon="sync" [spin]="isLoading"></fa-icon>
-        <span jhiTranslate="jobadminApp.process.home.refreshListLabel">Refresh List</span>
+        <span jhiTranslate="jobadminApp.process.home.refreshListLabel">Refresh list</span>
       </button>
 
       <button
@@ -25,24 +25,48 @@
   <jhi-alert></jhi-alert>
 
   <div class="alert alert-warning" id="no-result" *ngIf="processes?.length === 0">
-    <span jhiTranslate="jobadminApp.process.home.notFound">No processes found</span>
+    <span jhiTranslate="jobadminApp.process.home.notFound">No Processes found</span>
   </div>
 
-  <div class="table-responsive" id="entities" *ngIf="processes && processes.length > 0">
+  <div class="table-responsive table-entities" id="entities" *ngIf="processes && processes.length > 0">
     <table class="table table-striped" aria-describedby="page-heading">
       <thead>
-        <tr jhiSort [(predicate)]="predicate" [(ascending)]="ascending" (sortChange)="loadPage()">
-          <th scope="col" jhiSortBy="id"><span jhiTranslate="global.field.id">ID</span> <fa-icon icon="sort"></fa-icon></th>
-          <th scope="col" jhiSortBy="key"><span jhiTranslate="jobadminApp.process.key">Key</span> <fa-icon icon="sort"></fa-icon></th>
-          <th scope="col" jhiSortBy="name"><span jhiTranslate="jobadminApp.process.name">Name</span> <fa-icon icon="sort"></fa-icon></th>
+        <tr jhiSort [(predicate)]="predicate" [(ascending)]="ascending" (sortChange)="navigateToWithComponentValues()">
+          <th scope="col" jhiSortBy="id">
+            <div class="d-flex">
+              <span jhiTranslate="global.field.id">ID</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="key">
+            <div class="d-flex">
+              <span jhiTranslate="jobadminApp.process.key">Key</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="name">
+            <div class="d-flex">
+              <span jhiTranslate="jobadminApp.process.name">Name</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
           <th scope="col" jhiSortBy="activation">
-            <span jhiTranslate="jobadminApp.process.activation">Activation</span> <fa-icon icon="sort"></fa-icon>
+            <div class="d-flex">
+              <span jhiTranslate="jobadminApp.process.activation">Activation</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
           </th>
           <th scope="col" jhiSortBy="agentKey">
-            <span jhiTranslate="jobadminApp.process.agentKey">Agent Key</span> <fa-icon icon="sort"></fa-icon>
+            <div class="d-flex">
+              <span jhiTranslate="jobadminApp.process.agentKey">Agent Key</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
           </th>
           <th scope="col" jhiSortBy="bucketKeyIfPaused">
-            <span jhiTranslate="jobadminApp.process.bucketKeyIfPaused">Bucket Key If Paused</span> <fa-icon icon="sort"></fa-icon>
+            <div class="d-flex">
+              <span jhiTranslate="jobadminApp.process.bucketKeyIfPaused">Bucket Key If Paused</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
           </th>
           <th scope="col"></th>
         </tr>
@@ -98,12 +122,12 @@
     <div class="d-flex justify-content-center">
       <ngb-pagination
         [collectionSize]="totalItems"
-        [(page)]="ngbPaginationPage"
+        [page]="page"
         [pageSize]="itemsPerPage"
         [maxSize]="5"
         [rotate]="true"
         [boundaryLinks]="true"
-        (pageChange)="loadPage($event)"
+        (pageChange)="navigateToPage($event)"
       ></ngb-pagination>
     </div>
   </div>

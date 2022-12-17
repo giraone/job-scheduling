@@ -9,6 +9,5 @@ import { ProcessRoutingModule } from './route/process-routing.module';
 @NgModule({
   imports: [SharedModule, ProcessRoutingModule],
   declarations: [ProcessComponent, ProcessDetailComponent, ProcessUpdateComponent, ProcessDeleteDialogComponent],
-  entryComponents: [ProcessDeleteDialogComponent],
 })
 export class ProcessModule {}

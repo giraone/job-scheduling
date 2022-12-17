@@ -9,6 +9,5 @@ import { JobRecordRoutingModule } from './route/job-record-routing.module';
 @NgModule({
   imports: [SharedModule, JobRecordRoutingModule],
   declarations: [JobRecordComponent, JobRecordDetailComponent, JobRecordUpdateComponent, JobRecordDeleteDialogComponent],
-  entryComponents: [JobRecordDeleteDialogComponent],
 })
 export class JobRecordModule {}

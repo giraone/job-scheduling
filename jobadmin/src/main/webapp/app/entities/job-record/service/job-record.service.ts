@@ -7,7 +7,21 @@ import dayjs from 'dayjs/esm';
 import { isPresent } from 'app/core/util/operators';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
 import { createRequestOption } from 'app/core/request/request-util';
-import { IJobRecord, getJobRecordIdentifier } from '../job-record.model';
+import { IJobRecord, NewJobRecord } from '../job-record.model';
+
+export type PartialUpdateJobRecord = Partial<IJobRecord> & Pick<IJobRecord, 'id'>;
+
+type RestOf<T extends IJobRecord | NewJobRecord> = Omit<T, 'jobAcceptedTimestamp' | 'lastEventTimestamp' | 'lastRecordUpdateTimestamp'> & {
+  jobAcceptedTimestamp?: string | null;
+  lastEventTimestamp?: string | null;
+  lastRecordUpdateTimestamp?: string | null;
+};
+
+export type RestJobRecord = RestOf<IJobRecord>;
+
+export type NewRestJobRecord = RestOf<NewJobRecord>;
+
+export type PartialUpdateRestJobRecord = RestOf<PartialUpdateJobRecord>;
 
 export type EntityResponseType = HttpResponse<IJobRecord>;
 export type EntityArrayResponseType = HttpResponse<IJobRecord[]>;
@@ -18,38 +32,38 @@ export class JobRecordService {
 
   constructor(protected http: HttpClient, protected applicationConfigService: ApplicationConfigService) {}
 
-  create(jobRecord: IJobRecord): Observable<EntityResponseType> {
+  create(jobRecord: NewJobRecord): Observable<EntityResponseType> {
     const copy = this.convertDateFromClient(jobRecord);
     return this.http
-      .post<IJobRecord>(this.resourceUrl, copy, { observe: 'response' })
-      .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));
+      .post<RestJobRecord>(this.resourceUrl, copy, { observe: 'response' })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   update(jobRecord: IJobRecord): Observable<EntityResponseType> {
     const copy = this.convertDateFromClient(jobRecord);
     return this.http
-      .put<IJobRecord>(`${this.resourceUrl}/${getJobRecordIdentifier(jobRecord) as number}`, copy, { observe: 'response' })
-      .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));
+      .put<RestJobRecord>(`${this.resourceUrl}/${this.getJobRecordIdentifier(jobRecord)}`, copy, { observe: 'response' })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
-  partialUpdate(jobRecord: IJobRecord): Observable<EntityResponseType> {
+  partialUpdate(jobRecord: PartialUpdateJobRecord): Observable<EntityResponseType> {
     const copy = this.convertDateFromClient(jobRecord);
     return this.http
-      .patch<IJobRecord>(`${this.resourceUrl}/${getJobRecordIdentifier(jobRecord) as number}`, copy, { observe: 'response' })
-      .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));
+      .patch<RestJobRecord>(`${this.resourceUrl}/${this.getJobRecordIdentifier(jobRecord)}`, copy, { observe: 'response' })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   find(id: number): Observable<EntityResponseType> {
     return this.http
-      .get<IJobRecord>(`${this.resourceUrl}/${id}`, { observe: 'response' })
-      .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));
+      .get<RestJobRecord>(`${this.resourceUrl}/${id}`, { observe: 'response' })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
     return this.http
-      .get<IJobRecord[]>(this.resourceUrl, { params: options, observe: 'response' })
-      .pipe(map((res: EntityArrayResponseType) => this.convertDateArrayFromServer(res)));
+      .get<RestJobRecord[]>(this.resourceUrl, { params: options, observe: 'response' })
+      .pipe(map(res => this.convertResponseArrayFromServer(res)));
   }
 
   delete(id: number): Observable<HttpResponse<{}>> {
@@ -61,16 +75,24 @@ export class JobRecordService {
     return this.http.delete(`${this.resourceUrl}-delete-all`, { observe: 'response' });
   }
 
-  addJobRecordToCollectionIfMissing(
-    jobRecordCollection: IJobRecord[],
-    ...jobRecordsToCheck: (IJobRecord | null | undefined)[]
-  ): IJobRecord[] {
-    const jobRecords: IJobRecord[] = jobRecordsToCheck.filter(isPresent);
+  getJobRecordIdentifier(jobRecord: Pick<IJobRecord, 'id'>): number {
+    return jobRecord.id;
+  }
+
+  compareJobRecord(o1: Pick<IJobRecord, 'id'> | null, o2: Pick<IJobRecord, 'id'> | null): boolean {
+    return o1 && o2 ? this.getJobRecordIdentifier(o1) === this.getJobRecordIdentifier(o2) : o1 === o2;
+  }
+
+  addJobRecordToCollectionIfMissing<Type extends Pick<IJobRecord, 'id'>>(
+    jobRecordCollection: Type[],
+    ...jobRecordsToCheck: (Type | null | undefined)[]
+  ): Type[] {
+    const jobRecords: Type[] = jobRecordsToCheck.filter(isPresent);
     if (jobRecords.length > 0) {
-      const jobRecordCollectionIdentifiers = jobRecordCollection.map(jobRecordItem => getJobRecordIdentifier(jobRecordItem)!);
+      const jobRecordCollectionIdentifiers = jobRecordCollection.map(jobRecordItem => this.getJobRecordIdentifier(jobRecordItem)!);
       const jobRecordsToAdd = jobRecords.filter(jobRecordItem => {
-        const jobRecordIdentifier = getJobRecordIdentifier(jobRecordItem);
-        if (jobRecordIdentifier == null || jobRecordCollectionIdentifiers.includes(jobRecordIdentifier)) {
+        const jobRecordIdentifier = this.getJobRecordIdentifier(jobRecordItem);
+        if (jobRecordCollectionIdentifiers.includes(jobRecordIdentifier)) {
           return false;
         }
         jobRecordCollectionIdentifiers.push(jobRecordIdentifier);
@@ -81,31 +103,33 @@ export class JobRecordService {
     return jobRecordCollection;
   }
 
-  protected convertDateFromClient(jobRecord: IJobRecord): IJobRecord {
-    return Object.assign({}, jobRecord, {
-      jobAcceptedTimestamp: jobRecord.jobAcceptedTimestamp?.isValid() ? jobRecord.jobAcceptedTimestamp.toJSON() : undefined,
-      lastEventTimestamp: jobRecord.lastEventTimestamp?.isValid() ? jobRecord.lastEventTimestamp.toJSON() : undefined,
-      lastRecordUpdateTimestamp: jobRecord.lastRecordUpdateTimestamp?.isValid() ? jobRecord.lastRecordUpdateTimestamp.toJSON() : undefined,
+  protected convertDateFromClient<T extends IJobRecord | NewJobRecord | PartialUpdateJobRecord>(jobRecord: T): RestOf<T> {
+    return {
+      ...jobRecord,
+      jobAcceptedTimestamp: jobRecord.jobAcceptedTimestamp?.toJSON() ?? null,
+      lastEventTimestamp: jobRecord.lastEventTimestamp?.toJSON() ?? null,
+      lastRecordUpdateTimestamp: jobRecord.lastRecordUpdateTimestamp?.toJSON() ?? null,
+    };
+  }
+
+  protected convertDateFromServer(restJobRecord: RestJobRecord): IJobRecord {
+    return {
+      ...restJobRecord,
+      jobAcceptedTimestamp: restJobRecord.jobAcceptedTimestamp ? dayjs(restJobRecord.jobAcceptedTimestamp) : undefined,
+      lastEventTimestamp: restJobRecord.lastEventTimestamp ? dayjs(restJobRecord.lastEventTimestamp) : undefined,
+      lastRecordUpdateTimestamp: restJobRecord.lastRecordUpdateTimestamp ? dayjs(restJobRecord.lastRecordUpdateTimestamp) : undefined,
+    };
+  }
+
+  protected convertResponseFromServer(res: HttpResponse<RestJobRecord>): HttpResponse<IJobRecord> {
+    return res.clone({
+      body: res.body ? this.convertDateFromServer(res.body) : null,
     });
   }
 
-  protected convertDateFromServer(res: EntityResponseType): EntityResponseType {
-    if (res.body) {
-      res.body.jobAcceptedTimestamp = res.body.jobAcceptedTimestamp ? dayjs(res.body.jobAcceptedTimestamp) : undefined;
-      res.body.lastEventTimestamp = res.body.lastEventTimestamp ? dayjs(res.body.lastEventTimestamp) : undefined;
-      res.body.lastRecordUpdateTimestamp = res.body.lastRecordUpdateTimestamp ? dayjs(res.body.lastRecordUpdateTimestamp) : undefined;
-    }
-    return res;
-  }
-
-  protected convertDateArrayFromServer(res: EntityArrayResponseType): EntityArrayResponseType {
-    if (res.body) {
-      res.body.forEach((jobRecord: IJobRecord) => {
-        jobRecord.jobAcceptedTimestamp = jobRecord.jobAcceptedTimestamp ? dayjs(jobRecord.jobAcceptedTimestamp) : undefined;
-        jobRecord.lastEventTimestamp = jobRecord.lastEventTimestamp ? dayjs(jobRecord.lastEventTimestamp) : undefined;
-        jobRecord.lastRecordUpdateTimestamp = jobRecord.lastRecordUpdateTimestamp ? dayjs(jobRecord.lastRecordUpdateTimestamp) : undefined;
-      });
-    }
-    return res;
+  protected convertResponseArrayFromServer(res: HttpResponse<RestJobRecord[]>): HttpResponse<IJobRecord[]> {
+    return res.clone({
+      body: res.body ? res.body.map(item => this.convertDateFromServer(item)) : null,
+    });
   }
 }

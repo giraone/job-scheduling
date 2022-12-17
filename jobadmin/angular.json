@@ -98,7 +98,6 @@
       }
     }
   },
-  "defaultProject": "jobadmin",
   "cli": {
     "cache": {
       "enabled": true,

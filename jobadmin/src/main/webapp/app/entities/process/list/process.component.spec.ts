@@ -8,11 +8,13 @@ import { of } from 'rxjs';
 import { ProcessService } from '../service/process.service';
 
 import { ProcessComponent } from './process.component';
+import SpyInstance = jest.SpyInstance;
 
 describe('Process Management Component', () => {
   let comp: ProcessComponent;
   let fixture: ComponentFixture<ProcessComponent>;
   let service: ProcessService;
+  let routerNavigateSpy: SpyInstance<Promise<boolean>>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -32,6 +34,7 @@ describe('Process Management Component', () => {
                 sort: 'id,desc',
               })
             ),
+            snapshot: { queryParams: {} },
           },
         },
       ],
@@ -42,6 +45,7 @@ describe('Process Management Component', () => {
     fixture = TestBed.createComponent(ProcessComponent);
     comp = fixture.componentInstance;
     service = TestBed.inject(ProcessService);
+    routerNavigateSpy = jest.spyOn(comp.router, 'navigate');
 
     const headers = new HttpHeaders();
     jest.spyOn(service, 'query').mockReturnValue(
@@ -63,13 +67,22 @@ describe('Process Management Component', () => {
     expect(comp.processes?.[0]).toEqual(expect.objectContaining({ id: 123 }));
   });
 
+  describe('trackId', () => {
+    it('Should forward to processService', () => {
+      const entity = { id: 123 };
+      jest.spyOn(service, 'getProcessIdentifier');
+      const id = comp.trackId(0, entity);
+      expect(service.getProcessIdentifier).toHaveBeenCalledWith(entity);
+      expect(id).toBe(entity.id);
+    });
+  });
+
   it('should load a page', () => {
     // WHEN
-    comp.loadPage(1);
+    comp.navigateToPage(1);
 
     // THEN
-    expect(service.query).toHaveBeenCalled();
-    expect(comp.processes?.[0]).toEqual(expect.objectContaining({ id: 123 }));
+    expect(routerNavigateSpy).toHaveBeenCalled();
   });
 
   it('should calculate the sort attribute for an id', () => {
@@ -77,20 +90,24 @@ describe('Process Management Component', () => {
     comp.ngOnInit();
 
     // THEN
-    expect(service.query).toHaveBeenCalledWith(expect.objectContaining({ sort: ['id,desc'] }));
+    expect(service.query).toHaveBeenLastCalledWith(expect.objectContaining({ sort: ['id,desc'] }));
   });
 
   it('should calculate the sort attribute for a non-id attribute', () => {
-    // INIT
-    comp.ngOnInit();
-
     // GIVEN
     comp.predicate = 'name';
 
     // WHEN
-    comp.loadPage(1);
+    comp.navigateToWithComponentValues();
 
     // THEN
-    expect(service.query).toHaveBeenLastCalledWith(expect.objectContaining({ sort: ['name,desc', 'id'] }));
+    expect(routerNavigateSpy).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        queryParams: expect.objectContaining({
+          sort: ['name,asc'],
+        }),
+      })
+    );
   });
 });

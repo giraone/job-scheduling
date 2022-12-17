@@ -6,13 +6,14 @@ import { JobRecordComponent } from '../list/job-record.component';
 import { JobRecordDetailComponent } from '../detail/job-record-detail.component';
 import { JobRecordUpdateComponent } from '../update/job-record-update.component';
 import { JobRecordRoutingResolveService } from './job-record-routing-resolve.service';
+import { ASC } from 'app/config/navigation.constants';
 
 const jobRecordRoute: Routes = [
   {
     path: '',
     component: JobRecordComponent,
     data: {
-      defaultSort: 'id,asc',
+      defaultSort: 'id,' + ASC,
     },
     canActivate: [UserRouteAccessService],
   },

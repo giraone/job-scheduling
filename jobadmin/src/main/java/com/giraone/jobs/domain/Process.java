@@ -10,6 +10,7 @@ import javax.validation.constraints.*;
  */
 @Entity
 @Table(name = "process")
+@SuppressWarnings("common-java:DuplicatedBlocks")
 public class Process implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -131,6 +132,7 @@ public class Process implements Serializable {
     }
 
     public void setBucketKeyIfPaused(String bucketKeyIfPaused) {
+        // ADAPTED
         this.bucketKeyIfPaused = "".equals(bucketKeyIfPaused) ? null : bucketKeyIfPaused;
     }
 

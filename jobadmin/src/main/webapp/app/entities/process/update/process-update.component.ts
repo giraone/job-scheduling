@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
-import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
-import { IProcess, Process } from '../process.model';
+import { ProcessFormService, ProcessFormGroup } from './process-form.service';
+import { IProcess } from '../process.model';
 import { ProcessService } from '../service/process.service';
 import { ActivationEnum } from 'app/entities/enumerations/activation-enum.model';
 
@@ -15,22 +15,23 @@ import { ActivationEnum } from 'app/entities/enumerations/activation-enum.model'
 })
 export class ProcessUpdateComponent implements OnInit {
   isSaving = false;
+  process: IProcess | null = null;
   activationEnumValues = Object.keys(ActivationEnum);
 
-  editForm = this.fb.group({
-    id: [],
-    key: [null, [Validators.required]],
-    name: [null, [Validators.required]],
-    activation: [null, [Validators.required]],
-    agentKey: [],
-    bucketKeyIfPaused: [],
-  });
+  editForm: ProcessFormGroup = this.processFormService.createProcessFormGroup();
 
-  constructor(protected processService: ProcessService, protected activatedRoute: ActivatedRoute, protected fb: FormBuilder) {}
+  constructor(
+    protected processService: ProcessService,
+    protected processFormService: ProcessFormService,
+    protected activatedRoute: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(({ process }) => {
-      this.updateForm(process);
+      this.process = process;
+      if (process) {
+        this.updateForm(process);
+      }
     });
   }
 
@@ -40,8 +41,8 @@ export class ProcessUpdateComponent implements OnInit {
 
   save(): void {
     this.isSaving = true;
-    const process = this.createFromForm();
-    if (process.id !== undefined) {
+    const process = this.processFormService.getProcess(this.editForm);
+    if (process.id !== null) {
       this.subscribeToSaveResponse(this.processService.update(process));
     } else {
       this.subscribeToSaveResponse(this.processService.create(process));
@@ -68,25 +69,7 @@ export class ProcessUpdateComponent implements OnInit {
   }
 
   protected updateForm(process: IProcess): void {
-    this.editForm.patchValue({
-      id: process.id,
-      key: process.key,
-      name: process.name,
-      activation: process.activation,
-      agentKey: process.agentKey,
-      bucketKeyIfPaused: process.bucketKeyIfPaused,
-    });
-  }
-
-  protected createFromForm(): IProcess {
-    return {
-      ...new Process(),
-      id: this.editForm.get(['id'])!.value,
-      key: this.editForm.get(['key'])!.value,
-      name: this.editForm.get(['name'])!.value,
-      activation: this.editForm.get(['activation'])!.value,
-      agentKey: this.editForm.get(['agentKey'])!.value,
-      bucketKeyIfPaused: this.editForm.get(['bucketKeyIfPaused'])!.value,
-    };
+    this.process = process;
+    this.processFormService.resetForm(this.editForm, process);
   }
 }

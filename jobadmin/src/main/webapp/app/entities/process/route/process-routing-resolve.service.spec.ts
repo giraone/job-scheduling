@@ -5,7 +5,7 @@ import { ActivatedRouteSnapshot, ActivatedRoute, Router, convertToParamMap } fro
 import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
 
-import { IProcess, Process } from '../process.model';
+import { IProcess } from '../process.model';
 import { ProcessService } from '../service/process.service';
 
 import { ProcessRoutingResolveService } from './process-routing-resolve.service';
@@ -15,7 +15,7 @@ describe('Process routing resolve service', () => {
   let mockActivatedRouteSnapshot: ActivatedRouteSnapshot;
   let routingResolveService: ProcessRoutingResolveService;
   let service: ProcessService;
-  let resultProcess: IProcess | undefined;
+  let resultProcess: IProcess | null | undefined;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -55,7 +55,7 @@ describe('Process routing resolve service', () => {
       expect(resultProcess).toEqual({ id: 123 });
     });
 
-    it('should return new IProcess if id is not provided', () => {
+    it('should return null if id is not provided', () => {
       // GIVEN
       service.find = jest.fn();
       mockActivatedRouteSnapshot.params = {};
@@ -67,12 +67,12 @@ describe('Process routing resolve service', () => {
 
       // THEN
       expect(service.find).not.toBeCalled();
-      expect(resultProcess).toEqual(new Process());
+      expect(resultProcess).toEqual(null);
     });
 
     it('should route to 404 page if data not found in server', () => {
       // GIVEN
-      jest.spyOn(service, 'find').mockReturnValue(of(new HttpResponse({ body: null as unknown as Process })));
+      jest.spyOn(service, 'find').mockReturnValue(of(new HttpResponse<IProcess>({ body: null })));
       mockActivatedRouteSnapshot.params = { id: 123 };
 
       // WHEN

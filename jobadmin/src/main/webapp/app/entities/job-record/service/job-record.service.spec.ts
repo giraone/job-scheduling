@@ -1,19 +1,22 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import dayjs from 'dayjs/esm';
 
-import { DATE_TIME_FORMAT } from 'app/config/input.constants';
-import { JobStatusEnum } from 'app/entities/enumerations/job-status-enum.model';
-import { IJobRecord, JobRecord } from '../job-record.model';
+import { IJobRecord } from '../job-record.model';
+import { sampleWithRequiredData, sampleWithNewData, sampleWithPartialData, sampleWithFullData } from '../job-record.test-samples';
 
-import { JobRecordService } from './job-record.service';
+import { JobRecordService, RestJobRecord } from './job-record.service';
+
+const requireRestSample: RestJobRecord = {
+  ...sampleWithRequiredData,
+  jobAcceptedTimestamp: sampleWithRequiredData.jobAcceptedTimestamp?.toJSON(),
+  lastEventTimestamp: sampleWithRequiredData.lastEventTimestamp?.toJSON(),
+  lastRecordUpdateTimestamp: sampleWithRequiredData.lastRecordUpdateTimestamp?.toJSON(),
+};
 
 describe('JobRecord Service', () => {
   let service: JobRecordService;
   let httpMock: HttpTestingController;
-  let elemDefault: IJobRecord;
   let expectedResult: IJobRecord | IJobRecord[] | boolean | null;
-  let currentDate: dayjs.Dayjs;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -22,57 +25,27 @@ describe('JobRecord Service', () => {
     expectedResult = null;
     service = TestBed.inject(JobRecordService);
     httpMock = TestBed.inject(HttpTestingController);
-    currentDate = dayjs();
-
-    elemDefault = {
-      id: 0,
-      jobAcceptedTimestamp: currentDate,
-      lastEventTimestamp: currentDate,
-      lastRecordUpdateTimestamp: currentDate,
-      status: JobStatusEnum.ACCEPTED,
-      pausedBucketKey: 'AAAAAAA',
-    };
   });
 
   describe('Service methods', () => {
     it('should find an element', () => {
-      const returnedFromService = Object.assign(
-        {
-          jobAcceptedTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          lastEventTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          lastRecordUpdateTimestamp: currentDate.format(DATE_TIME_FORMAT),
-        },
-        elemDefault
-      );
+      const returnedFromService = { ...requireRestSample };
+      const expected = { ...sampleWithRequiredData };
 
       service.find(123).subscribe(resp => (expectedResult = resp.body));
 
       const req = httpMock.expectOne({ method: 'GET' });
       req.flush(returnedFromService);
-      expect(expectedResult).toMatchObject(elemDefault);
+      expect(expectedResult).toMatchObject(expected);
     });
 
     it('should create a JobRecord', () => {
-      const returnedFromService = Object.assign(
-        {
-          id: 0,
-          jobAcceptedTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          lastEventTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          lastRecordUpdateTimestamp: currentDate.format(DATE_TIME_FORMAT),
-        },
-        elemDefault
-      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const jobRecord = { ...sampleWithNewData };
+      const returnedFromService = { ...requireRestSample };
+      const expected = { ...sampleWithRequiredData };
 
-      const expected = Object.assign(
-        {
-          jobAcceptedTimestamp: currentDate,
-          lastEventTimestamp: currentDate,
-          lastRecordUpdateTimestamp: currentDate,
-        },
-        returnedFromService
-      );
-
-      service.create(new JobRecord()).subscribe(resp => (expectedResult = resp.body));
+      service.create(jobRecord).subscribe(resp => (expectedResult = resp.body));
 
       const req = httpMock.expectOne({ method: 'POST' });
       req.flush(returnedFromService);
@@ -80,28 +53,11 @@ describe('JobRecord Service', () => {
     });
 
     it('should update a JobRecord', () => {
-      const returnedFromService = Object.assign(
-        {
-          id: 1,
-          jobAcceptedTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          lastEventTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          lastRecordUpdateTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          status: 'BBBBBB',
-          pausedBucketKey: 'BBBBBB',
-        },
-        elemDefault
-      );
+      const jobRecord = { ...sampleWithRequiredData };
+      const returnedFromService = { ...requireRestSample };
+      const expected = { ...sampleWithRequiredData };
 
-      const expected = Object.assign(
-        {
-          jobAcceptedTimestamp: currentDate,
-          lastEventTimestamp: currentDate,
-          lastRecordUpdateTimestamp: currentDate,
-        },
-        returnedFromService
-      );
-
-      service.update(expected).subscribe(resp => (expectedResult = resp.body));
+      service.update(jobRecord).subscribe(resp => (expectedResult = resp.body));
 
       const req = httpMock.expectOne({ method: 'PUT' });
       req.flush(returnedFromService);
@@ -109,25 +65,9 @@ describe('JobRecord Service', () => {
     });
 
     it('should partial update a JobRecord', () => {
-      const patchObject = Object.assign(
-        {
-          lastEventTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          lastRecordUpdateTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          pausedBucketKey: 'BBBBBB',
-        },
-        new JobRecord()
-      );
-
-      const returnedFromService = Object.assign(patchObject, elemDefault);
-
-      const expected = Object.assign(
-        {
-          jobAcceptedTimestamp: currentDate,
-          lastEventTimestamp: currentDate,
-          lastRecordUpdateTimestamp: currentDate,
-        },
-        returnedFromService
-      );
+      const patchObject = { ...sampleWithPartialData };
+      const returnedFromService = { ...requireRestSample };
+      const expected = { ...sampleWithRequiredData };
 
       service.partialUpdate(patchObject).subscribe(resp => (expectedResult = resp.body));
 
@@ -137,81 +77,66 @@ describe('JobRecord Service', () => {
     });
 
     it('should return a list of JobRecord', () => {
-      const returnedFromService = Object.assign(
-        {
-          id: 1,
-          jobAcceptedTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          lastEventTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          lastRecordUpdateTimestamp: currentDate.format(DATE_TIME_FORMAT),
-          status: 'BBBBBB',
-          pausedBucketKey: 'BBBBBB',
-        },
-        elemDefault
-      );
+      const returnedFromService = { ...requireRestSample };
 
-      const expected = Object.assign(
-        {
-          jobAcceptedTimestamp: currentDate,
-          lastEventTimestamp: currentDate,
-          lastRecordUpdateTimestamp: currentDate,
-        },
-        returnedFromService
-      );
+      const expected = { ...sampleWithRequiredData };
 
       service.query().subscribe(resp => (expectedResult = resp.body));
 
       const req = httpMock.expectOne({ method: 'GET' });
       req.flush([returnedFromService]);
       httpMock.verify();
-      expect(expectedResult).toContainEqual(expected);
+      expect(expectedResult).toMatchObject([expected]);
     });
 
     it('should delete a JobRecord', () => {
+      const expected = true;
+
       service.delete(123).subscribe(resp => (expectedResult = resp.ok));
 
       const req = httpMock.expectOne({ method: 'DELETE' });
       req.flush({ status: 200 });
-      expect(expectedResult);
+      expect(expectedResult).toBe(expected);
     });
 
     describe('addJobRecordToCollectionIfMissing', () => {
       it('should add a JobRecord to an empty array', () => {
-        const jobRecord: IJobRecord = { id: 123 };
+        const jobRecord: IJobRecord = sampleWithRequiredData;
         expectedResult = service.addJobRecordToCollectionIfMissing([], jobRecord);
         expect(expectedResult).toHaveLength(1);
         expect(expectedResult).toContain(jobRecord);
       });
 
       it('should not add a JobRecord to an array that contains it', () => {
-        const jobRecord: IJobRecord = { id: 123 };
+        const jobRecord: IJobRecord = sampleWithRequiredData;
         const jobRecordCollection: IJobRecord[] = [
           {
             ...jobRecord,
           },
-          { id: 456 },
+          sampleWithPartialData,
         ];
         expectedResult = service.addJobRecordToCollectionIfMissing(jobRecordCollection, jobRecord);
         expect(expectedResult).toHaveLength(2);
       });
 
       it("should add a JobRecord to an array that doesn't contain it", () => {
-        const jobRecord: IJobRecord = { id: 123 };
-        const jobRecordCollection: IJobRecord[] = [{ id: 456 }];
+        const jobRecord: IJobRecord = sampleWithRequiredData;
+        const jobRecordCollection: IJobRecord[] = [sampleWithPartialData];
         expectedResult = service.addJobRecordToCollectionIfMissing(jobRecordCollection, jobRecord);
         expect(expectedResult).toHaveLength(2);
         expect(expectedResult).toContain(jobRecord);
       });
 
       it('should add only unique JobRecord to an array', () => {
-        const jobRecordArray: IJobRecord[] = [{ id: 123 }, { id: 456 }, { id: 17919 }];
-        const jobRecordCollection: IJobRecord[] = [{ id: 123 }];
+        const jobRecordArray: IJobRecord[] = [sampleWithRequiredData, sampleWithPartialData, sampleWithFullData];
+        const jobRecordCollection: IJobRecord[] = [sampleWithRequiredData];
         expectedResult = service.addJobRecordToCollectionIfMissing(jobRecordCollection, ...jobRecordArray);
         expect(expectedResult).toHaveLength(3);
       });
 
       it('should accept varargs', () => {
-        const jobRecord: IJobRecord = { id: 123 };
-        const jobRecord2: IJobRecord = { id: 456 };
+        const jobRecord: IJobRecord = sampleWithRequiredData;
+        const jobRecord2: IJobRecord = sampleWithPartialData;
         expectedResult = service.addJobRecordToCollectionIfMissing([], jobRecord, jobRecord2);
         expect(expectedResult).toHaveLength(2);
         expect(expectedResult).toContain(jobRecord);
@@ -219,16 +144,60 @@ describe('JobRecord Service', () => {
       });
 
       it('should accept null and undefined values', () => {
-        const jobRecord: IJobRecord = { id: 123 };
+        const jobRecord: IJobRecord = sampleWithRequiredData;
         expectedResult = service.addJobRecordToCollectionIfMissing([], null, jobRecord, undefined);
         expect(expectedResult).toHaveLength(1);
         expect(expectedResult).toContain(jobRecord);
       });
 
       it('should return initial array if no JobRecord is added', () => {
-        const jobRecordCollection: IJobRecord[] = [{ id: 123 }];
+        const jobRecordCollection: IJobRecord[] = [sampleWithRequiredData];
         expectedResult = service.addJobRecordToCollectionIfMissing(jobRecordCollection, undefined, null);
         expect(expectedResult).toEqual(jobRecordCollection);
+      });
+    });
+
+    describe('compareJobRecord', () => {
+      it('Should return true if both entities are null', () => {
+        const entity1 = null;
+        const entity2 = null;
+
+        const compareResult = service.compareJobRecord(entity1, entity2);
+
+        expect(compareResult).toEqual(true);
+      });
+
+      it('Should return false if one entity is null', () => {
+        const entity1 = { id: 123 };
+        const entity2 = null;
+
+        const compareResult1 = service.compareJobRecord(entity1, entity2);
+        const compareResult2 = service.compareJobRecord(entity2, entity1);
+
+        expect(compareResult1).toEqual(false);
+        expect(compareResult2).toEqual(false);
+      });
+
+      it('Should return false if primaryKey differs', () => {
+        const entity1 = { id: 123 };
+        const entity2 = { id: 456 };
+
+        const compareResult1 = service.compareJobRecord(entity1, entity2);
+        const compareResult2 = service.compareJobRecord(entity2, entity1);
+
+        expect(compareResult1).toEqual(false);
+        expect(compareResult2).toEqual(false);
+      });
+
+      it('Should return false if primaryKey matches', () => {
+        const entity1 = { id: 123 };
+        const entity2 = { id: 123 };
+
+        const compareResult1 = service.compareJobRecord(entity1, entity2);
+        const compareResult2 = service.compareJobRecord(entity2, entity1);
+
+        expect(compareResult1).toEqual(true);
+        expect(compareResult2).toEqual(true);
       });
     });
   });

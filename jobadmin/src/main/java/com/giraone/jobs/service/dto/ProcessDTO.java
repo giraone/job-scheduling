@@ -10,6 +10,7 @@ import javax.validation.constraints.*;
  * A DTO for the {@link com.giraone.jobs.domain.Process} entity.
  */
 @Schema(description = "Process (the job type).")
+@SuppressWarnings("common-java:DuplicatedBlocks")
 public class ProcessDTO implements Serializable {
 
     private Long id;

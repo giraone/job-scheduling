@@ -286,7 +286,7 @@ class JobRecordResourceIT {
 
     @Test
     @Transactional
-    void putNewJobRecord() throws Exception {
+    void putExistingJobRecord() throws Exception {
         // Initialize the database
         jobRecordRepository.saveAndFlush(jobRecord);
 

@@ -51,7 +51,7 @@ public class JobRecordService {
      * @return the persisted entity.
      */
     public JobRecordDTO update(JobRecordDTO jobRecordDTO) {
-        log.debug("Request to save JobRecord : {}", jobRecordDTO);
+        log.debug("Request to update JobRecord : {}", jobRecordDTO);
         JobRecord jobRecord = jobRecordMapper.toEntity(jobRecordDTO);
         jobRecord = jobRecordRepository.save(jobRecord);
         return jobRecordMapper.toDto(jobRecord);

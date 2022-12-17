@@ -148,6 +148,7 @@ public class JobRecordResource {
         );
     }
 
+    // ADAPTED
     /**
      * {@code GET  /job-records} : get all the jobRecords.
      *
@@ -195,6 +196,7 @@ public class JobRecordResource {
             .build();
     }
 
+    // ADAPTED
     /**
      * {@code DELETE  /job-records} : delete all jobRecord.
      */

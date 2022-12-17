@@ -1,6 +1,7 @@
 package com.giraone.jobs;
 
 import com.giraone.jobs.config.ApplicationProperties;
+import com.giraone.jobs.config.CRLFLogConverter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -84,6 +85,7 @@ public class JobadminApp {
             log.warn("The host name could not be determined, using `localhost` as fallback");
         }
         log.info(
+            CRLFLogConverter.CRLF_SAFE_MARKER,
             "\n----------------------------------------------------------\n\t" +
             "Application '{}' is running! Access URLs:\n\t" +
             "Local: \t\t{}://localhost:{}{}\n\t" +

@@ -8,7 +8,7 @@
       <div>
         <jhi-alert-error></jhi-alert-error>
 
-        <div class="row mb-3" [hidden]="editForm.get('id')!.value == null">
+        <div class="row mb-3" *ngIf="editForm.controls.id.value !== null">
           <label class="form-label" jhiTranslate="global.field.id" for="field_id">ID</label>
           <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
         </div>
@@ -47,8 +47,8 @@
             </small>
             <small
               class="form-text text-danger"
-              [hidden]="!editForm.get('jobAcceptedTimestamp')?.errors?.ZonedDateTimelocal"
-              jhiTranslate="entity.validation.ZonedDateTimelocal"
+              [hidden]="!editForm.get('jobAcceptedTimestamp')?.errors?.datetimelocal"
+              jhiTranslate="entity.validation.datetimelocal"
             >
               This field should be a date and time.
             </small>
@@ -89,8 +89,8 @@
             </small>
             <small
               class="form-text text-danger"
-              [hidden]="!editForm.get('lastEventTimestamp')?.errors?.ZonedDateTimelocal"
-              jhiTranslate="entity.validation.ZonedDateTimelocal"
+              [hidden]="!editForm.get('lastEventTimestamp')?.errors?.datetimelocal"
+              jhiTranslate="entity.validation.datetimelocal"
             >
               This field should be a date and time.
             </small>
@@ -131,8 +131,8 @@
             </small>
             <small
               class="form-text text-danger"
-              [hidden]="!editForm.get('lastRecordUpdateTimestamp')?.errors?.ZonedDateTimelocal"
-              jhiTranslate="entity.validation.ZonedDateTimelocal"
+              [hidden]="!editForm.get('lastRecordUpdateTimestamp')?.errors?.datetimelocal"
+              jhiTranslate="entity.validation.datetimelocal"
             >
               This field should be a date and time.
             </small>
@@ -180,12 +180,16 @@
 
         <div class="row mb-3">
           <label class="form-label" jhiTranslate="jobadminApp.jobRecord.process" for="field_process">Process</label>
-          <select class="form-control" id="field_process" data-cy="process" name="process" formControlName="process">
+          <select
+            class="form-control"
+            id="field_process"
+            data-cy="process"
+            name="process"
+            formControlName="process"
+            [compareWith]="compareProcess"
+          >
             <option *ngIf="!editForm.get('process')!.value" [ngValue]="null" selected></option>
-            <option
-              [ngValue]="processOption.id === editForm.get('process')!.value?.id ? editForm.get('process')!.value : processOption"
-              *ngFor="let processOption of processesSharedCollection; trackBy: trackProcessById"
-            >
+            <option [ngValue]="processOption" *ngFor="let processOption of processesSharedCollection">
               {{ processOption.id }} - {{ processOption.key }} - {{ processOption.name }}
             </option>
           </select>

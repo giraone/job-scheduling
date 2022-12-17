@@ -11,6 +11,7 @@ import javax.validation.constraints.*;
  * A DTO for the {@link com.giraone.jobs.domain.JobRecord} entity.
  */
 @Schema(description = "A single materialized job record.")
+@SuppressWarnings("common-java:DuplicatedBlocks")
 public class JobRecordDTO implements Serializable {
 
     private Long id;

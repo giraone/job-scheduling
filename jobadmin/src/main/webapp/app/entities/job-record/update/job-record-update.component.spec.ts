@@ -6,8 +6,9 @@ import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of, Subject, from } from 'rxjs';
 
+import { JobRecordFormService } from './job-record-form.service';
 import { JobRecordService } from '../service/job-record.service';
-import { IJobRecord, JobRecord } from '../job-record.model';
+import { IJobRecord } from '../job-record.model';
 import { IProcess } from 'app/entities/process/process.model';
 import { ProcessService } from 'app/entities/process/service/process.service';
 
@@ -17,6 +18,7 @@ describe('JobRecord Management Update Component', () => {
   let comp: JobRecordUpdateComponent;
   let fixture: ComponentFixture<JobRecordUpdateComponent>;
   let activatedRoute: ActivatedRoute;
+  let jobRecordFormService: JobRecordFormService;
   let jobRecordService: JobRecordService;
   let processService: ProcessService;
 
@@ -39,6 +41,7 @@ describe('JobRecord Management Update Component', () => {
 
     fixture = TestBed.createComponent(JobRecordUpdateComponent);
     activatedRoute = TestBed.inject(ActivatedRoute);
+    jobRecordFormService = TestBed.inject(JobRecordFormService);
     jobRecordService = TestBed.inject(JobRecordService);
     processService = TestBed.inject(ProcessService);
 
@@ -61,7 +64,10 @@ describe('JobRecord Management Update Component', () => {
       comp.ngOnInit();
 
       expect(processService.query).toHaveBeenCalled();
-      expect(processService.addProcessToCollectionIfMissing).toHaveBeenCalledWith(processCollection, ...additionalProcesses);
+      expect(processService.addProcessToCollectionIfMissing).toHaveBeenCalledWith(
+        processCollection,
+        ...additionalProcesses.map(expect.objectContaining)
+      );
       expect(comp.processesSharedCollection).toEqual(expectedCollection);
     });
 
@@ -73,16 +79,17 @@ describe('JobRecord Management Update Component', () => {
       activatedRoute.data = of({ jobRecord });
       comp.ngOnInit();
 
-      expect(comp.editForm.value).toEqual(expect.objectContaining(jobRecord));
       expect(comp.processesSharedCollection).toContain(process);
+      expect(comp.jobRecord).toEqual(jobRecord);
     });
   });
 
   describe('save', () => {
     it('Should call update service on save for existing entity', () => {
       // GIVEN
-      const saveSubject = new Subject<HttpResponse<JobRecord>>();
+      const saveSubject = new Subject<HttpResponse<IJobRecord>>();
       const jobRecord = { id: 123 };
+      jest.spyOn(jobRecordFormService, 'getJobRecord').mockReturnValue(jobRecord);
       jest.spyOn(jobRecordService, 'update').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ jobRecord });
@@ -95,18 +102,20 @@ describe('JobRecord Management Update Component', () => {
       saveSubject.complete();
 
       // THEN
+      expect(jobRecordFormService.getJobRecord).toHaveBeenCalled();
       expect(comp.previousState).toHaveBeenCalled();
-      expect(jobRecordService.update).toHaveBeenCalledWith(jobRecord);
+      expect(jobRecordService.update).toHaveBeenCalledWith(expect.objectContaining(jobRecord));
       expect(comp.isSaving).toEqual(false);
     });
 
     it('Should call create service on save for new entity', () => {
       // GIVEN
-      const saveSubject = new Subject<HttpResponse<JobRecord>>();
-      const jobRecord = new JobRecord();
+      const saveSubject = new Subject<HttpResponse<IJobRecord>>();
+      const jobRecord = { id: 123 };
+      jest.spyOn(jobRecordFormService, 'getJobRecord').mockReturnValue({ id: null });
       jest.spyOn(jobRecordService, 'create').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
-      activatedRoute.data = of({ jobRecord });
+      activatedRoute.data = of({ jobRecord: null });
       comp.ngOnInit();
 
       // WHEN
@@ -116,14 +125,15 @@ describe('JobRecord Management Update Component', () => {
       saveSubject.complete();
 
       // THEN
-      expect(jobRecordService.create).toHaveBeenCalledWith(jobRecord);
+      expect(jobRecordFormService.getJobRecord).toHaveBeenCalled();
+      expect(jobRecordService.create).toHaveBeenCalled();
       expect(comp.isSaving).toEqual(false);
       expect(comp.previousState).toHaveBeenCalled();
     });
 
     it('Should set isSaving to false on error', () => {
       // GIVEN
-      const saveSubject = new Subject<HttpResponse<JobRecord>>();
+      const saveSubject = new Subject<HttpResponse<IJobRecord>>();
       const jobRecord = { id: 123 };
       jest.spyOn(jobRecordService, 'update').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
@@ -136,18 +146,20 @@ describe('JobRecord Management Update Component', () => {
       saveSubject.error('This is an error!');
 
       // THEN
-      expect(jobRecordService.update).toHaveBeenCalledWith(jobRecord);
+      expect(jobRecordService.update).toHaveBeenCalled();
       expect(comp.isSaving).toEqual(false);
       expect(comp.previousState).not.toHaveBeenCalled();
     });
   });
 
-  describe('Tracking relationships identifiers', () => {
-    describe('trackProcessById', () => {
-      it('Should return tracked Process primary key', () => {
+  describe('Compare relationships', () => {
+    describe('compareProcess', () => {
+      it('Should forward to processService', () => {
         const entity = { id: 123 };
-        const trackResult = comp.trackProcessById(0, entity);
-        expect(trackResult).toEqual(entity.id);
+        const entity2 = { id: 456 };
+        jest.spyOn(processService, 'compareProcess');
+        comp.compareProcess(entity, entity2);
+        expect(processService.compareProcess).toHaveBeenCalledWith(entity, entity2);
       });
     });
   });

@@ -50,7 +50,7 @@ public class ProcessService {
      * @return the persisted entity.
      */
     public ProcessDTO update(ProcessDTO processDTO) {
-        log.debug("Request to save Process : {}", processDTO);
+        log.debug("Request to update Process : {}", processDTO);
         Process process = processMapper.toEntity(processDTO);
         process = processRepository.save(process);
         return processMapper.toDto(process);

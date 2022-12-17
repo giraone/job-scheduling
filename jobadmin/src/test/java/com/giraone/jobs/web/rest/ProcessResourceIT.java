@@ -245,7 +245,7 @@ class ProcessResourceIT {
 
     @Test
     @Transactional
-    void putNewProcess() throws Exception {
+    void putExistingProcess() throws Exception {
         // Initialize the database
         processRepository.saveAndFlush(process);
 

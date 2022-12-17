@@ -7,9 +7,8 @@
 
   <div class="modal-body">
     <jhi-alert-error></jhi-alert-error>
-
     <p id="jhi-delete-jobRecord-heading" jhiTranslate="jobadminApp.jobRecord.delete.question" [translateValues]="{ id: jobRecord.id }">
-      Are you sure you want to delete this Job Record?
+      Are you sure you want to delete Job Record {{ jobRecord.id }}?
     </p>
   </div>
 

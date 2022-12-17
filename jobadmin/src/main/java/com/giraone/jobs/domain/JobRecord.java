@@ -11,6 +11,7 @@ import javax.validation.constraints.*;
  */
 @Entity
 @Table(name = "job_record")
+@SuppressWarnings("common-java:DuplicatedBlocks")
 public class JobRecord implements Serializable {
 
     private static final long serialVersionUID = 1L;

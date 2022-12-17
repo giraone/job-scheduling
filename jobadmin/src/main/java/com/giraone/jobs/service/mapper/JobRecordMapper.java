@@ -11,7 +11,7 @@ import org.mapstruct.*;
  */
 @Mapper(componentModel = "spring")
 public interface JobRecordMapper extends EntityMapper<JobRecordDTO, JobRecord> {
-    @Mapping(target = "process", source = "process")
+    @Mapping(target = "process", source = "process") // ADAPTED
     JobRecordDTO toDto(JobRecord s);
 
     @Named("processId")

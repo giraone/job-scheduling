@@ -3,6 +3,7 @@
     <span jhiTranslate="jobadminApp.jobRecord.home.title">Job Records</span>
 
     <div class="d-flex justify-content-end">
+      <!-- ADAPTED -->
       <button class="btn btn-info me-2" (click)="loadPage()" [disabled]="isLoading">
         <fa-icon icon="sync" [spin]="isLoading"></fa-icon>
         <span jhiTranslate="jobadminApp.jobRecord.home.refreshListLabel">Refresh List</span>
@@ -30,49 +31,54 @@
   <jhi-alert></jhi-alert>
 
   <div class="alert alert-warning" id="no-result" *ngIf="jobRecords?.length === 0">
-    <span jhiTranslate="jobadminApp.jobRecord.home.notFound">No jobRecords found</span>
+    <span jhiTranslate="jobadminApp.jobRecord.home.notFound">No Job Records found</span>
   </div>
 
-  <div class="row">
-    <label style="width: 5%; text-align: right" for="field_status">State</label>
-    <select style="width: 20%; padding-left: 10px" id="field_status" [(ngModel)]="statusFilter">
-      <option [ngValue]="null">--- all ---</option>
-      <option *ngFor="let jobStatusEnum of jobStatusEnumValues" [value]="jobStatusEnum">
-        {{ 'jobadminApp.JobStatusEnum.' + jobStatusEnum | translate }}
-      </option>
-    </select>
-    <label style="width: 15%; text-align: right" for="field_process">Process</label>
-    <select style="width: 20%; padding-left: 10px" id="field_process" [(ngModel)]="processFilter">
-      <option [ngValue]="null" selected>--- all ---</option>
-      <option [ngValue]="processOption.id" *ngFor="let processOption of processesSharedCollection">
-        {{ processOption.id }}
-      </option>
-    </select>
-  </div>
-
-  <div class="table-responsive" id="entities" *ngIf="jobRecords && jobRecords.length > 0">
+  <div class="table-responsive table-entities" id="entities" *ngIf="jobRecords && jobRecords.length > 0">
     <table class="table table-striped" aria-describedby="page-heading">
       <thead>
-        <tr jhiSort [(predicate)]="predicate" [(ascending)]="ascending" (sortChange)="loadPage()">
-          <th scope="col" jhiSortBy="id"><span jhiTranslate="global.field.id">ID</span> <fa-icon icon="sort"></fa-icon></th>
+        <tr jhiSort [(predicate)]="predicate" [(ascending)]="ascending" (sortChange)="navigateToWithComponentValues()">
+          <th scope="col" jhiSortBy="id">
+            <div class="d-flex">
+              <span jhiTranslate="global.field.id">ID</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
           <th scope="col" jhiSortBy="jobAcceptedTimestamp">
-            <span jhiTranslate="jobadminApp.jobRecord.jobAcceptedTimestamp">Job Accepted Timestamp</span> <fa-icon icon="sort"></fa-icon>
+            <div class="d-flex">
+              <span jhiTranslate="jobadminApp.jobRecord.jobAcceptedTimestamp">Job Accepted Timestamp</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
           </th>
           <th scope="col" jhiSortBy="lastEventTimestamp">
-            <span jhiTranslate="jobadminApp.jobRecord.lastEventTimestamp">Last Event Timestamp</span> <fa-icon icon="sort"></fa-icon>
+            <div class="d-flex">
+              <span jhiTranslate="jobadminApp.jobRecord.lastEventTimestamp">Last Event Timestamp</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
           </th>
           <th scope="col" jhiSortBy="lastRecordUpdateTimestamp">
-            <span jhiTranslate="jobadminApp.jobRecord.lastRecordUpdateTimestamp">Last Record Update Timestamp</span>
-            <fa-icon icon="sort"></fa-icon>
+            <div class="d-flex">
+              <span jhiTranslate="jobadminApp.jobRecord.lastRecordUpdateTimestamp">Last Record Update Timestamp</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
           </th>
           <th scope="col" jhiSortBy="status">
-            <span jhiTranslate="jobadminApp.jobRecord.status">Status</span> <fa-icon icon="sort"></fa-icon>
+            <div class="d-flex">
+              <span jhiTranslate="jobadminApp.jobRecord.status">Status</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
           </th>
           <th scope="col" jhiSortBy="pausedBucketKey">
-            <span jhiTranslate="jobadminApp.jobRecord.pausedBucketKey">Paused Bucket Key</span> <fa-icon icon="sort"></fa-icon>
+            <div class="d-flex">
+              <span jhiTranslate="jobadminApp.jobRecord.pausedBucketKey">Paused Bucket Key</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
           </th>
           <th scope="col" jhiSortBy="process.id">
-            <span jhiTranslate="jobadminApp.jobRecord.process">Process</span> <fa-icon icon="sort"></fa-icon>
+            <div class="d-flex">
+              <span jhiTranslate="jobadminApp.jobRecord.process">Process</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
           </th>
           <th scope="col"></th>
         </tr>
@@ -133,12 +139,12 @@
     <div class="d-flex justify-content-center">
       <ngb-pagination
         [collectionSize]="totalItems"
-        [(page)]="ngbPaginationPage"
+        [page]="page"
         [pageSize]="itemsPerPage"
         [maxSize]="5"
         [rotate]="true"
         [boundaryLinks]="true"
-        (pageChange)="loadPage($event)"
+        (pageChange)="navigateToPage($event)"
       ></ngb-pagination>
     </div>
   </div>

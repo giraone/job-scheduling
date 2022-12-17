@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
- * Spring Data SQL repository for the JobRecord entity.
+ * Spring Data JPA repository for the JobRecord entity.
  */
 @SuppressWarnings("unused")
 @Repository
