@@ -39,7 +39,7 @@
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">2</stringProp>
+          <stringProp name="LoopController.loops">10</stringProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
@@ -79,7 +79,7 @@ vars.put(&quot;processKey&quot;, processKey);
             <collectionProp name="Arguments.arguments">
               <elementProp name="" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">{&quot;requesterId&quot;: ${requesterId},&quot;processKey&quot;: &quot;${processKey}&quot;,&quot;eventTimestamp&quot;:&quot;${isoTime}&quot;,&quot;payload&quot;:&quot;0123456789&quot;}</stringProp>
+                <stringProp name="Argument.value">{&quot;requesterId&quot;: &quot;${requesterId}&quot;,&quot;processKey&quot;: &quot;${processKey}&quot;,&quot;eventTimestamp&quot;:&quot;${isoTime}&quot;,&quot;payload&quot;:&quot;0123456789&quot;}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
