@@ -2,6 +2,8 @@ package com.giraone.jobs.materialize.web.rest;
 
 import com.giraone.jobs.materialize.model.JobRecord;
 import com.giraone.jobs.materialize.service.StateRecordService;
+import com.github.f4b6a3.tsid.Tsid;
+import com.github.f4b6a3.tsid.TsidCreator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -61,8 +63,10 @@ class JobRecordResourceTest {
 
         // arrange
         Instant nowInstant = Instant.now();
-        JobRecord jobRecord1 = new JobRecord("1", nowInstant, nowInstant, nowInstant, JobRecord.STATE_accepted, 1L);
-        JobRecord jobRecord2 = new JobRecord("2", nowInstant, nowInstant, nowInstant, JobRecord.STATE_scheduled,1L);
+        Tsid tsid1 = TsidCreator.getTsid256();
+        Tsid tsid2 = TsidCreator.getTsid256();
+        JobRecord jobRecord1 = new JobRecord(tsid1.toLong(), nowInstant, nowInstant, nowInstant, JobRecord.STATE_accepted, 1L);
+        JobRecord jobRecord2 = new JobRecord(tsid2.toLong(), nowInstant, nowInstant, nowInstant, JobRecord.STATE_scheduled,1L);
         Mockito.when(stateRecordService.findAll(any())).thenReturn(
             Flux.just(jobRecord1, jobRecord2));
 
@@ -84,10 +88,10 @@ class JobRecordResourceTest {
         // assert
         assertThat(list).isNotNull();
         assertThat(list).hasSize(2);
-        assertThat(list.get(0).getId()).isEqualTo("1");
+        assertThat(list.get(0).getId()).isEqualTo(tsid1.toString());
         assertThat(list.get(0).getStatus()).isEqualTo(JobRecord.STATE_accepted);
         assertThat(list.get(0).getLastRecordUpdateTimestamp()).isCloseTo(nowInstant, within(1, ChronoUnit.MILLIS));
-        assertThat(list.get(1).getId()).isEqualTo("2");
+        assertThat(list.get(1).getId()).isEqualTo(tsid2.toString());
         assertThat(list.get(1).getStatus()).isEqualTo(JobRecord.STATE_scheduled);
         assertThat(list.get(1).getLastRecordUpdateTimestamp()).isCloseTo(nowInstant, within(1, ChronoUnit.MILLIS));
     }

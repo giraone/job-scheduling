@@ -1,6 +1,7 @@
 package com.giraone.jobs.materialize.service;
 
 import com.giraone.jobs.materialize.model.JobRecord;
+import com.github.f4b6a3.tsid.Tsid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -33,8 +34,9 @@ public class StateRecordService {
         this.r2dbcEntityTemplate = r2dbcEntityTemplate;
     }
 
-    public Mono<JobRecord> insert(String id, Instant creationEventTimestamp, Instant now, String processKey) {
+    public Mono<JobRecord> insert(String idString, Instant creationEventTimestamp, Instant now, String processKey) {
 
+        long id = Tsid.from(idString).toLong();
         // TODO: processKey ==> processId by DB query or DB view
         final long processId = Long.parseLong(processKey.substring(1), 10);
         final JobRecord jobRecord = new JobRecord(id, creationEventTimestamp, now /*X*/, processId);
