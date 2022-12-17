@@ -33,8 +33,10 @@ public class StateRecordService {
         this.r2dbcEntityTemplate = r2dbcEntityTemplate;
     }
 
-    public Mono<JobRecord> insert(long id, Instant creationEventTimestamp, Instant now, String processId) {
+    public Mono<JobRecord> insert(long id, Instant creationEventTimestamp, Instant now, String processKey) {
 
+        // TODO: processKey ==> processId by DB query or DB view
+        final long processId = Long.parseLong(processKey.substring(1), 10);
         final JobRecord jobRecord = new JobRecord(id, creationEventTimestamp, now /*X*/, processId);
         jobRecord.setLastRecordUpdateTimestamp(Instant.now());
         return r2dbcEntityTemplate.insert(jobRecord);

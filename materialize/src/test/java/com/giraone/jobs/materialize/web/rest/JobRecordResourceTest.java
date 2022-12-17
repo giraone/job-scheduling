@@ -61,8 +61,8 @@ class JobRecordResourceTest {
 
         // arrange
         Instant nowInstant = Instant.now();
-        JobRecord jobRecord1 = new JobRecord(1L, nowInstant, nowInstant, nowInstant, JobRecord.STATE_accepted, "A01");
-        JobRecord jobRecord2 = new JobRecord(2L, nowInstant, nowInstant, nowInstant, JobRecord.STATE_scheduled,"A01");
+        JobRecord jobRecord1 = new JobRecord(1L, nowInstant, nowInstant, nowInstant, JobRecord.STATE_accepted, 1L);
+        JobRecord jobRecord2 = new JobRecord(2L, nowInstant, nowInstant, nowInstant, JobRecord.STATE_scheduled,1L);
         Mockito.when(stateRecordService.findAll(any())).thenReturn(
             Flux.just(jobRecord1, jobRecord2));
 

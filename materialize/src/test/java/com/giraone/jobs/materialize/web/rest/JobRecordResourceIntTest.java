@@ -36,8 +36,8 @@ class JobRecordResourceIntTest {
 
         // arrange
         Instant nowInstant = Instant.now();
-        JobRecord jobRecord1 = new JobRecord(1L, nowInstant, nowInstant, nowInstant, "accepted", "A01");
-        JobRecord jobRecord2 = new JobRecord(2L, nowInstant, nowInstant, nowInstant, "scheduled", "A01");
+        JobRecord jobRecord1 = new JobRecord(1L, nowInstant, nowInstant, nowInstant, "accepted", 1L);
+        JobRecord jobRecord2 = new JobRecord(2L, nowInstant, nowInstant, nowInstant, "scheduled", 1L);
         r2dbcEntityTemplate.insert(jobRecord2).subscribe();
         r2dbcEntityTemplate.insert(jobRecord1).subscribe();
 
