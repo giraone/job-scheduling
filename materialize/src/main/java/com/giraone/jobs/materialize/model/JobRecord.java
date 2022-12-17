@@ -20,6 +20,7 @@ public class JobRecord implements Serializable {
     public static final String ATTRIBUTE_lastEventTimestamp = "lastEventTimestamp";
     public static final String ATTRIBUTE_lastRecordUpdateTimestamp = "lastRecordUpdateTimestamp";
     public static final String ATTRIBUTE_status = "status";
+    public static final String ATTRIBUTE_pausedBucketKey = "pausedBucketKey";
 
     public static final String STATE_accepted = "ACCEPTED";
     public static final String STATE_scheduled = "SCHEDULED";

@@ -42,17 +42,19 @@ public class StateRecordService {
         return r2dbcEntityTemplate.insert(jobRecord);
     }
 
-    public Mono<Integer> update(String id, String state, Instant lastEventTimestamp, Instant now) {
+    public Mono<Integer> update(String id, String state, Instant lastEventTimestamp, Instant now, String pausedBucketKey) {
 
+        final Update update = Update.update(JobRecord.ATTRIBUTE_status, state)
+            .set(JobRecord.ATTRIBUTE_lastEventTimestamp, lastEventTimestamp)
+            .set(JobRecord.ATTRIBUTE_lastRecordUpdateTimestamp, now)
+            .set(JobRecord.ATTRIBUTE_pausedBucketKey, pausedBucketKey);
         return r2dbcEntityTemplate
             .update(JobRecord.class)
             .matching(Query.query(
                     where(JobRecord.ATTRIBUTE_id).is(id))
                 // TODO: and lastModificationTimestamp < event.eventTimestamp /*X*/
             )
-            .apply(Update.update(JobRecord.ATTRIBUTE_status, state)
-                .set(JobRecord.ATTRIBUTE_lastEventTimestamp, lastEventTimestamp)
-                .set(JobRecord.ATTRIBUTE_lastRecordUpdateTimestamp, now))
+            .apply(update)
             .doOnNext(updateCount -> LOGGER.debug("Update id={} state={} updated {} rows", id, state, updateCount));
     }
 

@@ -162,7 +162,8 @@ public class ConsumerService implements CommandLineRunner {
             LOGGER.debug("UPDATE id={}, eventTimestamp={} to state={}, nanoLatency={}",
                 jobChangedEvent.getId(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getStatus(), latency);
         }
-        return stateRecordService.update(jobChangedEvent.getId(), jobChangedEvent.getStatus(), jobChangedEvent.getEventTimestamp(), now)
+        return stateRecordService.update(jobChangedEvent.getId(), jobChangedEvent.getStatus(),
+                jobChangedEvent.getEventTimestamp(), now, jobChangedEvent.getPausedBucketKey())
             .map(updateCount -> new DatabaseResult(jobChangedEvent.getId(), updateCount != null && updateCount > 0, DatabaseOperation.update));
     }
 
