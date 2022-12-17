@@ -36,8 +36,8 @@ class JobRecordResourceIntTest {
 
         // arrange
         Instant nowInstant = Instant.now();
-        JobRecord jobRecord1 = new JobRecord(1L, nowInstant, nowInstant, nowInstant, "accepted", 1L);
-        JobRecord jobRecord2 = new JobRecord(2L, nowInstant, nowInstant, nowInstant, "scheduled", 1L);
+        JobRecord jobRecord1 = new JobRecord("1", nowInstant, nowInstant, nowInstant, "accepted", 1L);
+        JobRecord jobRecord2 = new JobRecord("2", nowInstant, nowInstant, nowInstant, "scheduled", 1L);
         r2dbcEntityTemplate.insert(jobRecord2).subscribe();
         r2dbcEntityTemplate.insert(jobRecord1).subscribe();
 
@@ -55,10 +55,10 @@ class JobRecordResourceIntTest {
         // assert
         assertThat(list).isNotNull();
         assertThat(list).hasSize(2);
-        assertThat(list.get(0).getId()).isEqualTo(1);
+        assertThat(list.get(0).getId()).isEqualTo("1");
         assertThat(list.get(0).getStatus()).isEqualTo("accepted");
         assertThat(list.get(0).getLastRecordUpdateTimestamp()).isCloseTo(nowInstant, within(1, ChronoUnit.MILLIS));
-        assertThat(list.get(1).getId()).isEqualTo(2);
+        assertThat(list.get(1).getId()).isEqualTo("2");
         assertThat(list.get(1).getStatus()).isEqualTo("scheduled");
         assertThat(list.get(1).getLastRecordUpdateTimestamp()).isCloseTo(nowInstant, within(1, ChronoUnit.MILLIS));
     }

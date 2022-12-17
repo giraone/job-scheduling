@@ -49,10 +49,10 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
     @Order(1)
     void passOneNewEvent() throws Exception {
 
-        JobAcceptedEvent event = new JobAcceptedEvent(1L, "A01", Instant.now());
+        JobAcceptedEvent event = new JobAcceptedEvent("1", "A01", Instant.now());
         String jsonEvent = objectMapper.writeValueAsString(event);
         String topic = applicationProperties.getTopicInsert();
-        String messageKey = Long.toString(event.getId());
+        String messageKey = event.getId();
 
         // sendMessages(List.of(new ProducerRecord<>(topic, messageKey, jsonEvent)).stream());
 
@@ -81,7 +81,7 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
     @Order(2)
     void passOneUpdateEvent() throws JsonProcessingException {
 
-        JobStatusChangedEvent event = new JobStatusChangedEvent(1L, "A01", Instant.now(), "SCHEDULED");
+        JobStatusChangedEvent event = new JobStatusChangedEvent("1", "A01", Instant.now(), "SCHEDULED");
         String jsonEvent = objectMapper.writeValueAsString(event);
         String topic = applicationProperties.getTopicsUpdate();
 
@@ -93,7 +93,7 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
                     .as(StepVerifier::create)
                     .expectNextCount(1L)
                     .assertNext(record -> {
-                        assertThat(record.getId()).isEqualTo(1L);
+                        assertThat(record.getId()).isEqualTo("1");
                         assertThat(record.getStatus()).isEqualTo("scheduled");
                         assertThat(record.getJobAcceptedTimestamp()).isNotNull();
                         assertThat(record.getLastEventTimestamp()).isEqualTo(event.getEventTimestamp());

@@ -29,8 +29,6 @@ public class ConsumerService implements CommandLineRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerService.class);
     private static final ObjectMapper objectMapper = ObjectMapperBuilder.build(false, false);
-    private static final DatabaseResult INSERT_FAILED = new DatabaseResult(-1, false, DatabaseOperation.insert);
-    private static final DatabaseResult UPDATE_FAILED = new DatabaseResult(-1, false, DatabaseOperation.update);
 
     private final ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplate;
     private final StateRecordService stateRecordService;
@@ -65,6 +63,7 @@ public class ConsumerService implements CommandLineRunner {
 
     private Mono<DatabaseResult> consumeNewEvent(ReceiverRecord<String, String> consumerRecord) {
 
+        final String messageKey = consumerRecord.key();
         return parseNewEvent(consumerRecord.value())
             .flatMap(event -> storeStateForNewJob(event, Instant.now(), event.getProcessKey()))
             .doOnSuccess(databaseResult -> {
@@ -72,16 +71,18 @@ public class ConsumerService implements CommandLineRunner {
                 consumerRecord.receiverOffset().commit().then(Mono.just(databaseResult));
             })
             .onErrorResume(throwable -> {
-                logError(INSERT_FAILED, consumerRecord, throwable);
+                final DatabaseResult result = new DatabaseResult(messageKey, false, DatabaseOperation.insert);
+                logError(result, consumerRecord, throwable);
                 consumerRecord.receiverOffset().commit();
                 LOGGER.error("Erroneous message committed with partition={}, offset={}",
                     consumerRecord.receiverOffset().topicPartition(), consumerRecord.receiverOffset().offset());
-                return MonoOperator.just(INSERT_FAILED);
+                return MonoOperator.just(result);
             });
     }
 
     private Mono<DatabaseResult> consumeUpdateEvent(ReceiverRecord<String, String> consumerRecord, String topic) {
 
+        final String messageKey = consumerRecord.key();
         return parseChangeEvent(consumerRecord.value(), topic)
             .flatMap(event -> storeStateForExistingJob(event, Instant.now()))
             .doOnSuccess(databaseResult -> {
@@ -89,9 +90,10 @@ public class ConsumerService implements CommandLineRunner {
                 consumerRecord.receiverOffset().commit().then(Mono.just(databaseResult));
             })
             .onErrorResume(throwable -> {
-                logError(UPDATE_FAILED, consumerRecord, throwable);
+                final DatabaseResult result = new DatabaseResult(messageKey, false, DatabaseOperation.update);
+                logError(result, consumerRecord, throwable);
                 consumerRecord.receiverOffset().commit();
-                return MonoOperator.just(UPDATE_FAILED);
+                return MonoOperator.just(result);
             });
     }
 

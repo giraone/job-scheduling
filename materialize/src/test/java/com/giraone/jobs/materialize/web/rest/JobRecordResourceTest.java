@@ -61,8 +61,8 @@ class JobRecordResourceTest {
 
         // arrange
         Instant nowInstant = Instant.now();
-        JobRecord jobRecord1 = new JobRecord(1L, nowInstant, nowInstant, nowInstant, JobRecord.STATE_accepted, 1L);
-        JobRecord jobRecord2 = new JobRecord(2L, nowInstant, nowInstant, nowInstant, JobRecord.STATE_scheduled,1L);
+        JobRecord jobRecord1 = new JobRecord("1", nowInstant, nowInstant, nowInstant, JobRecord.STATE_accepted, 1L);
+        JobRecord jobRecord2 = new JobRecord("2", nowInstant, nowInstant, nowInstant, JobRecord.STATE_scheduled,1L);
         Mockito.when(stateRecordService.findAll(any())).thenReturn(
             Flux.just(jobRecord1, jobRecord2));
 
@@ -84,10 +84,10 @@ class JobRecordResourceTest {
         // assert
         assertThat(list).isNotNull();
         assertThat(list).hasSize(2);
-        assertThat(list.get(0).getId()).isEqualTo(1);
+        assertThat(list.get(0).getId()).isEqualTo("1");
         assertThat(list.get(0).getStatus()).isEqualTo(JobRecord.STATE_accepted);
         assertThat(list.get(0).getLastRecordUpdateTimestamp()).isCloseTo(nowInstant, within(1, ChronoUnit.MILLIS));
-        assertThat(list.get(1).getId()).isEqualTo(2);
+        assertThat(list.get(1).getId()).isEqualTo("2");
         assertThat(list.get(1).getStatus()).isEqualTo(JobRecord.STATE_scheduled);
         assertThat(list.get(1).getLastRecordUpdateTimestamp()).isCloseTo(nowInstant, within(1, ChronoUnit.MILLIS));
     }
