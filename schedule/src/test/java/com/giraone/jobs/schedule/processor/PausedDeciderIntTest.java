@@ -69,7 +69,7 @@ class PausedDeciderIntTest {
         configureTargetMockServer();
 
         // act
-        Map<String, String> result = pausedDecider.loadPausedMap();
+        Map<String, String> result = pausedDecider.loadPausedMap().block();
 
         // assert
         assertThat(result).containsExactlyInAnyOrderEntriesOf(Map.of( "2", "B01"));

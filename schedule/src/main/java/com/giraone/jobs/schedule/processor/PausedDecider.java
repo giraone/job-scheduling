@@ -2,10 +2,12 @@ package com.giraone.jobs.schedule.processor;
 
 import com.giraone.jobs.schedule.clients.JobAdminClient;
 import com.giraone.jobs.schedule.model.ActivationEnum;
+import com.giraone.jobs.schedule.model.ProcessDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +27,7 @@ public class PausedDecider {
 
     @Scheduled(fixedRateString = "${application.loadProcessStatus.fixedRateMs}", initialDelayString = "${application.loadProcessStatus.initialDelayMs}")
     public void scheduleReload() {
-        pausedMap = loadPausedMap();
+        pausedMap = loadPausedMap().block();
     }
 
     // null = not paused, != null key of bucket
@@ -34,16 +36,13 @@ public class PausedDecider {
         return pausedMap.get(processKey);
     }
 
-    protected Map<String, String> loadPausedMap() {
+    protected Mono<Map<String, String>> loadPausedMap() {
 
-        final Map<String, String> newPausedMap = new HashMap<>();
-        jobAdminClient.getProcesses().doOnNext(processDTO -> {
-            final String bucketKeyIfPaused = processDTO.getActivation() == ActivationEnum.PAUSED ? processDTO.getBucketKeyIfPaused() : null;
-            LOGGER.info(">>> IS-PAUSED {} = {} {}", processDTO.getKey(), processDTO.getActivation(), bucketKeyIfPaused);
-            if (bucketKeyIfPaused != null) {
-                newPausedMap.put(processDTO.getKey(), bucketKeyIfPaused);
-            }
-        }).blockLast();
-        return newPausedMap;
+        return jobAdminClient.getProcesses()
+            .doOnNext(processDTO -> {
+                LOGGER.info(">>> IS-PAUSED {} = {} {}", processDTO.getKey(), processDTO.getActivation(), processDTO.getBucketKeyIfPaused());
+            })
+            .filter(processDTO -> processDTO.getActivation() == ActivationEnum.PAUSED)
+            .collectMap(ProcessDTO::getKey, ProcessDTO::getBucketKeyIfPaused);
     }
 }
