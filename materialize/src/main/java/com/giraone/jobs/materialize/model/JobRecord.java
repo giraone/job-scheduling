@@ -41,17 +41,17 @@ public class JobRecord implements Serializable {
     private String status;
 
     @Column("process_id")
-    private String processId;
+    private long processId;
 
     public JobRecord() {
     }
 
-    public JobRecord(long id, Instant jobAcceptedTimestamp, Instant now, String processId) {
+    public JobRecord(long id, Instant jobAcceptedTimestamp, Instant now, long processId) {
         this(id, jobAcceptedTimestamp, now, now, STATE_accepted, processId);
     }
 
     public JobRecord(long id, Instant jobAcceptedTimestamp,
-                     Instant lastEventTimestamp, Instant lastRecordUpdateTimestamp, String status, String processId) {
+                     Instant lastEventTimestamp, Instant lastRecordUpdateTimestamp, String status, long processId) {
         this.id = id;
         this.jobAcceptedTimestamp = jobAcceptedTimestamp;
         this.lastEventTimestamp = lastEventTimestamp;
@@ -100,11 +100,11 @@ public class JobRecord implements Serializable {
         this.status = status;
     }
 
-    public String getProcessId() {
+    public long getProcessId() {
         return processId;
     }
 
-    public void setProcessId(String processId) {
+    public void setProcessId(long processId) {
         this.processId = processId;
     }
 

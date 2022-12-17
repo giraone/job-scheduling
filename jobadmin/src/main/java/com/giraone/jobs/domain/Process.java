@@ -131,7 +131,7 @@ public class Process implements Serializable {
     }
 
     public void setBucketKeyIfPaused(String bucketKeyIfPaused) {
-        this.bucketKeyIfPaused = bucketKeyIfPaused;
+        this.bucketKeyIfPaused = "".equals(bucketKeyIfPaused) ? null : bucketKeyIfPaused;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

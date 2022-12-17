@@ -29,7 +29,7 @@
             <column name="paused_bucket_key" type="varchar(255)" remarks="Paused bucket key">
                 <constraints nullable="true" />
             </column>
-            <column name="process_id" type="varchar(255)">
+            <column name="process_id" type="bigint">
                 <constraints nullable="false" />
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
