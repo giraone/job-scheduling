@@ -223,12 +223,13 @@ public class EventProcessor {
 
     /**
      * Perform deserialization, processing, serialization, send with message header
+     *
      * @param messageValue the message input as a byte array
      * @param deserializer the deserialization function resulting in an AbstractJobEvent
      * @param processor the processor with an AbstractJobEvent as the input and a Message as the output
      * @param processName the processor name for finding the corresponding error topic
-     * @return an outbound job or null, if no outbound job should be sent (e.g. on error or when dynamic topics are used)
      * @param <T> the concrete job class of the inbound job
+     * @return an outbound job or null, if no outbound job should be sent (e.g. on error or when dynamic topics are used)
      */
     protected <T extends AbstractJobEvent> Message<byte[]> tryCatchForProcessor(
         byte[] messageValue,

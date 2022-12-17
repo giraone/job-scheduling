@@ -21,7 +21,7 @@ public class JobScheduledEvent extends AbstractJobStatusChangedEvent {
         this(jobPausedEvent.getId(), jobPausedEvent.getProcessKey(), Instant.now(), jobPausedEvent.getPayload());
     }
 
-    public JobScheduledEvent(long id, String processKey, Instant eventTimestamp, String payload) {
+    public JobScheduledEvent(String id, String processKey, Instant eventTimestamp, String payload) {
         super(id, processKey, eventTimestamp, payload, "SCHEDULED");
     }
 

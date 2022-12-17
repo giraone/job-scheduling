@@ -2,7 +2,6 @@ package com.giraone.jobs.schedule.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.giraone.jobs.events.JobAcceptedEvent;
-import com.giraone.jobs.events.JobCompletedEvent;
 import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -13,7 +12,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -21,7 +19,6 @@ import java.time.Instant;
 
 import static com.giraone.jobs.schedule.config.TestConfig.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -65,7 +62,7 @@ class ProcessScheduleInOutTest extends AbstractInOutTest {
         when(pausedDecider.isProcessPaused(anyString())).thenReturn(paused ? 1 : 0);
 
         // act
-        JobAcceptedEvent jobAcceptedEvent = new JobAcceptedEvent(12L, "A01", Instant.now(), "");
+        JobAcceptedEvent jobAcceptedEvent = new JobAcceptedEvent("12", "A01", Instant.now(), "");
         produce(jobAcceptedEvent, TOPIC_accepted);
 
         // assert
@@ -77,7 +74,7 @@ class ProcessScheduleInOutTest extends AbstractInOutTest {
         ConsumerRecord<String, String> consumerRecord = pollTopic(topicNameSent);
         assertThat(consumerRecord.key()).isNotNull();
         assertThat(consumerRecord.value()).isNotNull();
-        assertThat(consumerRecord.value()).contains("\"id\":12");
+        assertThat(consumerRecord.value()).contains("\"id\":\"12\"");
         assertThat(consumerRecord.value()).contains("\"processKey\":\"A01\"");
 
         if (paused) {

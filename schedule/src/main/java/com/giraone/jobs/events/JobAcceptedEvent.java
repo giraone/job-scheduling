@@ -12,7 +12,7 @@ public class JobAcceptedEvent extends AbstractJobEvent {
         super();
     }
 
-    public JobAcceptedEvent(long id, String processKey, Instant eventTimestamp, String payload) {
+    public JobAcceptedEvent(String id, String processKey, Instant eventTimestamp, String payload) {
         super(id, processKey, eventTimestamp, payload);
     }
 

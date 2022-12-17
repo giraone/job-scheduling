@@ -18,7 +18,7 @@ public class ProcessorNotify {
 
         UtilsAndConstants.simulationModeSleep();
 
-        if (jobCompletedEvent.getId() == 0L) {
+        if (jobCompletedEvent.getId() == null) {
             throw new IllegalArgumentException("Forced runtime exception because id is null");
         }
 

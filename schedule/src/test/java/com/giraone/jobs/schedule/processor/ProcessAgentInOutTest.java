@@ -45,14 +45,14 @@ class ProcessAgentInOutTest extends AbstractInOutTest {
         LOGGER.info("{} testProcessWorks START", getClass().getName());
 
         // act
-        JobScheduledEvent jobScheduledEvent = new JobScheduledEvent(12L, "A01", Instant.now(), "");
+        JobScheduledEvent jobScheduledEvent = new JobScheduledEvent("12", "A01", Instant.now(), "");
         produce(jobScheduledEvent, TOPIC_scheduled_A01);
 
         // assert
         ConsumerRecord<String, String> consumerRecord = pollTopic(TOPIC_completed);
         assertThat(consumerRecord.key()).isNotNull();
         assertThat(consumerRecord.value()).isNotNull();
-        assertThat(consumerRecord.value()).contains("\"id\":12");
+        assertThat(consumerRecord.value()).contains("\"id\":\"12\"");
         assertThat(consumerRecord.value()).contains("\"processKey\":\"A01\"");
 
         JobCompletedEvent JobCompletedEvent = objectMapper.readValue(consumerRecord.value(), JobCompletedEvent.class);

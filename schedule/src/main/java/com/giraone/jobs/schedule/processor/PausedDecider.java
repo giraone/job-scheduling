@@ -1,7 +1,6 @@
 package com.giraone.jobs.schedule.processor;
 
 import com.giraone.jobs.schedule.clients.JobAdminClient;
-import com.giraone.jobs.schedule.config.ApplicationProperties;
 import com.giraone.jobs.schedule.model.ActivationEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,7 @@ public class PausedDecider {
     // 0 = not paused, > 0 index of bucket
     public int isProcessPaused(String processKey) {
 
-       return pausedMap.get(processKey);
+        return pausedMap.get(processKey);
     }
 
     protected Map<String, Integer> loadPausedMap() {

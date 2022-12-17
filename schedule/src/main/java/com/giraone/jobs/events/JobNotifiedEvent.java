@@ -15,7 +15,7 @@ public class JobNotifiedEvent extends AbstractJobStatusChangedEvent {
         this(jobCompletedEvent.getId(), jobCompletedEvent.getProcessKey(), Instant.now(), jobCompletedEvent.getPayload());
     }
 
-    public JobNotifiedEvent(long id, String processKey, Instant eventTimestamp, String payload) {
+    public JobNotifiedEvent(String id, String processKey, Instant eventTimestamp, String payload) {
         super(id, processKey, eventTimestamp, payload, "NOTIFIED");
     }
 

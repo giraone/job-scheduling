@@ -26,7 +26,7 @@ public class ProcessorResume {
 
         UtilsAndConstants.simulationModeSleep();
 
-        if (jobPausedEvent.getId() == 0L) {
+        if (jobPausedEvent.getId() == null) {
             throw new IllegalArgumentException("Forced runtime exception because id is null");
         }
 

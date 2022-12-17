@@ -6,8 +6,6 @@ import com.giraone.jobs.events.JobNotifiedEvent;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
@@ -47,14 +45,14 @@ class ProcessNotifyInOutTest extends AbstractInOutTest {
         LOGGER.info("{} testProcessWorks START", getClass().getName());
 
         // act
-        JobCompletedEvent jobCompletedEvent = new JobCompletedEvent(12L, "A01", Instant.now(), "link");
+        JobCompletedEvent jobCompletedEvent = new JobCompletedEvent("12", "A01", Instant.now(), "link");
         produce(jobCompletedEvent, TOPIC_completed);
 
         // assert
         ConsumerRecord<String, String> consumerRecord = pollTopic(TOPIC_notified);
         assertThat(consumerRecord.key()).isNotNull();
         assertThat(consumerRecord.value()).isNotNull();
-        assertThat(consumerRecord.value()).contains("\"id\":12");
+        assertThat(consumerRecord.value()).contains("\"id\":\"12\"");
         assertThat(consumerRecord.value()).contains("\"processKey\":\"A01\"");
         JobNotifiedEvent JobNotifiedEvent = objectMapper.readValue(consumerRecord.value(), JobNotifiedEvent.class);
         assertThat(JobNotifiedEvent.getMessageKey()).isNotNull();

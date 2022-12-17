@@ -9,7 +9,7 @@ public abstract class AbstractJobStatusChangedEvent extends AbstractJobEvent {
     protected AbstractJobStatusChangedEvent() {
     }
 
-    protected AbstractJobStatusChangedEvent(long id, String processKey, Instant eventTimestamp, String payload, String status) {
+    protected AbstractJobStatusChangedEvent(String id, String processKey, Instant eventTimestamp, String payload, String status) {
         super(id, processKey, eventTimestamp, payload);
         this.status = status;
     }

@@ -19,7 +19,7 @@ public class JobPausedEvent extends AbstractJobStatusChangedEvent {
         this(jobAcceptedEvent.getId(), jobAcceptedEvent.getProcessKey(), Instant.now(), jobAcceptedEvent.getPayload(), bucket);
     }
 
-    public JobPausedEvent(long id, String processKey, Instant eventTimestamp, String payload, int bucket) {
+    public JobPausedEvent(String id, String processKey, Instant eventTimestamp, String payload, int bucket) {
         super(id, processKey, eventTimestamp, payload, "PAUSED");
         this.bucket = bucket;
     }

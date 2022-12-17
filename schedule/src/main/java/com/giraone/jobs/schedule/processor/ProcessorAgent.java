@@ -24,7 +24,7 @@ public class ProcessorAgent {
 
         UtilsAndConstants.simulationModeSleep();
 
-        if (jobScheduledEvent.getId() == 0L) {
+        if (jobScheduledEvent.getId() == null) {
             throw new IllegalArgumentException("Forced runtime exception because id is null");
         }
 

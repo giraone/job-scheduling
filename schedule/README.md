@@ -7,8 +7,8 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 ### Global
 
 - [x] All events have *message keys* based on [TSID](https://github.com/f4b6a3/tsid-creator)
-- [ ] Migrate event ID from type long to String (TSID). Only within the database it should be a long value.
-- [ ] JobAdmin has to manage the buckets, no only the active/paused boolean
+- [x] Migrate event ID from type long to String (TSID). Only within the database it should be a long value.
+- [x] JobAdmin has to manage the buckets, no only the active/paused boolean
 - [ ] Display buckets in JobAdmin (materialize must handle this)
 
 ### Schedule

@@ -26,7 +26,7 @@ public class ProcessorSchedule {
 
         UtilsAndConstants.simulationModeSleep();
 
-        if (jobAcceptedEvent.getId() == 0L) {
+        if (jobAcceptedEvent.getId() == null) {
             throw new IllegalArgumentException("Forced runtime exception because ID-NULL");
         }
 

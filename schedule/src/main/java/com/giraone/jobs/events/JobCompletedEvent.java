@@ -15,7 +15,7 @@ public class JobCompletedEvent extends AbstractJobStatusChangedEvent {
         this(jobScheduledEvent.getId(), jobScheduledEvent.getProcessKey(), Instant.now(), result);
     }
 
-    public JobCompletedEvent(long id, String processKey, Instant eventTimestamp, String payload) {
+    public JobCompletedEvent(String id, String processKey, Instant eventTimestamp, String payload) {
         super(id, processKey, eventTimestamp, payload, "COMPLETED");
     }
 
