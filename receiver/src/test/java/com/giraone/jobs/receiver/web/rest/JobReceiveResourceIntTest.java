@@ -48,7 +48,7 @@ public class JobReceiveResourceIntTest extends AbstractKafkaIntTest {
 
     @BeforeEach
     public void setUp() {
-        String topic = applicationProperties.getJobNewTopic();
+        String topic = applicationProperties.getJobAcceptedTopic();
         createNewTopic(topic);
         consumer = createConsumer(topic);
         LOGGER.info("Consumer for \"{}\" created.", topic);
@@ -58,7 +58,7 @@ public class JobReceiveResourceIntTest extends AbstractKafkaIntTest {
     public void tearDown() {
         if (consumer != null) {
             consumer.close();
-            LOGGER.info("Consumer for \"{}\" closed.", applicationProperties.getJobNewTopic());
+            LOGGER.info("Consumer for \"{}\" closed.", applicationProperties.getJobAcceptedTopic());
         }
     }
 
@@ -89,7 +89,7 @@ public class JobReceiveResourceIntTest extends AbstractKafkaIntTest {
         Instant now = Instant.now();
         long id = System.nanoTime();
         Map<String, Object> body = Map.of(
-            "id", id,
+            "requesterId", id,
             "eventTimestamp", DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault()).format(now)
         );
 

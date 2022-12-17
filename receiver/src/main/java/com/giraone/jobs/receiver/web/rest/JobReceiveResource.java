@@ -26,7 +26,7 @@ public class JobReceiveResource {
     }
 
     @PostMapping("/jobs")
-    public Mono<Map<String, Object>> create(@RequestBody String event) {
+    public Mono<Map<String, Object>> create(@RequestBody Map<String, Object> event) {
         return this.producerService.send(event)
             .map(key -> Map.of("key", key));
     }

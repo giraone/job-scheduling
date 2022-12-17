@@ -1,5 +1,8 @@
 package com.giraone.jobs.receiver.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.giraone.jobs.common.ObjectMapperBuilder;
 import com.giraone.jobs.receiver.config.ApplicationProperties;
 import com.github.f4b6a3.tsid.Tsid;
 import com.github.f4b6a3.tsid.TsidCreator;
@@ -16,6 +19,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ProducerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProducerService.class);
+
+    private static final ObjectMapper objectMapper = ObjectMapperBuilder.build(true, false);
 
     private final String topic;
     private final ReactiveKafkaProducerTemplate<String, String> reactiveKafkaProducerTemplate;
@@ -35,12 +40,19 @@ public class ProducerService {
         return Mono.just(Map.of("sent", counterSent, "failed", counterFailed));
     }
 
-    public Mono<String> send(String event) {
+    public Mono<String> send(Map<String, Object> event) {
 
         final Tsid tsid = TsidCreator.getTsid256();
-        final String messageKey = tsid.toString();
+        final String id = tsid.toString();
+        event.put("id", id);
+        final String messageBody;
+        try {
+            messageBody = objectMapper.writeValueAsString(event);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         return reactiveKafkaProducerTemplate
-            .send(topic, messageKey, event)
+            .send(topic, id, messageBody)
             .doOnError(e -> {
                 LOGGER.error("Send to topic \"{}\" failed.", topic, e);
                 counterFailed.incrementAndGet();
@@ -49,6 +61,6 @@ public class ProducerService {
                 LOGGER.info("Send to topic \"{}\" successful.", topic);
                 counterSent.incrementAndGet();
             })
-            .map(r -> messageKey);
+            .map(r -> id);
     }
 }
