@@ -6,33 +6,33 @@ import { IJobRecord, NewJobRecord } from './job-record.model';
 
 export const sampleWithRequiredData: IJobRecord = {
   id: 87521,
-  jobAcceptedTimestamp: dayjs('2022-11-30T16:01'),
-  lastEventTimestamp: dayjs('2022-11-30T16:25'),
-  lastRecordUpdateTimestamp: dayjs('2022-12-01T12:44'),
+  jobAcceptedTimestamp: dayjs('2022-12-16T11:25'),
+  lastEventTimestamp: dayjs('2022-12-16T11:50'),
+  lastRecordUpdateTimestamp: dayjs('2022-12-17T08:09'),
   status: JobStatusEnum['DELIVERED'],
 };
 
 export const sampleWithPartialData: IJobRecord = {
   id: 64594,
-  jobAcceptedTimestamp: dayjs('2022-12-01T05:07'),
-  lastEventTimestamp: dayjs('2022-12-01T03:52'),
-  lastRecordUpdateTimestamp: dayjs('2022-11-30T20:51'),
+  jobAcceptedTimestamp: dayjs('2022-12-17T00:32'),
+  lastEventTimestamp: dayjs('2022-12-16T23:17'),
+  lastRecordUpdateTimestamp: dayjs('2022-12-16T16:16'),
   status: JobStatusEnum['SCHEDULED'],
 };
 
 export const sampleWithFullData: IJobRecord = {
   id: 34600,
-  jobAcceptedTimestamp: dayjs('2022-12-01T13:19'),
-  lastEventTimestamp: dayjs('2022-11-30T15:04'),
-  lastRecordUpdateTimestamp: dayjs('2022-12-01T08:17'),
+  jobAcceptedTimestamp: dayjs('2022-12-17T08:44'),
+  lastEventTimestamp: dayjs('2022-12-16T10:29'),
+  lastRecordUpdateTimestamp: dayjs('2022-12-17T03:42'),
   status: JobStatusEnum['NOTIFIED'],
   pausedBucketKey: 'incentivize context-sensitive red',
 };
 
 export const sampleWithNewData: NewJobRecord = {
-  jobAcceptedTimestamp: dayjs('2022-11-30T22:15'),
-  lastEventTimestamp: dayjs('2022-12-01T05:44'),
-  lastRecordUpdateTimestamp: dayjs('2022-12-01T01:44'),
+  jobAcceptedTimestamp: dayjs('2022-12-16T17:40'),
+  lastEventTimestamp: dayjs('2022-12-17T01:08'),
+  lastRecordUpdateTimestamp: dayjs('2022-12-16T21:09'),
   status: JobStatusEnum['PAUSED'],
   id: null,
 };

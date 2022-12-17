@@ -25,7 +25,7 @@ public class Process implements Serializable {
      * Alias/Key of process.
      */
     @NotNull
-    @Column(name = "key", nullable = false)
+    @Column(name = "process_key", nullable = false)
     private String key;
 
     /**

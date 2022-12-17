@@ -7,30 +7,36 @@
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <!--
-        Added the entity Process.
+        Added the entity JobRecord.
     -->
-    <changeSet id="20221201145231-1" author="jhipster">
-        <createTable tableName="process" remarks="Process (the job type).">
+    <changeSet id="20221217101722-1" author="jhipster">
+        <createTable tableName="job_record" remarks="A single materialized job record.">
             <column name="id" type="bigint">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="key" type="varchar(255)" remarks="Alias/Key of process.">
+            <column name="job_accepted_timestamp" type="${datetimeType}" remarks="Timestamp, when job was accepted.">
                 <constraints nullable="false" />
             </column>
-            <column name="name" type="varchar(255)" remarks="Name of process.">
+            <column name="last_event_timestamp" type="${datetimeType}" remarks="Timestamp of last status change.">
                 <constraints nullable="false" />
             </column>
-            <column name="activation" type="varchar(255)" remarks="Is process active or paused?">
+            <column name="last_record_update_timestamp" type="${datetimeType}" remarks="Timestamp of last status change in materialized record.">
                 <constraints nullable="false" />
             </column>
-            <column name="agent_key" type="varchar(255)" remarks="Agent key on which the process is performed.">
+            <column name="status" type="varchar(255)" remarks="Job status.">
+                <constraints nullable="false" />
+            </column>
+            <column name="paused_bucket_key" type="varchar(255)" remarks="Paused bucket key">
                 <constraints nullable="true" />
             </column>
-            <column name="bucket_key_if_paused" type="varchar(255)" remarks="Bucket key to be used, if process is paused.">
-                <constraints nullable="true" />
+            <column name="process_id" type="bigint">
+                <constraints nullable="false" />
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
+        <dropDefaultValue tableName="job_record" columnName="job_accepted_timestamp" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="job_record" columnName="last_event_timestamp" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="job_record" columnName="last_record_update_timestamp" columnDataType="${datetimeType}"/>
     </changeSet>
 
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
@@ -43,18 +49,19 @@
           This can be customized by adding or removing 'faker' in the 'spring.liquibase.contexts'
           Spring Boot configuration key.
     -->
-    <changeSet id="20221201145231-1-data" author="jhipster" context="faker">
+    <changeSet id="20221217101722-1-data" author="jhipster" context="faker">
         <loadData
-                  file="config/liquibase/fake-data/process.csv"
+                  file="config/liquibase/fake-data/job_record.csv"
                   separator=";"
-                  tableName="process"
+                  tableName="job_record"
                   usePreparedStatements="true">
             <column name="id" type="numeric"/>
-            <column name="key" type="string"/>
-            <column name="name" type="string"/>
-            <column name="activation" type="string"/>
-            <column name="agent_key" type="string"/>
-            <column name="bucket_key_if_paused" type="string"/>
+            <column name="job_accepted_timestamp" type="date"/>
+            <column name="last_event_timestamp" type="date"/>
+            <column name="last_record_update_timestamp" type="date"/>
+            <column name="status" type="string"/>
+            <column name="paused_bucket_key" type="string"/>
+            <column name="process_id" type="numeric"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

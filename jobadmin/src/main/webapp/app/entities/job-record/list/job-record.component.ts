@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpHeaders } from '@angular/common/http';
+import { HttpHeaders, HttpResponse } from '@angular/common/http';
 import { ActivatedRoute, Data, ParamMap, Router } from '@angular/router';
-import { combineLatest, filter, Observable, switchMap, tap } from 'rxjs';
+import { combineLatest, filter, map, Observable, switchMap, tap } from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 import { IJobRecord } from '../job-record.model';
@@ -10,6 +10,10 @@ import { ITEMS_PER_PAGE, PAGE_HEADER, TOTAL_COUNT_RESPONSE_HEADER } from 'app/co
 import { ASC, DESC, SORT, ITEM_DELETED_EVENT, DEFAULT_SORT_DATA } from 'app/config/navigation.constants';
 import { EntityArrayResponseType, JobRecordService } from '../service/job-record.service';
 import { JobRecordDeleteDialogComponent } from '../delete/job-record-delete-dialog.component';
+
+import { IProcess } from '../../../entities/process/process.model';
+import { ProcessService } from '../../../entities/process/service/process.service';
+import { JobStatusEnum } from '../../../entities/enumerations/job-status-enum.model';
 
 @Component({
   selector: 'jhi-job-record',
@@ -26,8 +30,15 @@ export class JobRecordComponent implements OnInit {
   totalItems = 0;
   page = 1;
 
+  // adapted
+  jobStatusEnumValues = Object.keys(JobStatusEnum);
+  processesSharedCollection: IProcess[] = [];
+  statusFilter: string | null = null;
+  processFilter: string | null = null;
+
   constructor(
     protected jobRecordService: JobRecordService,
+    protected processService: ProcessService, // ADAPTED
     protected activatedRoute: ActivatedRoute,
     public router: Router,
     protected modalService: NgbModal
@@ -37,6 +48,8 @@ export class JobRecordComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    // adapted
+    this.loadRelationshipsOptions();
   }
 
   delete(jobRecord: IJobRecord): void {
@@ -55,6 +68,19 @@ export class JobRecordComponent implements OnInit {
       });
   }
 
+  deleteAll(): void {
+    this.isLoading = true;
+    this.jobRecordService.deleteAll().subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.load();
+      },
+      error: () => {
+        this.isLoading = false;
+      },
+    });
+  }
+
   load(): void {
     this.loadFromBackendWithRouteInformations().subscribe({
       next: (res: EntityArrayResponseType) => {
@@ -69,6 +95,15 @@ export class JobRecordComponent implements OnInit {
 
   navigateToPage(page = this.page): void {
     this.handleNavigation(page, this.predicate, this.ascending);
+  }
+
+  // adapted
+  protected loadRelationshipsOptions(): void {
+    this.processService
+      .query()
+      .pipe(map((res: HttpResponse<IProcess[]>) => res.body ?? []))
+      .pipe(map((processes: IProcess[]) => this.processService.addProcessToCollectionIfMissing(processes, null)))
+      .subscribe((processes: IProcess[]) => (this.processesSharedCollection = processes));
   }
 
   protected loadFromBackendWithRouteInformations(): Observable<EntityArrayResponseType> {
@@ -107,6 +142,8 @@ export class JobRecordComponent implements OnInit {
       page: pageToLoad - 1,
       size: this.itemsPerPage,
       sort: this.getSortQueryParam(predicate, ascending),
+      status: this.statusFilter,
+      processId: this.processFilter
     };
     return this.jobRecordService.query(queryObject).pipe(tap(() => (this.isLoading = false)));
   }

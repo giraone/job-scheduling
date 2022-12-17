@@ -9,7 +9,8 @@ export interface IJobRecord {
   lastRecordUpdateTimestamp?: dayjs.Dayjs | null;
   status?: JobStatusEnum | null;
   pausedBucketKey?: string | null;
-  process?: Pick<IProcess, 'id'> | null;
+  //process?: IProcess;
+  process?: Pick<IProcess, 'id'|'key'|'name'> | null;
 }
 
 export type NewJobRecord = Omit<IJobRecord, 'id'> & { id: null };

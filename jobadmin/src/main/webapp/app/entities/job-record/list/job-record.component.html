@@ -4,7 +4,7 @@
 
     <div class="d-flex justify-content-end">
       <!-- ADAPTED -->
-      <button class="btn btn-info me-2" (click)="loadPage()" [disabled]="isLoading">
+      <button class="btn btn-info me-2" (click)="load()" [disabled]="isLoading">
         <fa-icon icon="sync" [spin]="isLoading"></fa-icon>
         <span jhiTranslate="jobadminApp.jobRecord.home.refreshListLabel">Refresh List</span>
       </button>
@@ -32,6 +32,23 @@
 
   <div class="alert alert-warning" id="no-result" *ngIf="jobRecords?.length === 0">
     <span jhiTranslate="jobadminApp.jobRecord.home.notFound">No Job Records found</span>
+  </div>
+
+  <div class="row">
+    <label style="width: 5%; text-align: right" for="field_status">State</label>
+    <select style="width: 20%; padding-left: 10px" id="field_status" [(ngModel)]="statusFilter">
+      <option [ngValue]="null">--- all ---</option>
+      <option *ngFor="let jobStatusEnum of jobStatusEnumValues" [value]="jobStatusEnum">
+        {{ 'jobadminApp.JobStatusEnum.' + jobStatusEnum | translate }}
+      </option>
+    </select>
+    <label style="width: 15%; text-align: right" for="field_process">Process</label>
+    <select style="width: 20%; padding-left: 10px" id="field_process" [(ngModel)]="processFilter">
+      <option [ngValue]="null" selected>--- all ---</option>
+      <option [ngValue]="processOption.id" *ngFor="let processOption of processesSharedCollection">
+        {{ processOption.name }} ({{ processOption.key }})
+      </option>
+    </select>
   </div>
 
   <div class="table-responsive table-entities" id="entities" *ngIf="jobRecords && jobRecords.length > 0">
@@ -95,7 +112,7 @@
           <td>{{ jobRecord.pausedBucketKey }}</td>
           <td>
             <div *ngIf="jobRecord.process">
-              <a [routerLink]="['/process', jobRecord.process?.id, 'view']">{{ jobRecord.process?.name }} ({{ jobRecord.process?.key }})</a>
+              <a [routerLink]="['/process', jobRecord.process.id, 'view']">{{ jobRecord.process.name }} ({{ jobRecord.process.key }})</a>
             </div>
           </td>
           <td class="text-end">

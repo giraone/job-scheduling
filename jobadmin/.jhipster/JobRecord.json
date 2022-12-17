@@ -1,6 +1,6 @@
 {
   "applications": "*",
-  "changelogDate": "20221201145230",
+  "changelogDate": "20221217101722",
   "dto": "mapstruct",
   "embedded": false,
   "entityTableName": "job_record",
@@ -47,7 +47,6 @@
     {
       "javadoc": "Process to which job belongs.",
       "otherEntityName": "process",
-      "otherEntityRelationshipName": "jobRecord",
       "relationshipName": "process",
       "relationshipType": "many-to-one",
       "relationshipValidateRules": "required"

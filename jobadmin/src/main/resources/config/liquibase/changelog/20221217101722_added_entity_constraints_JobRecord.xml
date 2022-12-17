@@ -6,7 +6,7 @@
     <!--
         Added the constraints for entity JobRecord.
     -->
-    <changeSet id="20221201145230-2" author="jhipster">
+    <changeSet id="20221217101722-2" author="jhipster">
 
         <addForeignKeyConstraint baseColumnNames="process_id"
                                  baseTableName="job_record"

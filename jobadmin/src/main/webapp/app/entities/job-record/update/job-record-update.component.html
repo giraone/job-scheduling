@@ -191,7 +191,7 @@
             <option *ngIf="!editForm.get('process')!.value" [ngValue]="null" selected></option>
             <option [ngValue]="processOption" *ngFor="let processOption of processesSharedCollection">
               {{ processOption.id }} - {{ processOption.key }} - {{ processOption.name }}
-            </option>
+            </option><!-- ADAPTED -->
           </select>
         </div>
         <div *ngIf="editForm.get(['process'])!.invalid && (editForm.get(['process'])!.dirty || editForm.get(['process'])!.touched)">

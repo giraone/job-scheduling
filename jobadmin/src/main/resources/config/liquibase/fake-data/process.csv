@@ -1,11 +1,4 @@
-id;key;name;activation;agent_key;bucket_key_if_paused
-1;Expressway deposit Lead;Heights compressing Granite;PAUSED;Visionary;archive
-2;Cambodia Accountability;scalable;ACTIVE;Lira virtual grey;deposit
-3;District Soap;Intelligent bleeding-edge;ACTIVE;didactic;Rubber Buckinghamshire uniform
-4;Borders transmitting Land;Berkshire;ACTIVE;Communications;Uganda bypass
-5;Developer Tuna;transition wireless Communications;PAUSED;driver;Stream Carolina
-6;Unbranded;Berkshire Dalasi Idaho;PAUSED;driver Dynamic;Fish Metal Mauritania
-7;high-level circuit navigate;Account;ACTIVE;empower Movies Manager;B2C
-8;AGP;viral;ACTIVE;Usability;transition
-9;Plastic;orange Technician;ACTIVE;card Bacon;Bedfordshire haptic
-10;user-centric Synchronised Spring;invoice;PAUSED;International Forward;monitor cutting-edge Wall
+id;process_key;name;activation;agent_key;bucket_key_if_paused
+1;V001;Verfahren V001;ACTIVE;A01;
+2;V002;Verfahren V002;ACTIVE;A01;
+3;V003;Verfahren V003;ACTIVE;A02;
