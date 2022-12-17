@@ -44,9 +44,11 @@ public class StateRecordService {
         return r2dbcEntityTemplate.insert(jobRecord);
     }
 
-    public Mono<Integer> update(String id, String state, Instant lastEventTimestamp, Instant now, String pausedBucketKey) {
+    public Mono<Integer> update(String idString, String state, Instant lastEventTimestamp, Instant now, String pausedBucketKey) {
 
-        final Update update = Update.update(JobRecord.ATTRIBUTE_status, state)
+        long id = Tsid.from(idString).toLong();
+        final Update update = Update
+            .update(JobRecord.ATTRIBUTE_status, state)
             .set(JobRecord.ATTRIBUTE_lastEventTimestamp, lastEventTimestamp)
             .set(JobRecord.ATTRIBUTE_lastRecordUpdateTimestamp, now)
             .set(JobRecord.ATTRIBUTE_pausedBucketKey, pausedBucketKey);

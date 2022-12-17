@@ -41,6 +41,9 @@ public class JobRecord implements Serializable {
     @Column("status")
     private String status;
 
+    @Column("paused_bucket_key")
+    private String pausedBucketKey;
+
     @Column("process_id")
     private long processId;
 
@@ -48,16 +51,17 @@ public class JobRecord implements Serializable {
     }
 
     public JobRecord(long id, Instant jobAcceptedTimestamp, Instant now, long processId) {
-        this(id, jobAcceptedTimestamp, now, now, STATE_accepted, processId);
+        this(id, jobAcceptedTimestamp, now, now, STATE_accepted, null, processId);
     }
 
     public JobRecord(long id, Instant jobAcceptedTimestamp,
-                     Instant lastEventTimestamp, Instant lastRecordUpdateTimestamp, String status, long processId) {
+                     Instant lastEventTimestamp, Instant lastRecordUpdateTimestamp, String status, String pausedBucketKey, long processId) {
         this.id = id;
         this.jobAcceptedTimestamp = jobAcceptedTimestamp;
         this.lastEventTimestamp = lastEventTimestamp;
         this.lastRecordUpdateTimestamp = lastRecordUpdateTimestamp;
         this.status = status;
+        this.pausedBucketKey = pausedBucketKey;
         this.processId = processId;
     }
 

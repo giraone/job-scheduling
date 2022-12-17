@@ -1,7 +1,6 @@
 package com.giraone.jobs.materialize.web.rest;
 
 import com.giraone.jobs.materialize.model.JobRecord;
-import com.github.f4b6a3.tsid.Tsid;
 import com.github.f4b6a3.tsid.TsidCreator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,10 +37,10 @@ class JobRecordResourceIntTest {
 
         // arrange
         Instant nowInstant = Instant.now();
-        Tsid tsid1 = TsidCreator.getTsid256();
-        Tsid tsid2 = TsidCreator.getTsid256();
-        JobRecord jobRecord1 = new JobRecord(tsid1.toLong(), nowInstant, nowInstant, nowInstant, "accepted", 1L);
-        JobRecord jobRecord2 = new JobRecord(tsid2.toLong(), nowInstant, nowInstant, nowInstant, "scheduled", 1L);
+        long id1 = TsidCreator.getTsid256().toLong();
+        long id2 = TsidCreator.getTsid256().toLong();
+        JobRecord jobRecord1 = new JobRecord(id1, nowInstant, nowInstant, nowInstant, "accepted", null, 1L);
+        JobRecord jobRecord2 = new JobRecord(id2, nowInstant, nowInstant, nowInstant, "scheduled", null, 1L);
         r2dbcEntityTemplate.insert(jobRecord2).subscribe();
         r2dbcEntityTemplate.insert(jobRecord1).subscribe();
 
@@ -59,10 +58,10 @@ class JobRecordResourceIntTest {
         // assert
         assertThat(list).isNotNull();
         assertThat(list).hasSize(2);
-        assertThat(list.get(0).getId()).isEqualTo(tsid1.toString());
+        assertThat(list.get(0).getId()).isEqualTo(id1);
         assertThat(list.get(0).getStatus()).isEqualTo("accepted");
         assertThat(list.get(0).getLastRecordUpdateTimestamp()).isCloseTo(nowInstant, within(1, ChronoUnit.MILLIS));
-        assertThat(list.get(1).getId()).isEqualTo(tsid2.toString());
+        assertThat(list.get(1).getId()).isEqualTo(id2);
         assertThat(list.get(1).getStatus()).isEqualTo("scheduled");
         assertThat(list.get(1).getLastRecordUpdateTimestamp()).isCloseTo(nowInstant, within(1, ChronoUnit.MILLIS));
     }
