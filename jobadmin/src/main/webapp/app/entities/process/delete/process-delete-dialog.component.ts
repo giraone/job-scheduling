@@ -16,7 +16,7 @@ export class ProcessDeleteDialogComponent {
     this.activeModal.dismiss();
   }
 
-  confirmDelete(id: string): void {
+  confirmDelete(id: number): void {
     this.processService.delete(id).subscribe(() => {
       this.activeModal.close('deleted');
     });

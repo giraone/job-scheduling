@@ -56,6 +56,7 @@ export class JobRecordService {
     return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
   }
 
+  // ADAPTED
   deleteAll(): Observable<HttpResponse<{}>> {
     return this.http.delete(`${this.resourceUrl}-delete-all`, { observe: 'response' });
   }

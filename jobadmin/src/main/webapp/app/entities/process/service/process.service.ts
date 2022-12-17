@@ -21,11 +21,11 @@ export class ProcessService {
   }
 
   update(process: IProcess): Observable<EntityResponseType> {
-    return this.http.put<IProcess>(`${this.resourceUrl}/${getProcessIdentifier(process) as string}`, process, { observe: 'response' });
+    return this.http.put<IProcess>(`${this.resourceUrl}/${getProcessIdentifier(process) as number}`, process, { observe: 'response' });
   }
 
   partialUpdate(process: IProcess): Observable<EntityResponseType> {
-    return this.http.patch<IProcess>(`${this.resourceUrl}/${getProcessIdentifier(process) as string}`, process, { observe: 'response' });
+    return this.http.patch<IProcess>(`${this.resourceUrl}/${getProcessIdentifier(process) as number}`, process, { observe: 'response' });
   }
 
   find(id: number): Observable<EntityResponseType> {
@@ -37,7 +37,7 @@ export class ProcessService {
     return this.http.get<IProcess[]>(this.resourceUrl, { params: options, observe: 'response' });
   }
 
-  delete(id: string): Observable<HttpResponse<{}>> {
+  delete(id: number): Observable<HttpResponse<{}>> {
     return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
   }
 

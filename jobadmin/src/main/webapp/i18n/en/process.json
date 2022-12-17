@@ -21,10 +21,14 @@
       "key": "Key",
       "name": "Name",
       "activation": "Activation",
+      "agentKey": "Agent Key",
+      "bucketKeyIfPaused": "Bucket Key If Paused",
       "help": {
         "key": "Alias/Key of process.",
         "name": "Name of process.",
-        "activation": "Is process active or paused?"
+        "activation": "Is process active or paused?",
+        "agentKey": "Agent key on which the process is performed.",
+        "bucketKeyIfPaused": "Bucket key to be used, if process is paused."
       }
     }
   }

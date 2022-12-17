@@ -89,6 +89,7 @@ public class JobRecordService {
         return jobRecordRepository.findAll(pageable).map(jobRecordMapper::toDto);
     }
 
+    // ADAPTED
     /**
      * Get all the (filtered) jobRecords.
      *
@@ -96,19 +97,23 @@ public class JobRecordService {
      * @return the list of entities.
      */
     @Transactional(readOnly = true)
-    public Page<JobRecordDTO> findFiltered(JobStatusEnum status, String process, Pageable pageable) {
+    public Page<JobRecordDTO> findFiltered(JobStatusEnum status, Long processId, Pageable pageable) {
         log.debug("Request to get all filtered JobRecords");
-        if (process != null) {
+        Page<JobRecord> records;
+        if (processId != null && processId != 0) {
             if (status != null) {
-                return jobRecordRepository.findByStatusAndProcessId(status, process, pageable).map(jobRecordMapper::toDto);
+                records = jobRecordRepository.findByStatusAndProcessId(status, processId, pageable);
             } else {
-                return jobRecordRepository.findByProcessId(process, pageable).map(jobRecordMapper::toDto);
+                records = jobRecordRepository.findByProcessId(processId, pageable);
             }
         } else if (status != null) {
-            return jobRecordRepository.findByStatus(status, pageable).map(jobRecordMapper::toDto);
+            records = jobRecordRepository.findByStatus(status, pageable);
         } else {
-            return jobRecordRepository.findAll(pageable).map(jobRecordMapper::toDto);
+            records = jobRecordRepository.findAll(pageable);
         }
+        log.debug("Request to get all filtered JobRecords returned {} of {} records", records.getSize(), records.getTotalElements());
+        final Page<JobRecordDTO> ret = records.map(jobRecordMapper::toDto);
+        return ret;
     }
 
     /**
@@ -133,6 +138,7 @@ public class JobRecordService {
         jobRecordRepository.deleteById(id);
     }
 
+    // ADAPTED
     public void deleteAll() {
         log.debug("Request to delete all JobRecords");
         jobRecordRepository.deleteAll();

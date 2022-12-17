@@ -18,9 +18,9 @@
         "title": "Job Record"
       },
       "id": "ID",
-      "jobAcceptedTimestamp": "Job Accepted Timestamp",
-      "lastEventTimestamp": "Last Event Timestamp",
-      "lastRecordUpdateTimestamp": "Last Record Update Timestamp",
+      "jobAcceptedTimestamp": "Job Accepted",
+      "lastEventTimestamp": "Last Event",
+      "lastRecordUpdateTimestamp": "Last Record Update",
       "status": "Status",
       "pausedBucketKey": "Paused Bucket Key",
       "process": "Process",

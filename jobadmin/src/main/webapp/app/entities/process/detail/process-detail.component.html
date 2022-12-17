@@ -14,6 +14,10 @@
         <dd>
           <span>{{ process.id }}</span>
         </dd>
+        <dt><span jhiTranslate="jobadminApp.process.key" [ngbTooltip]="'jobadminApp.process.help.key' | translate">Key</span></dt>
+        <dd>
+          <span>{{ process.key }}</span>
+        </dd>
         <dt><span jhiTranslate="jobadminApp.process.name" [ngbTooltip]="'jobadminApp.process.help.name' | translate">Name</span></dt>
         <dd>
           <span>{{ process.name }}</span>
@@ -25,6 +29,20 @@
         </dt>
         <dd>
           <span jhiTranslate="{{ 'jobadminApp.ActivationEnum.' + process.activation }}">{{ process.activation }}</span>
+        </dd>
+        <dt>
+          <span jhiTranslate="jobadminApp.process.agentKey" [ngbTooltip]="'jobadminApp.process.help.agentKey' | translate">Agent Key</span>
+        </dt>
+        <dd>
+          <span>{{ process.agentKey }}</span>
+        </dd>
+        <dt>
+          <span jhiTranslate="jobadminApp.process.bucketKeyIfPaused" [ngbTooltip]="'jobadminApp.process.help.bucketKeyIfPaused' | translate"
+            >Bucket Key If Paused</span
+          >
+        </dt>
+        <dd>
+          <span>{{ process.bucketKeyIfPaused }}</span>
         </dd>
       </dl>
 

@@ -11,8 +11,11 @@
     -->
     <changeSet id="20221201145231-1" author="jhipster">
         <createTable tableName="process" remarks="Process (the job type).">
-            <column name="id" type="varchar(255)" remarks="Alias/Key of process.">
-                <constraints primaryKey="true" nullable="false" />
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="key" type="varchar(255)" remarks="Alias/Key of process.">
+                <constraints nullable="false" />
             </column>
             <column name="name" type="varchar(255)" remarks="Name of process.">
                 <constraints nullable="false" />
@@ -20,10 +23,39 @@
             <column name="activation" type="varchar(255)" remarks="Is process active or paused?">
                 <constraints nullable="false" />
             </column>
+            <column name="agent_key" type="varchar(255)" remarks="Agent key on which the process is performed.">
+                <constraints nullable="true" />
+            </column>
+            <column name="bucket_key_if_paused" type="varchar(255)" remarks="Bucket key to be used, if process is paused.">
+                <constraints nullable="true" />
+            </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
     </changeSet>
 
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
 
+    <!--
+        Load sample data generated with Faker.js
+        - This data can be easily edited using a CSV editor (or even MS Excel) and
+          is located in the 'src/main/resources/config/liquibase/fake-data' directory
+        - By default this data is applied when running with the JHipster 'dev' profile.
+          This can be customized by adding or removing 'faker' in the 'spring.liquibase.contexts'
+          Spring Boot configuration key.
+    -->
+    <changeSet id="20221201145231-1-data" author="jhipster" context="faker">
+        <loadData
+                  file="config/liquibase/fake-data/process.csv"
+                  separator=";"
+                  tableName="process"
+                  usePreparedStatements="true">
+            <column name="id" type="numeric"/>
+            <column name="key" type="string"/>
+            <column name="name" type="string"/>
+            <column name="activation" type="string"/>
+            <column name="agent_key" type="string"/>
+            <column name="bucket_key_if_paused" type="string"/>
+            <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
+        </loadData>
+    </changeSet>
 </databaseChangeLog>

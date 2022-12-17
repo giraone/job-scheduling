@@ -157,11 +157,11 @@ public class JobRecordResource {
     @GetMapping("/job-records")
     public ResponseEntity<List<JobRecordDTO>> getAllJobRecords(
         @RequestParam(required = false) JobStatusEnum status,
-        @RequestParam(required = false) String process,
+        @RequestParam(required = false) Long processId,
         @ParameterObject Pageable pageable
     ) {
-        log.debug("REST request to get a page of JobRecords status={} process={}", status, process);
-        Page<JobRecordDTO> page = jobRecordService.findFiltered(status, process, pageable);
+        log.debug("REST request to get a page of JobRecords status={} process={}", status, processId);
+        Page<JobRecordDTO> page = jobRecordService.findFiltered(status, processId, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

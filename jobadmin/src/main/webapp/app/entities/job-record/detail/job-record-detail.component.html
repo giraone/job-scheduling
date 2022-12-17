@@ -61,7 +61,7 @@
         <dt><span jhiTranslate="jobadminApp.jobRecord.process">Process</span></dt>
         <dd>
           <div *ngIf="jobRecord.process">
-            <a [routerLink]="['/process', jobRecord.process?.id, 'view']">{{ jobRecord.process?.id }}</a>
+            <a [routerLink]="['/process', jobRecord.process?.id, 'view']">{{ jobRecord.process?.name }} ({{ jobRecord.process?.key }})</a>
           </div>
         </dd>
       </dl>

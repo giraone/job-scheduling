@@ -70,7 +70,7 @@ export class JobRecordUpdateComponent implements OnInit {
     }
   }
 
-  trackProcessById(_index: number, item: IProcess): string {
+  trackProcessById(_index: number, item: IProcess): number {
     return item.id!;
   }
 

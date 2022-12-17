@@ -24,6 +24,16 @@
       "fieldValidateRules": ["required"],
       "fieldValues": "ACTIVE,PAUSED",
       "javadoc": "Is process active or paused?"
+    },
+    {
+      "fieldName": "agentKey",
+      "fieldType": "String",
+      "javadoc": "Agent key on which the process is performed."
+    },
+    {
+      "fieldName": "bucketKeyIfPaused",
+      "fieldType": "String",
+      "javadoc": "Bucket key to be used, if process is paused."
     }
   ],
   "fluentMethods": true,

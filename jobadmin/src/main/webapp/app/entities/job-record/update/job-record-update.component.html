@@ -186,7 +186,7 @@
               [ngValue]="processOption.id === editForm.get('process')!.value?.id ? editForm.get('process')!.value : processOption"
               *ngFor="let processOption of processesSharedCollection; trackBy: trackProcessById"
             >
-              {{ processOption.id }}
+              {{ processOption.id }} - {{ processOption.key }} - {{ processOption.name }}
             </option>
           </select>
         </div>

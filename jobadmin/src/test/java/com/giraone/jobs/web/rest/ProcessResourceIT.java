@@ -32,11 +32,20 @@ import org.springframework.transaction.annotation.Transactional;
 @WithMockUser
 class ProcessResourceIT {
 
+    private static final String DEFAULT_KEY = "AAAAAAAAAA";
+    private static final String UPDATED_KEY = "BBBBBBBBBB";
+
     private static final String DEFAULT_NAME = "AAAAAAAAAA";
     private static final String UPDATED_NAME = "BBBBBBBBBB";
 
     private static final ActivationEnum DEFAULT_ACTIVATION = ActivationEnum.ACTIVE;
     private static final ActivationEnum UPDATED_ACTIVATION = ActivationEnum.PAUSED;
+
+    private static final String DEFAULT_AGENT_KEY = "AAAAAAAAAA";
+    private static final String UPDATED_AGENT_KEY = "BBBBBBBBBB";
+
+    private static final String DEFAULT_BUCKET_KEY_IF_PAUSED = "AAAAAAAAAA";
+    private static final String UPDATED_BUCKET_KEY_IF_PAUSED = "BBBBBBBBBB";
 
     private static final String ENTITY_API_URL = "/api/processes";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
@@ -65,7 +74,12 @@ class ProcessResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Process createEntity(EntityManager em) {
-        Process process = new Process().name(DEFAULT_NAME).activation(DEFAULT_ACTIVATION);
+        Process process = new Process()
+            .key(DEFAULT_KEY)
+            .name(DEFAULT_NAME)
+            .activation(DEFAULT_ACTIVATION)
+            .agentKey(DEFAULT_AGENT_KEY)
+            .bucketKeyIfPaused(DEFAULT_BUCKET_KEY_IF_PAUSED);
         return process;
     }
 
@@ -76,7 +90,12 @@ class ProcessResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Process createUpdatedEntity(EntityManager em) {
-        Process process = new Process().name(UPDATED_NAME).activation(UPDATED_ACTIVATION);
+        Process process = new Process()
+            .key(UPDATED_KEY)
+            .name(UPDATED_NAME)
+            .activation(UPDATED_ACTIVATION)
+            .agentKey(UPDATED_AGENT_KEY)
+            .bucketKeyIfPaused(UPDATED_BUCKET_KEY_IF_PAUSED);
         return process;
     }
 
@@ -99,15 +118,18 @@ class ProcessResourceIT {
         List<Process> processList = processRepository.findAll();
         assertThat(processList).hasSize(databaseSizeBeforeCreate + 1);
         Process testProcess = processList.get(processList.size() - 1);
+        assertThat(testProcess.getKey()).isEqualTo(DEFAULT_KEY);
         assertThat(testProcess.getName()).isEqualTo(DEFAULT_NAME);
         assertThat(testProcess.getActivation()).isEqualTo(DEFAULT_ACTIVATION);
+        assertThat(testProcess.getAgentKey()).isEqualTo(DEFAULT_AGENT_KEY);
+        assertThat(testProcess.getBucketKeyIfPaused()).isEqualTo(DEFAULT_BUCKET_KEY_IF_PAUSED);
     }
 
     @Test
     @Transactional
     void createProcessWithExistingId() throws Exception {
         // Create the Process with an existing ID
-        process.setId("001");
+        process.setId(1L);
         ProcessDTO processDTO = processMapper.toDto(process);
 
         int databaseSizeBeforeCreate = processRepository.findAll().size();
@@ -120,6 +142,24 @@ class ProcessResourceIT {
         // Validate the Process in the database
         List<Process> processList = processRepository.findAll();
         assertThat(processList).hasSize(databaseSizeBeforeCreate);
+    }
+
+    @Test
+    @Transactional
+    void checkKeyIsRequired() throws Exception {
+        int databaseSizeBeforeTest = processRepository.findAll().size();
+        // set the field null
+        process.setKey(null);
+
+        // Create the Process, which fails.
+        ProcessDTO processDTO = processMapper.toDto(process);
+
+        restProcessMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(processDTO)))
+            .andExpect(status().isBadRequest());
+
+        List<Process> processList = processRepository.findAll();
+        assertThat(processList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
@@ -169,9 +209,12 @@ class ProcessResourceIT {
             .perform(get(ENTITY_API_URL + "?sort=id,desc"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(process.getId())))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(process.getId().intValue())))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY)))
             .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
-            .andExpect(jsonPath("$.[*].activation").value(hasItem(DEFAULT_ACTIVATION.toString())));
+            .andExpect(jsonPath("$.[*].activation").value(hasItem(DEFAULT_ACTIVATION.toString())))
+            .andExpect(jsonPath("$.[*].agentKey").value(hasItem(DEFAULT_AGENT_KEY)))
+            .andExpect(jsonPath("$.[*].bucketKeyIfPaused").value(hasItem(DEFAULT_BUCKET_KEY_IF_PAUSED)));
     }
 
     @Test
@@ -185,9 +228,12 @@ class ProcessResourceIT {
             .perform(get(ENTITY_API_URL_ID, process.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.id").value(process.getId()))
+            .andExpect(jsonPath("$.id").value(process.getId().intValue()))
+            .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
             .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
-            .andExpect(jsonPath("$.activation").value(DEFAULT_ACTIVATION.toString()));
+            .andExpect(jsonPath("$.activation").value(DEFAULT_ACTIVATION.toString()))
+            .andExpect(jsonPath("$.agentKey").value(DEFAULT_AGENT_KEY))
+            .andExpect(jsonPath("$.bucketKeyIfPaused").value(DEFAULT_BUCKET_KEY_IF_PAUSED));
     }
 
     @Test
@@ -209,7 +255,12 @@ class ProcessResourceIT {
         Process updatedProcess = processRepository.findById(process.getId()).get();
         // Disconnect from session so that the updates on updatedProcess are not directly saved in db
         em.detach(updatedProcess);
-        updatedProcess.name(UPDATED_NAME).activation(UPDATED_ACTIVATION);
+        updatedProcess
+            .key(UPDATED_KEY)
+            .name(UPDATED_NAME)
+            .activation(UPDATED_ACTIVATION)
+            .agentKey(UPDATED_AGENT_KEY)
+            .bucketKeyIfPaused(UPDATED_BUCKET_KEY_IF_PAUSED);
         ProcessDTO processDTO = processMapper.toDto(updatedProcess);
 
         restProcessMockMvc
@@ -224,15 +275,18 @@ class ProcessResourceIT {
         List<Process> processList = processRepository.findAll();
         assertThat(processList).hasSize(databaseSizeBeforeUpdate);
         Process testProcess = processList.get(processList.size() - 1);
+        assertThat(testProcess.getKey()).isEqualTo(UPDATED_KEY);
         assertThat(testProcess.getName()).isEqualTo(UPDATED_NAME);
         assertThat(testProcess.getActivation()).isEqualTo(UPDATED_ACTIVATION);
+        assertThat(testProcess.getAgentKey()).isEqualTo(UPDATED_AGENT_KEY);
+        assertThat(testProcess.getBucketKeyIfPaused()).isEqualTo(UPDATED_BUCKET_KEY_IF_PAUSED);
     }
 
     @Test
     @Transactional
     void putNonExistingProcess() throws Exception {
         int databaseSizeBeforeUpdate = processRepository.findAll().size();
-        process.setId(String.format("%03d", count.incrementAndGet()));
+        process.setId(count.incrementAndGet());
 
         // Create the Process
         ProcessDTO processDTO = processMapper.toDto(process);
@@ -255,7 +309,7 @@ class ProcessResourceIT {
     @Transactional
     void putWithIdMismatchProcess() throws Exception {
         int databaseSizeBeforeUpdate = processRepository.findAll().size();
-        process.setId(String.format("%03d", count.incrementAndGet()));
+        process.setId(count.incrementAndGet());
 
         // Create the Process
         ProcessDTO processDTO = processMapper.toDto(process);
@@ -278,7 +332,7 @@ class ProcessResourceIT {
     @Transactional
     void putWithMissingIdPathParamProcess() throws Exception {
         int databaseSizeBeforeUpdate = processRepository.findAll().size();
-        process.setId(String.format("%03d", count.incrementAndGet()));
+        process.setId(count.incrementAndGet());
 
         // Create the Process
         ProcessDTO processDTO = processMapper.toDto(process);
@@ -305,6 +359,8 @@ class ProcessResourceIT {
         Process partialUpdatedProcess = new Process();
         partialUpdatedProcess.setId(process.getId());
 
+        partialUpdatedProcess.agentKey(UPDATED_AGENT_KEY).bucketKeyIfPaused(UPDATED_BUCKET_KEY_IF_PAUSED);
+
         restProcessMockMvc
             .perform(
                 patch(ENTITY_API_URL_ID, partialUpdatedProcess.getId())
@@ -317,8 +373,11 @@ class ProcessResourceIT {
         List<Process> processList = processRepository.findAll();
         assertThat(processList).hasSize(databaseSizeBeforeUpdate);
         Process testProcess = processList.get(processList.size() - 1);
+        assertThat(testProcess.getKey()).isEqualTo(DEFAULT_KEY);
         assertThat(testProcess.getName()).isEqualTo(DEFAULT_NAME);
         assertThat(testProcess.getActivation()).isEqualTo(DEFAULT_ACTIVATION);
+        assertThat(testProcess.getAgentKey()).isEqualTo(UPDATED_AGENT_KEY);
+        assertThat(testProcess.getBucketKeyIfPaused()).isEqualTo(UPDATED_BUCKET_KEY_IF_PAUSED);
     }
 
     @Test
@@ -333,7 +392,12 @@ class ProcessResourceIT {
         Process partialUpdatedProcess = new Process();
         partialUpdatedProcess.setId(process.getId());
 
-        partialUpdatedProcess.name(UPDATED_NAME).activation(UPDATED_ACTIVATION);
+        partialUpdatedProcess
+            .key(UPDATED_KEY)
+            .name(UPDATED_NAME)
+            .activation(UPDATED_ACTIVATION)
+            .agentKey(UPDATED_AGENT_KEY)
+            .bucketKeyIfPaused(UPDATED_BUCKET_KEY_IF_PAUSED);
 
         restProcessMockMvc
             .perform(
@@ -347,15 +411,18 @@ class ProcessResourceIT {
         List<Process> processList = processRepository.findAll();
         assertThat(processList).hasSize(databaseSizeBeforeUpdate);
         Process testProcess = processList.get(processList.size() - 1);
+        assertThat(testProcess.getKey()).isEqualTo(UPDATED_KEY);
         assertThat(testProcess.getName()).isEqualTo(UPDATED_NAME);
         assertThat(testProcess.getActivation()).isEqualTo(UPDATED_ACTIVATION);
+        assertThat(testProcess.getAgentKey()).isEqualTo(UPDATED_AGENT_KEY);
+        assertThat(testProcess.getBucketKeyIfPaused()).isEqualTo(UPDATED_BUCKET_KEY_IF_PAUSED);
     }
 
     @Test
     @Transactional
     void patchNonExistingProcess() throws Exception {
         int databaseSizeBeforeUpdate = processRepository.findAll().size();
-        process.setId(String.format("%03d", count.incrementAndGet()));
+        process.setId(count.incrementAndGet());
 
         // Create the Process
         ProcessDTO processDTO = processMapper.toDto(process);
@@ -378,7 +445,7 @@ class ProcessResourceIT {
     @Transactional
     void patchWithIdMismatchProcess() throws Exception {
         int databaseSizeBeforeUpdate = processRepository.findAll().size();
-        process.setId(String.format("%03d", count.incrementAndGet()));
+        process.setId(count.incrementAndGet());
 
         // Create the Process
         ProcessDTO processDTO = processMapper.toDto(process);
@@ -401,7 +468,7 @@ class ProcessResourceIT {
     @Transactional
     void patchWithMissingIdPathParamProcess() throws Exception {
         int databaseSizeBeforeUpdate = processRepository.findAll().size();
-        process.setId(String.format("%03d", count.incrementAndGet()));
+        process.setId(count.incrementAndGet());
 
         // Create the Process
         ProcessDTO processDTO = processMapper.toDto(process);

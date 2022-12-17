@@ -80,7 +80,7 @@ public class ProcessResource {
      */
     @PutMapping("/processes/{id}")
     public ResponseEntity<ProcessDTO> updateProcess(
-        @PathVariable(value = "id", required = false) final String id,
+        @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody ProcessDTO processDTO
     ) throws URISyntaxException {
         log.debug("REST request to update Process : {}, {}", id, processDTO);
@@ -91,13 +91,11 @@ public class ProcessResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        ProcessDTO result;
         if (!processRepository.existsById(id)) {
-            result = processService.save(processDTO);
-        } else {
-            result = processService.update(processDTO);
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
+        ProcessDTO result = processService.update(processDTO);
         return ResponseEntity
             .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, processDTO.getId().toString()))
@@ -117,7 +115,7 @@ public class ProcessResource {
      */
     @PatchMapping(value = "/processes/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<ProcessDTO> partialUpdateProcess(
-        @PathVariable(value = "id", required = false) final String id,
+        @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody ProcessDTO processDTO
     ) throws URISyntaxException {
         log.debug("REST request to partial update Process partially : {}, {}", id, processDTO);
@@ -161,7 +159,7 @@ public class ProcessResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the processDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/processes/{id}")
-    public ResponseEntity<ProcessDTO> getProcess(@PathVariable String id) {
+    public ResponseEntity<ProcessDTO> getProcess(@PathVariable Long id) {
         log.debug("REST request to get Process : {}", id);
         Optional<ProcessDTO> processDTO = processService.findOne(id);
         return ResponseUtil.wrapOrNotFound(processDTO);
@@ -174,7 +172,7 @@ public class ProcessResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/processes/{id}")
-    public ResponseEntity<Void> deleteProcess(@PathVariable String id) {
+    public ResponseEntity<Void> deleteProcess(@PathVariable Long id) {
         log.debug("REST request to delete Process : {}", id);
         processService.delete(id);
         return ResponseEntity

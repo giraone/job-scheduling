@@ -95,7 +95,7 @@ public class ProcessService {
      * @return the entity.
      */
     @Transactional(readOnly = true)
-    public Optional<ProcessDTO> findOne(String id) {
+    public Optional<ProcessDTO> findOne(Long id) {
         log.debug("Request to get Process : {}", id);
         return processRepository.findById(id).map(processMapper::toDto);
     }
@@ -105,7 +105,7 @@ public class ProcessService {
      *
      * @param id the id of the entity.
      */
-    public void delete(String id) {
+    public void delete(Long id) {
         log.debug("Request to delete Process : {}", id);
         processRepository.deleteById(id);
     }

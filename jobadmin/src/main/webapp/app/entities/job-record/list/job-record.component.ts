@@ -46,9 +46,9 @@ export class JobRecordComponent implements OnInit {
     const pageToLoad: number = page ?? this.page ?? 1;
 
     const params: any = {
-      page: pageToLoad - 1,
-      size: this.itemsPerPage,
-      sort: this.sort(),
+        page: pageToLoad - 1,
+        size: this.itemsPerPage,
+        sort: this.sort(),
     };
     if (this.statusFilter != null) {
       params.status = this.statusFilter;
@@ -57,15 +57,15 @@ export class JobRecordComponent implements OnInit {
       params.process = this.processFilter;
     }
     this.jobRecordService.query(params).subscribe({
-      next: (res: HttpResponse<IJobRecord[]>) => {
-        this.isLoading = false;
-        this.onSuccess(res.body, res.headers, pageToLoad, !dontNavigate);
-      },
-      error: () => {
-        this.isLoading = false;
-        this.onError();
-      },
-    });
+        next: (res: HttpResponse<IJobRecord[]>) => {
+          this.isLoading = false;
+          this.onSuccess(res.body, res.headers, pageToLoad, !dontNavigate);
+        },
+        error: () => {
+          this.isLoading = false;
+          this.onError();
+        },
+      });
   }
 
   deleteAll(): void {

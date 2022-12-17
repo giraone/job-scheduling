@@ -19,8 +19,11 @@ export class ProcessUpdateComponent implements OnInit {
 
   editForm = this.fb.group({
     id: [],
+    key: [null, [Validators.required]],
     name: [null, [Validators.required]],
     activation: [null, [Validators.required]],
+    agentKey: [],
+    bucketKeyIfPaused: [],
   });
 
   constructor(protected processService: ProcessService, protected activatedRoute: ActivatedRoute, protected fb: FormBuilder) {}
@@ -67,8 +70,11 @@ export class ProcessUpdateComponent implements OnInit {
   protected updateForm(process: IProcess): void {
     this.editForm.patchValue({
       id: process.id,
+      key: process.key,
       name: process.name,
       activation: process.activation,
+      agentKey: process.agentKey,
+      bucketKeyIfPaused: process.bucketKeyIfPaused,
     });
   }
 
@@ -76,8 +82,11 @@ export class ProcessUpdateComponent implements OnInit {
     return {
       ...new Process(),
       id: this.editForm.get(['id'])!.value,
+      key: this.editForm.get(['key'])!.value,
       name: this.editForm.get(['name'])!.value,
       activation: this.editForm.get(['activation'])!.value,
+      agentKey: this.editForm.get(['agentKey'])!.value,
+      bucketKeyIfPaused: this.editForm.get(['bucketKeyIfPaused'])!.value,
     };
   }
 }

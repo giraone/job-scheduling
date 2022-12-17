@@ -57,7 +57,7 @@ export class ProcessComponent implements OnInit {
     this.handleNavigation();
   }
 
-  trackId(_index: number, item: IProcess): string {
+  trackId(_index: number, item: IProcess): number {
     return item.id!;
   }
 

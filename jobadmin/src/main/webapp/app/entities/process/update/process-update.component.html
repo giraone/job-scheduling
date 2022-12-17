@@ -8,11 +8,22 @@
       <div>
         <jhi-alert-error></jhi-alert-error>
 
-        <div class="row mb-3">
+        <div class="row mb-3" [hidden]="editForm.get('id')!.value == null">
           <label class="form-label" jhiTranslate="global.field.id" for="field_id">ID</label>
-          <input type="string" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" />
-          <div *ngIf="editForm.get('id')!.invalid && (editForm.get('id')!.dirty || editForm.get('id')!.touched)">
-            <small class="form-text text-danger" *ngIf="editForm.get('id')?.errors?.required" jhiTranslate="entity.validation.required">
+          <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+        </div>
+
+        <div class="row mb-3">
+          <label
+            class="form-label"
+            jhiTranslate="jobadminApp.process.key"
+            for="field_key"
+            [ngbTooltip]="'jobadminApp.process.help.key' | translate"
+            >Key</label
+          >
+          <input type="text" class="form-control" name="key" id="field_key" data-cy="key" formControlName="key" />
+          <div *ngIf="editForm.get('key')!.invalid && (editForm.get('key')!.dirty || editForm.get('key')!.touched)">
+            <small class="form-text text-danger" *ngIf="editForm.get('key')?.errors?.required" jhiTranslate="entity.validation.required">
               This field is required.
             </small>
           </div>
@@ -57,6 +68,35 @@
               This field is required.
             </small>
           </div>
+        </div>
+
+        <div class="row mb-3">
+          <label
+            class="form-label"
+            jhiTranslate="jobadminApp.process.agentKey"
+            for="field_agentKey"
+            [ngbTooltip]="'jobadminApp.process.help.agentKey' | translate"
+            >Agent Key</label
+          >
+          <input type="text" class="form-control" name="agentKey" id="field_agentKey" data-cy="agentKey" formControlName="agentKey" />
+        </div>
+
+        <div class="row mb-3">
+          <label
+            class="form-label"
+            jhiTranslate="jobadminApp.process.bucketKeyIfPaused"
+            for="field_bucketKeyIfPaused"
+            [ngbTooltip]="'jobadminApp.process.help.bucketKeyIfPaused' | translate"
+            >Bucket Key If Paused</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            name="bucketKeyIfPaused"
+            id="field_bucketKeyIfPaused"
+            data-cy="bucketKeyIfPaused"
+            formControlName="bucketKeyIfPaused"
+          />
         </div>
       </div>
 

@@ -21,9 +21,12 @@ describe('Process Service', () => {
     httpMock = TestBed.inject(HttpTestingController);
 
     elemDefault = {
-      id: '000',
+      id: 0,
+      key: 'AAAAAAA',
       name: 'AAAAAAA',
       activation: ActivationEnum.ACTIVE,
+      agentKey: 'AAAAAAA',
+      bucketKeyIfPaused: 'AAAAAAA',
     };
   });
 
@@ -58,9 +61,12 @@ describe('Process Service', () => {
     it('should update a Process', () => {
       const returnedFromService = Object.assign(
         {
-          id: '001',
+          id: 1,
+          key: 'BBBBBB',
           name: 'BBBBBB',
           activation: 'BBBBBB',
+          agentKey: 'BBBBBB',
+          bucketKeyIfPaused: 'BBBBBB',
         },
         elemDefault
       );
@@ -79,6 +85,8 @@ describe('Process Service', () => {
         {
           name: 'BBBBBB',
           activation: 'BBBBBB',
+          agentKey: 'BBBBBB',
+          bucketKeyIfPaused: 'BBBBBB',
         },
         new Process()
       );
@@ -97,9 +105,12 @@ describe('Process Service', () => {
     it('should return a list of Process', () => {
       const returnedFromService = Object.assign(
         {
-          id: '001',
+          id: 1,
+          key: 'BBBBBB',
           name: 'BBBBBB',
           activation: 'BBBBBB',
+          agentKey: 'BBBBBB',
+          bucketKeyIfPaused: 'BBBBBB',
         },
         elemDefault
       );
@@ -151,7 +162,7 @@ describe('Process Service', () => {
       });
 
       it('should add only unique Process to an array', () => {
-        const processArray: IProcess[] = [{ id: 123 }, { id: 456 }, { id: 68714 }];
+        const processArray: IProcess[] = [{ id: 123 }, { id: 456 }, { id: 31818 }];
         const processCollection: IProcess[] = [{ id: 123 }];
         expectedResult = service.addProcessToCollectionIfMissing(processCollection, ...processArray);
         expect(expectedResult).toHaveLength(3);

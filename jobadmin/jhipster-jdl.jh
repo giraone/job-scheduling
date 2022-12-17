@@ -51,7 +51,11 @@ entity Process {
   /** Name of process. */
   name String required,
   /** Is process active or paused? */
-  activation ActivationEnum required
+  activation ActivationEnum required,
+  /** Agent key on which the process is performed. */
+  agentKey String,
+  /** Bucket key to be used, if process is paused. */
+  bucketKeyIfPaused String,
 }
 
 // --- --- --- RELATIONSHIPS --- --- ---

@@ -33,9 +33,16 @@
       <thead>
         <tr jhiSort [(predicate)]="predicate" [(ascending)]="ascending" (sortChange)="loadPage()">
           <th scope="col" jhiSortBy="id"><span jhiTranslate="global.field.id">ID</span> <fa-icon icon="sort"></fa-icon></th>
+          <th scope="col" jhiSortBy="key"><span jhiTranslate="jobadminApp.process.key">Key</span> <fa-icon icon="sort"></fa-icon></th>
           <th scope="col" jhiSortBy="name"><span jhiTranslate="jobadminApp.process.name">Name</span> <fa-icon icon="sort"></fa-icon></th>
           <th scope="col" jhiSortBy="activation">
             <span jhiTranslate="jobadminApp.process.activation">Activation</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="agentKey">
+            <span jhiTranslate="jobadminApp.process.agentKey">Agent Key</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="bucketKeyIfPaused">
+            <span jhiTranslate="jobadminApp.process.bucketKeyIfPaused">Bucket Key If Paused</span> <fa-icon icon="sort"></fa-icon>
           </th>
           <th scope="col"></th>
         </tr>
@@ -45,8 +52,11 @@
           <td>
             <a [routerLink]="['/process', process.id, 'view']">{{ process.id }}</a>
           </td>
+          <td>{{ process.key }}</td>
           <td>{{ process.name }}</td>
           <td jhiTranslate="{{ 'jobadminApp.ActivationEnum.' + process.activation }}">{{ process.activation }}</td>
+          <td>{{ process.agentKey }}</td>
+          <td>{{ process.bucketKeyIfPaused }}</td>
           <td class="text-end">
             <div class="btn-group">
               <button
