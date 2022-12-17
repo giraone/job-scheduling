@@ -40,7 +40,8 @@ public class PausedDecider {
 
         return jobAdminClient.getProcesses()
             .doOnNext(processDTO -> {
-                LOGGER.info(">>> IS-PAUSED {} = {} {}", processDTO.getKey(), processDTO.getActivation(), processDTO.getBucketKeyIfPaused());
+                LOGGER.info(">>> IS-PAUSED {} = {} '{}' '{}'", processDTO.getKey(), processDTO.getActivation(),
+                    processDTO.getBucketKeyIfPaused(), processDTO.getAgentKey());
             })
             .filter(processDTO -> processDTO.getActivation() == ActivationEnum.PAUSED)
             .collectMap(ProcessDTO::getKey, ProcessDTO::getBucketKeyIfPaused);

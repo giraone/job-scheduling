@@ -38,7 +38,8 @@ public class StateRecordService {
 
         long id = Tsid.from(idString).toLong();
         // TODO: processKey ==> processId by DB query or DB view
-        final long processId = Long.parseLong(processKey.substring(1), 10);
+        final long processId = 1000L + Long.parseLong(processKey.substring(1), 10);
+        System.err.println("####################### processId=" + processId);
         final JobRecord jobRecord = new JobRecord(id, creationEventTimestamp, now /*X*/, processId);
         jobRecord.setLastRecordUpdateTimestamp(Instant.now());
         return r2dbcEntityTemplate.insert(jobRecord);

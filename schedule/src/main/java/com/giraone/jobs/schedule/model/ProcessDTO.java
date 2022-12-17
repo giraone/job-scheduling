@@ -1,16 +1,22 @@
 package com.giraone.jobs.schedule.model;
 
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 public class ProcessDTO implements Serializable {
 
-    @NotNull
+    private long id;
     private String key;
-    @NotNull
     private ActivationEnum activation;
     private String agentKey;
     private String bucketKeyIfPaused;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
 
     public String getKey() {
         return key;
@@ -47,7 +53,8 @@ public class ProcessDTO implements Serializable {
     @Override
     public String toString() {
         return "ProcessDTO{" +
-            "key='" + key + '\'' +
+            "id=" + id +
+            ", key='" + key + '\'' +
             ", activation=" + activation +
             ", agentKey='" + agentKey + '\'' +
             ", bucketKeyIfPaused='" + bucketKeyIfPaused + '\'' +
