@@ -153,6 +153,9 @@ spring:
   output:
     ansi:
       console-available: true
+  # ADAPTED
+  jackson:
+    default-property-inclusion: non_null
 
 server:
   servlet:
