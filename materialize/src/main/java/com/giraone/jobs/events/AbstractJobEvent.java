@@ -12,7 +12,7 @@ import java.time.Instant;
 
 public abstract class AbstractJobEvent implements Serializable {
 
-    private long id;
+    private String id;
     @JsonDeserialize(using = TolerantInstantDeserializer.class)
     @JsonSerialize(using = CustomInstantSerializer.class)
     private Instant eventTimestamp;
@@ -21,7 +21,7 @@ public abstract class AbstractJobEvent implements Serializable {
     protected AbstractJobEvent() {
     }
 
-    protected AbstractJobEvent(long id, String processKey, Instant eventTimestamp) {
+    protected AbstractJobEvent(String id, String processKey, Instant eventTimestamp) {
         this.id = id;
         this.processKey = processKey;
         this.eventTimestamp = eventTimestamp;
@@ -34,11 +34,11 @@ public abstract class AbstractJobEvent implements Serializable {
 
     public abstract String getStatus();
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

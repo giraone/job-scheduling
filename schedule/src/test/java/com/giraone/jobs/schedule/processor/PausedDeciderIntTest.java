@@ -69,23 +69,24 @@ class PausedDeciderIntTest {
         configureTargetMockServer();
 
         // act
-        Map<String, Integer> result = pausedDecider.loadPausedMap();
+        Map<String, String> result = pausedDecider.loadPausedMap();
 
         // assert
-        assertThat(result).containsExactlyInAnyOrderEntriesOf(Map.of("1", 0, "2", 1));
+        assertThat(result).containsExactlyInAnyOrderEntriesOf(Map.of( "2", "B01"));
         verifyMockServerGetRequest();
     }
 
     private void configureTargetMockServer() {
 
         ProcessDTO processDTO1 = new ProcessDTO();
-        processDTO1.setId("1");
-        processDTO1.setName("V1");
+        processDTO1.setKey("1");
+        processDTO1.setAgentKey("A01");
         processDTO1.setActivation(ActivationEnum.ACTIVE);
         ProcessDTO processDTO2 = new ProcessDTO();
-        processDTO2.setId("2");
-        processDTO1.setName("V2");
+        processDTO2.setKey("2");
+        processDTO2.setAgentKey("A02");
         processDTO2.setActivation(ActivationEnum.PAUSED);
+        processDTO2.setBucketKeyIfPaused("B01");
         List<ProcessDTO> responseObject = List.of(
             processDTO1, processDTO2
         );

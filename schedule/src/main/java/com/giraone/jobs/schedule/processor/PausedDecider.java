@@ -17,7 +17,7 @@ public class PausedDecider {
 
     private final JobAdminClient jobAdminClient;
 
-    private Map<String, Integer> pausedMap = new HashMap<>();
+    private Map<String, String> pausedMap = new HashMap<>();
 
     public PausedDecider(JobAdminClient jobAdminClient) {
         this.jobAdminClient = jobAdminClient;
@@ -28,20 +28,21 @@ public class PausedDecider {
         pausedMap = loadPausedMap();
     }
 
-    // 0 = not paused, > 0 index of bucket
-    public int isProcessPaused(String processKey) {
+    // null = not paused, != null key of bucket
+    public String isProcessPaused(String processKey) {
 
         return pausedMap.get(processKey);
     }
 
-    protected Map<String, Integer> loadPausedMap() {
+    protected Map<String, String> loadPausedMap() {
 
-        Map<String, Integer> newPausedMap = new HashMap<>();
-        int bucket = 1; // TODO
+        final Map<String, String> newPausedMap = new HashMap<>();
         jobAdminClient.getProcesses().doOnNext(processDTO -> {
-            int zeroOrIndex = processDTO.getActivation().equals(ActivationEnum.PAUSED) ? bucket : 0;
-            LOGGER.info(">>> IS-PAUSED {}={}", processDTO.getId(), zeroOrIndex);
-            newPausedMap.put(processDTO.getId(), zeroOrIndex);
+            final String bucketKeyIfPaused = processDTO.getActivation() == ActivationEnum.PAUSED ? processDTO.getBucketKeyIfPaused() : null;
+            LOGGER.info(">>> IS-PAUSED {} = {} {}", processDTO.getKey(), processDTO.getActivation(), bucketKeyIfPaused);
+            if (bucketKeyIfPaused != null) {
+                newPausedMap.put(processDTO.getKey(), bucketKeyIfPaused);
+            }
         }).blockLast();
         return newPausedMap;
     }

@@ -10,18 +10,18 @@ public class JobPausedEvent extends AbstractJobStatusChangedEvent {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private int bucket;
+    private String pausedBucketKey;
 
     public JobPausedEvent() {
     }
 
-    public JobPausedEvent(int bucket, JobAcceptedEvent jobAcceptedEvent) {
-        this(jobAcceptedEvent.getId(), jobAcceptedEvent.getProcessKey(), Instant.now(), jobAcceptedEvent.getPayload(), bucket);
+    public JobPausedEvent(String pausedBucketKey, JobAcceptedEvent jobAcceptedEvent) {
+        this(jobAcceptedEvent.getId(), jobAcceptedEvent.getProcessKey(), Instant.now(), jobAcceptedEvent.getPayload(), pausedBucketKey);
     }
 
-    public JobPausedEvent(String id, String processKey, Instant eventTimestamp, String payload, int bucket) {
+    public JobPausedEvent(String id, String processKey, Instant eventTimestamp, String payload, String pausedBucketKey) {
         super(id, processKey, eventTimestamp, payload, "PAUSED");
-        this.bucket = bucket;
+        this.pausedBucketKey = pausedBucketKey;
     }
 
     @Override
@@ -31,6 +31,6 @@ public class JobPausedEvent extends AbstractJobStatusChangedEvent {
 
     @JsonIgnore
     public String getBucketSuffix() {
-        return String.format("B%02d", bucket);
+        return pausedBucketKey;
     }
 }

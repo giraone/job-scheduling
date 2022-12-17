@@ -3,6 +3,7 @@ package com.giraone.jobs.schedule.processor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.giraone.jobs.events.JobCompletedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
+import com.github.f4b6a3.tsid.TsidCreator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,7 @@ class ProcessAgentInOutTest extends AbstractInOutTest {
         LOGGER.info("{} testProcessWorks START", getClass().getName());
 
         // act
+        String id = TsidCreator.getTsid256().toString();
         JobScheduledEvent jobScheduledEvent = new JobScheduledEvent("12", "A01", Instant.now(), "");
         produce(jobScheduledEvent, TOPIC_scheduled_A01);
 
@@ -52,7 +54,7 @@ class ProcessAgentInOutTest extends AbstractInOutTest {
         ConsumerRecord<String, String> consumerRecord = pollTopic(TOPIC_completed);
         assertThat(consumerRecord.key()).isNotNull();
         assertThat(consumerRecord.value()).isNotNull();
-        assertThat(consumerRecord.value()).contains("\"id\":\"12\"");
+        assertThat(consumerRecord.value()).contains("\"id\":\"" + id + "\"");
         assertThat(consumerRecord.value()).contains("\"processKey\":\"A01\"");
 
         JobCompletedEvent JobCompletedEvent = objectMapper.readValue(consumerRecord.value(), JobCompletedEvent.class);

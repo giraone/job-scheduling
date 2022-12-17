@@ -2,38 +2,22 @@ package com.giraone.jobs.schedule.model;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.Objects;
 
 public class ProcessDTO implements Serializable {
 
-    private String id;
-
-    /**
-     * Name of process.
-     */
     @NotNull
-    private String name;
-
-    /**
-     * Is process active or paused?
-     */
+    private String key;
     @NotNull
     private ActivationEnum activation;
+    private String agentKey;
+    private String bucketKeyIfPaused;
 
-    public String getId() {
-        return id;
+    public String getKey() {
+        return key;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public ActivationEnum getActivation() {
@@ -44,34 +28,29 @@ public class ProcessDTO implements Serializable {
         this.activation = activation;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof ProcessDTO)) {
-            return false;
-        }
-
-        ProcessDTO processDTO = (ProcessDTO) o;
-        if (this.id == null) {
-            return false;
-        }
-        return Objects.equals(this.id, processDTO.id);
+    public String getAgentKey() {
+        return agentKey;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.id);
+    public void setAgentKey(String agentKey) {
+        this.agentKey = agentKey;
     }
 
-    // prettier-ignore
+    public String getBucketKeyIfPaused() {
+        return bucketKeyIfPaused;
+    }
+
+    public void setBucketKeyIfPaused(String bucketKeyIfPaused) {
+        this.bucketKeyIfPaused = bucketKeyIfPaused;
+    }
+
     @Override
     public String toString() {
         return "ProcessDTO{" +
-            "id=" + getId() +
-            ", name='" + getName() + "'" +
-            ", activation='" + getActivation() + "'" +
-            "}";
+            "key='" + key + '\'' +
+            ", activation=" + activation +
+            ", agentKey='" + agentKey + '\'' +
+            ", bucketKeyIfPaused='" + bucketKeyIfPaused + '\'' +
+            '}';
     }
 }

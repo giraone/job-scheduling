@@ -6,17 +6,17 @@ public class DatabaseResult implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private final long entityId;
+    private final String entityId;
     private final boolean success;
     private final DatabaseOperation operation;
 
-    public DatabaseResult(long entityId, boolean success, DatabaseOperation operation) {
+    public DatabaseResult(String entityId, boolean success, DatabaseOperation operation) {
         this.entityId = entityId;
         this.success = success;
         this.operation = operation;
     }
 
-    public long getEntityId() {
+    public String getEntityId() {
         return entityId;
     }
 

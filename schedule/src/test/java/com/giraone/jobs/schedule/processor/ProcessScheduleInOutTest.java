@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.giraone.jobs.events.JobAcceptedEvent;
 import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
+import com.github.f4b6a3.tsid.TsidCreator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -59,10 +60,11 @@ class ProcessScheduleInOutTest extends AbstractInOutTest {
         LOGGER.info("{} testProcessWorks START", this.getClass().getName());
 
         // arrange
-        when(pausedDecider.isProcessPaused(anyString())).thenReturn(paused ? 1 : 0);
+        when(pausedDecider.isProcessPaused(anyString())).thenReturn(paused ? "B01" : null);
 
         // act
-        JobAcceptedEvent jobAcceptedEvent = new JobAcceptedEvent("12", "A01", Instant.now(), "");
+        String id = TsidCreator.getTsid256().toString();
+        JobAcceptedEvent jobAcceptedEvent = new JobAcceptedEvent(id, "A01", Instant.now(), "");
         produce(jobAcceptedEvent, TOPIC_accepted);
 
         // assert
@@ -74,7 +76,7 @@ class ProcessScheduleInOutTest extends AbstractInOutTest {
         ConsumerRecord<String, String> consumerRecord = pollTopic(topicNameSent);
         assertThat(consumerRecord.key()).isNotNull();
         assertThat(consumerRecord.value()).isNotNull();
-        assertThat(consumerRecord.value()).contains("\"id\":\"12\"");
+        assertThat(consumerRecord.value()).contains("\"id\":\"" + id + "\"");
         assertThat(consumerRecord.value()).contains("\"processKey\":\"A01\"");
 
         if (paused) {

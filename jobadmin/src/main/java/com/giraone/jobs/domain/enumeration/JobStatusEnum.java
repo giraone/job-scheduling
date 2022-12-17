@@ -28,18 +28,23 @@ public enum JobStatusEnum {
     @JsonProperty("DELIVERED")
     DELIVERED("DELIVERED");
 
-    private static Map<String, JobStatusEnum> FORMAT_MAP = Stream
+    private static final Map<String, JobStatusEnum> FORMAT_MAP = Stream
         .of(JobStatusEnum.values())
         .collect(Collectors.toMap(s -> s.label, Function.identity()));
 
     public final String label;
 
-    private JobStatusEnum(String label) {
+    JobStatusEnum(String label) {
         this.label = label;
     }
 
     @JsonCreator // This is the factory method and must be static
     public static JobStatusEnum fromString(String string) {
         return Optional.ofNullable(FORMAT_MAP.get(string)).orElseThrow(() -> new IllegalArgumentException(string));
+    }
+
+    @Override
+    public String toString() {
+        return label;
     }
 }

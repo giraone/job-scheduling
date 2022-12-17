@@ -31,8 +31,8 @@ public class ProcessorResume {
         }
 
         final String processKey = jobPausedEvent.getProcessKey();
-        final Integer pausedBucket = pausedDecider.isProcessPaused(processKey);
-        if (pausedBucket != null) {
+        final String pausedBucketKey = pausedDecider.isProcessPaused(processKey);
+        if (pausedBucketKey != null) {
             return Optional.empty();
         }
         return Optional.of(new JobScheduledEvent(jobPausedEvent));
