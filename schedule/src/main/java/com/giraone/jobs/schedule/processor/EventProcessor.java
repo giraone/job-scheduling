@@ -146,6 +146,8 @@ public class EventProcessor {
             if (jobScheduledEvent.isPresent()) {
                 LOGGER.info(">>> Re-scheduling {} {}", processName, jobScheduledEvent);
                 sendToDynamicTarget(jobScheduledEvent.get(), jobEvent -> processName + "-" + jobEvent.getProcessKey());
+            } else {
+                // Kein ACK
             }
         };
     }

@@ -33,17 +33,21 @@ public class PausedDecider {
     // null = not paused, != null key of bucket
     public String isProcessPaused(String processKey) {
 
-        return pausedMap.get(processKey);
+        final String ret = pausedMap.get(processKey);
+        if (ret != null) {
+            LOGGER.info(">>> {} IS-PAUSED", processKey);
+        }
+        return ret;
     }
 
     protected Mono<Map<String, String>> loadPausedMap() {
 
         return jobAdminClient.getProcesses()
-            .doOnNext(processDTO -> {
-                LOGGER.info(">>> IS-PAUSED {} = {} '{}' '{}'", processDTO.getKey(), processDTO.getActivation(),
-                    processDTO.getBucketKeyIfPaused(), processDTO.getAgentKey());
-            })
             .filter(processDTO -> processDTO.getActivation() == ActivationEnum.PAUSED)
+            .doOnNext(processDTO -> {
+                LOGGER.info(">>> {} IS-PAUSED with Paused-Bucket={} and Agent='{}'",
+                    processDTO.getKey(), processDTO.getBucketKeyIfPaused(), processDTO.getAgentKey());
+            })
             .collectMap(ProcessDTO::getKey, ProcessDTO::getBucketKeyIfPaused);
     }
 }

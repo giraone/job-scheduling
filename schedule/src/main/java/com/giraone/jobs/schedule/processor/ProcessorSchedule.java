@@ -32,9 +32,11 @@ public class ProcessorSchedule {
 
         final String processKey = jobAcceptedEvent.getProcessKey();
         final String pausedBucketKey = pausedDecider.isProcessPaused(processKey);
+        LOGGER.info(">>> ProcessorSchedule.streamProcess {} {} pausedBucketKey={}",
+            jobAcceptedEvent.getId(), jobAcceptedEvent.getProcessKey(), pausedBucketKey);
         if (pausedBucketKey != null) {
             final JobPausedEvent jobPausedEvent = new JobPausedEvent(pausedBucketKey, jobAcceptedEvent);
-            LOGGER.debug(">>> Process {} is paused. Moving job {} to paused bucket {} in topic!",
+            LOGGER.info(">>> Process {} is paused. Moving job {} to paused bucket {} topic!",
                 processKey, jobPausedEvent.getMessageKey(), jobPausedEvent.getBucketSuffix());
             return jobPausedEvent;
         } else {
