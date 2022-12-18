@@ -2,6 +2,7 @@ logging:
   level:
     root: WARN
     com.giraone: DEBUG
+    name.nkonev: DEBUG
     # set the 4 lines to warn to suppress large config list output on startup
     org.apache.kafka.common.config.AbstractConfig: WARN
     org.apache.kafka.clients.admin.AdminClientConfig: WARN

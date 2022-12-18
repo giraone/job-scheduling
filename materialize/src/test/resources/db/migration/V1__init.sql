@@ -1,4 +1,3 @@
-/*
 CREATE TABLE job_record (
  id BIGINT NOT NULL,
  job_accepted_timestamp TIMESTAMP,
@@ -9,4 +8,3 @@ CREATE TABLE job_record (
  process_id BIGINT,
  CONSTRAINT PK_DOCUMENT_OBJECT PRIMARY KEY (id)
 );
-*/
