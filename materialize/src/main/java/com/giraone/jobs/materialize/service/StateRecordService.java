@@ -39,7 +39,6 @@ public class StateRecordService {
         long id = Tsid.from(idString).toLong();
         // TODO: processKey ==> processId by DB query or DB view
         final long processId = 1000L + Long.parseLong(processKey.substring(1), 10);
-        System.err.println("####################### processId=" + processId);
         final JobRecord jobRecord = new JobRecord(id, creationEventTimestamp, now /*X*/, processId);
         jobRecord.setLastRecordUpdateTimestamp(Instant.now());
         return r2dbcEntityTemplate.insert(jobRecord);
@@ -55,8 +54,7 @@ public class StateRecordService {
             .set(JobRecord.ATTRIBUTE_pausedBucketKey, pausedBucketKey);
         return r2dbcEntityTemplate
             .update(JobRecord.class)
-            .matching(Query.query(
-                    where(JobRecord.ATTRIBUTE_id).is(id))
+            .matching(Query.query(where(JobRecord.ATTRIBUTE_id).is(id))
                 // TODO: and lastModificationTimestamp < event.eventTimestamp /*X*/
             )
             .apply(update)

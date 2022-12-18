@@ -10,12 +10,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Collection;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ApplicationProperties.class})
@@ -28,26 +25,6 @@ public class EventToDatabaseApplication {
 
     public EventToDatabaseApplication(Environment env) {
         this.env = env;
-    }
-
-    /**
-     * Initializes documents.
-     * <p>
-     * Spring profiles can be configured with a program argument --spring.profiles.active=your-active-profile
-     * <p>
-     */
-    @PostConstruct
-    public void initApplication() {
-
-        Collection<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
-        if (activeProfiles.contains("dev") && activeProfiles.contains("prod")) {
-            LOGGER.error("You have misconfigured your application! It should not run " +
-                "with both the 'dev' and 'prod' profiles at the same time.");
-        }
-        if (activeProfiles.contains("dev") && activeProfiles.contains("cloud")) {
-            LOGGER.error("You have misconfigured your application! It should not " +
-                "run with both the 'dev' and 'cloud' profiles at the same time.");
-        }
     }
 
     /**
