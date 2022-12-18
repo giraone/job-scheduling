@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.giraone.jobs.events.JobAcceptedEvent;
 import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
+import com.giraone.jobs.schedule.service.PausedDecider;
 import com.github.f4b6a3.tsid.TsidCreator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeAll;
@@ -60,7 +61,7 @@ class ProcessScheduleInOutTest extends AbstractInOutTest {
         LOGGER.info("{} testProcessWorks START", this.getClass().getName());
 
         // arrange
-        when(pausedDecider.isProcessPaused(anyString())).thenReturn(paused ? "B01" : null);
+        when(pausedDecider.getBucketIfProcessPaused(anyString())).thenReturn(paused ? "B01" : null);
 
         // act
         String id = TsidCreator.getTsid256().toString();

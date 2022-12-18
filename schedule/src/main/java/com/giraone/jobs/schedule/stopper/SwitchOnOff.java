@@ -74,4 +74,18 @@ public class SwitchOnOff {
         Binding<?> state = bindingsEndpoint.queryState(bindingNameConsumer);
         return state.isPaused();
     }
+
+    //--- short cuts for processResume ---
+
+    public boolean changeStateToPausedForProcessResume(String bucketPausedKey, boolean paused) {
+        return changeStateToPaused("processResume" + bucketPausedKey, paused);
+    }
+
+    public boolean isRunningForProcessResume(String bucketPausedKey) {
+        return isRunning("processResume" + bucketPausedKey);
+    }
+
+    public boolean isPausedForProcessResume(String bucketPausedKey) {
+        return isPaused("processResume" + bucketPausedKey);
+    }
 }

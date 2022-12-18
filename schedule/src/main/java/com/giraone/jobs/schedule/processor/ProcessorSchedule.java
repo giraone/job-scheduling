@@ -5,6 +5,7 @@ import com.giraone.jobs.events.JobAcceptedEvent;
 import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
 import com.giraone.jobs.schedule.constants.UtilsAndConstants;
+import com.giraone.jobs.schedule.service.PausedDecider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -31,7 +32,7 @@ public class ProcessorSchedule {
         }
 
         final String processKey = jobAcceptedEvent.getProcessKey();
-        final String pausedBucketKey = pausedDecider.isProcessPaused(processKey);
+        final String pausedBucketKey = pausedDecider.getBucketIfProcessPaused(processKey);
         LOGGER.info(">>> ProcessorSchedule.streamProcess {} {} pausedBucketKey={}",
             jobAcceptedEvent.getId(), jobAcceptedEvent.getProcessKey(), pausedBucketKey);
         if (pausedBucketKey != null) {

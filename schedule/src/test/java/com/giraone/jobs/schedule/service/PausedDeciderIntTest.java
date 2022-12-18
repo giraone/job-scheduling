@@ -1,4 +1,4 @@
-package com.giraone.jobs.schedule.processor;
+package com.giraone.jobs.schedule.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,6 +6,7 @@ import com.giraone.jobs.common.ObjectMapperBuilder;
 import com.giraone.jobs.schedule.config.ApplicationProperties;
 import com.giraone.jobs.schedule.model.ActivationEnum;
 import com.giraone.jobs.schedule.model.ProcessDTO;
+import com.giraone.jobs.schedule.stopper.SwitchOnOff;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
@@ -16,6 +17,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -23,7 +26,6 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
-import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +47,8 @@ class PausedDeciderIntTest {
     @Autowired
     private PausedDecider pausedDecider;
     @Autowired
+    private SwitchOnOff switchOnOff;
+    @Autowired
     private ApplicationProperties applicationProperties;
 
     @BeforeAll
@@ -63,30 +67,74 @@ class PausedDeciderIntTest {
     }
 
     @Test
-    void loadPausedMap() {
+    void loadProcesses() {
 
         // arrange
-        configureTargetMockServer();
+        configureTargetMockServer(false, true);
 
         // act
-        Map<String, String> result = pausedDecider.loadPausedMap().block();
+        List<ProcessDTO> result = pausedDecider.loadProcesses();
 
         // assert
-        assertThat(result).containsExactlyInAnyOrderEntriesOf(Map.of( "2", "B01"));
+        assertThat(result).hasSize(2);
+
+        assertThat(result.get(0).getKey()).isEqualTo("1");
+        assertThat(result.get(0).getActivation()).isEqualTo(ActivationEnum.ACTIVE);
+        assertThat(result.get(0).getAgentKey()).isEqualTo("A01");
+        assertThat(result.get(0).getBucketKeyIfPaused()).isNull();
+
+        assertThat(result.get(1).getKey()).isEqualTo("2");
+        assertThat(result.get(1).getActivation()).isEqualTo(ActivationEnum.PAUSED);
+        assertThat(result.get(1).getAgentKey()).isEqualTo("A02");
+        assertThat(result.get(1).getBucketKeyIfPaused()).isEqualTo("B01");
+
         verifyMockServerGetRequest();
     }
 
-    private void configureTargetMockServer() {
+    @ParameterizedTest
+    @CsvSource({
+        "false,true,,B01,true,true",
+        "true,false,B01,,true,false",
+    })
+    void scheduleReload(boolean paused1, boolean paused2,
+                        String expectedBucket1, String expectedBucket2,
+                        boolean expectedB01Running /* always true */, boolean expectedB01Paused) {
+
+        // arrange
+        configureTargetMockServer(paused1, paused2);
+
+        // act
+        pausedDecider.scheduleReload();
+
+        // assert
+        verifyMockServerGetRequest();
+        assertThat(pausedDecider.getBucketIfProcessPaused("1")).isEqualTo(expectedBucket1);
+        assertThat(pausedDecider.getBucketIfProcessPaused("2")).isEqualTo(expectedBucket2);
+        assertThat(switchOnOff.isRunningForProcessResume("B01")).isEqualTo(expectedB01Running);
+        assertThat(switchOnOff.isPausedForProcessResume("B01")).isEqualTo(expectedB01Paused);
+    }
+
+    private void configureTargetMockServer(boolean paused1, boolean paused2) {
 
         ProcessDTO processDTO1 = new ProcessDTO();
         processDTO1.setKey("1");
         processDTO1.setAgentKey("A01");
-        processDTO1.setActivation(ActivationEnum.ACTIVE);
+        if (paused1) {
+            processDTO1.setActivation(ActivationEnum.PAUSED);
+            processDTO1.setBucketKeyIfPaused("B01");
+        } else {
+            processDTO1.setActivation(ActivationEnum.ACTIVE);
+        }
         ProcessDTO processDTO2 = new ProcessDTO();
         processDTO2.setKey("2");
         processDTO2.setAgentKey("A02");
         processDTO2.setActivation(ActivationEnum.PAUSED);
-        processDTO2.setBucketKeyIfPaused("B01");
+        if (paused2) {
+            processDTO2.setActivation(ActivationEnum.PAUSED);
+            processDTO2.setBucketKeyIfPaused("B01");
+        } else {
+            processDTO2.setActivation(ActivationEnum.ACTIVE);
+        }
         List<ProcessDTO> responseObject = List.of(
             processDTO1, processDTO2
         );
