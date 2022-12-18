@@ -105,6 +105,14 @@ public class JobRecord implements Serializable {
         this.status = status;
     }
 
+    public String getPausedBucketKey() {
+        return pausedBucketKey;
+    }
+
+    public void setPausedBucketKey(String pausedBucketKey) {
+        this.pausedBucketKey = pausedBucketKey;
+    }
+
     public long getProcessId() {
         return processId;
     }
@@ -121,6 +129,7 @@ public class JobRecord implements Serializable {
             ", lastEventTimestamp=" + lastEventTimestamp +
             ", lastRecordUpdateTimestamp=" + lastRecordUpdateTimestamp +
             ", status='" + status + '\'' +
+            ", pausedBucketKey='" + pausedBucketKey + '\'' +
             ", processId='" + processId + '\'' +
             '}';
     }

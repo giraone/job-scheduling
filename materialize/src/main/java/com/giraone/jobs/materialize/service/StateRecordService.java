@@ -54,8 +54,9 @@ public class StateRecordService {
             .set(JobRecord.ATTRIBUTE_pausedBucketKey, pausedBucketKey);
         return r2dbcEntityTemplate
             .update(JobRecord.class)
-            .matching(Query.query(where(JobRecord.ATTRIBUTE_id).is(id))
-                // TODO: and lastModificationTimestamp < event.eventTimestamp /*X*/
+            .matching(Query.query(
+                where(JobRecord.ATTRIBUTE_id).is(id)
+                    .and(JobRecord.ATTRIBUTE_lastEventTimestamp).lessThan(lastEventTimestamp))
             )
             .apply(update)
             .doOnNext(updateCount -> LOGGER.debug("Update id={} state={} updated {} rows", id, state, updateCount));

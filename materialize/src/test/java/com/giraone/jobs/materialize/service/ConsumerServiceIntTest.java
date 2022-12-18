@@ -2,13 +2,14 @@ package com.giraone.jobs.materialize.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.giraone.jobs.events.JobAcceptedEvent;
 import com.giraone.jobs.events.JobStatusChangedEvent;
 import com.giraone.jobs.materialize.common.ObjectMapperBuilder;
 import com.giraone.jobs.materialize.config.ApplicationProperties;
-import com.giraone.jobs.events.JobAcceptedEvent;
 import com.giraone.jobs.materialize.model.JobRecord;
+import com.github.f4b6a3.tsid.Tsid;
+import com.github.f4b6a3.tsid.TsidCreator;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerServiceIntTest.class);
     private static final ObjectMapper objectMapper = ObjectMapperBuilder.build(false, false);
+    private static final Tsid id = TsidCreator.getTsid256();
 
     @Autowired
     ApplicationProperties applicationProperties;
@@ -44,12 +46,11 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
         r2dbcEntityTemplate.delete(JobRecord.class).all().then().subscribe();
     }
 
-    @Disabled
     @Test
     @Order(1)
     void passOneNewEvent() throws Exception {
 
-        JobAcceptedEvent event = new JobAcceptedEvent("1", "A01", Instant.now());
+        JobAcceptedEvent event = new JobAcceptedEvent(id.toString(), "V001", Instant.now());
         String jsonEvent = objectMapper.writeValueAsString(event);
         String topic = applicationProperties.getTopicInsert();
         String messageKey = event.getId();
@@ -67,7 +68,7 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
         r2dbcEntityTemplate.select(JobRecord.class).all()
             .as(StepVerifier::create)
             .assertNext(record -> {
-                assertThat(record.getId()).isEqualTo(1L);
+                assertThat(record.getId()).isEqualTo(id.toLong());
                 assertThat(record.getStatus()).isEqualTo("accepted");
                 assertThat(record.getJobAcceptedTimestamp()).isEqualTo(event.getEventTimestamp());
                 assertThat(record.getLastEventTimestamp()).isNotNull();
@@ -76,12 +77,11 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
             .verifyComplete();
     }
 
-    @Disabled
     @Test
     @Order(2)
     void passOneUpdateEvent() throws JsonProcessingException {
 
-        JobStatusChangedEvent event = new JobStatusChangedEvent("1", "A01", Instant.now(), "SCHEDULED");
+        JobStatusChangedEvent event = new JobStatusChangedEvent(id.toString(), "V001", Instant.now(), "SCHEDULED");
         String jsonEvent = objectMapper.writeValueAsString(event);
         String topic = applicationProperties.getTopicsUpdate();
 
@@ -93,7 +93,7 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
                     .as(StepVerifier::create)
                     .expectNextCount(1L)
                     .assertNext(record -> {
-                        assertThat(record.getId()).isEqualTo("1");
+                        assertThat(record.getId()).isEqualTo(id.toLong());
                         assertThat(record.getStatus()).isEqualTo("scheduled");
                         assertThat(record.getJobAcceptedTimestamp()).isNotNull();
                         assertThat(record.getLastEventTimestamp()).isEqualTo(event.getEventTimestamp());

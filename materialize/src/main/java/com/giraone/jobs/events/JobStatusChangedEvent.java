@@ -5,6 +5,7 @@ import java.time.Instant;
 public class JobStatusChangedEvent extends AbstractJobEvent {
 
     private String status;
+    private String agentKey;
     private String pausedBucketKey;
 
     protected JobStatusChangedEvent() {
@@ -22,6 +23,14 @@ public class JobStatusChangedEvent extends AbstractJobEvent {
     @Override
     public String getStatus() {
         return this.status;
+    }
+
+    public String getAgentKey() {
+        return agentKey;
+    }
+
+    public void setAgentKey(String agentKey) {
+        this.agentKey = agentKey;
     }
 
     public void setPausedBucketKey(String pausedBucketKey) {
