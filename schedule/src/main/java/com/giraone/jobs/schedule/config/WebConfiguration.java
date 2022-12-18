@@ -31,7 +31,7 @@ import static org.springframework.web.reactive.function.server.ServerResponse.ok
 @Slf4j
 public class WebConfiguration implements WebFluxConfigurer {
 
-    private static final ObjectMapper objectMapper = ObjectMapperBuilder.build(true, false);
+    private static final ObjectMapper objectMapper = ObjectMapperBuilder.build(false, false);
 
     // Needs Spring Boot 2.1.* or newer - this enables X-Forwarded header support
     @Bean
@@ -64,16 +64,15 @@ public class WebConfiguration implements WebFluxConfigurer {
     @SuppressWarnings("SameParameterValue")
     private static WebClient.Builder prepareDefaultWebclient(String acceptedMediaType, String scheme, String host) {
 
-        ExchangeStrategies strategies = ExchangeStrategies
-            .builder()
-            .codecs(clientCodecConfigurer ->
-                clientCodecConfigurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper))
-            ).build();
+      ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
+            .codecs(configurer -> configurer.defaultCodecs()
+                .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper)))
+            .build();
 
         WebClient.Builder builder = WebClient.builder()
             .defaultHeader(HttpHeaders.ACCEPT, acceptedMediaType)
             .baseUrl(UriComponentsBuilder.newInstance().scheme(scheme).host(host).build().toString())
-            .exchangeStrategies(strategies);
+            .exchangeStrategies(exchangeStrategies);
 
         return builder;
     }
