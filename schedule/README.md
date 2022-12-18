@@ -4,6 +4,15 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 
 ## TODO
 
+### Java 17 / Spring Boot 3.0.0
+
+All projects are build for Java 17. The Spring Boot 3.0.0 migration is only partially done:
+
+- [x] receiver
+- [ ] materialize - R2DBC-Migrate not yet ready
+- [ ] schedule
+- [ ] jobadmin - Depends on JHipster
+
 ### Global
 
 - [x] All events have *message keys* based on [TSID](https://github.com/f4b6a3/tsid-creator)
@@ -12,6 +21,11 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 - [ ] Processes use an n:m mapping to agents. For this there is an agentKey attribute in the process definition
 - [ ] Add a requester id (string)
 - [ ] Display buckets in JobAdmin (materialize must handle this)
+- [ ] Measure consumer lag and expose it as metric
+
+### Materialize
+
+- [ ] Prevent that older events overwrite newer once - see StateRecordService.java
 
 ### Schedule
 
