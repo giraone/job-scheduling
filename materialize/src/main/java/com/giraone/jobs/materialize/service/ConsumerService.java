@@ -143,10 +143,10 @@ public class ConsumerService implements CommandLineRunner {
     private Mono<DatabaseResult> storeStateForNewJob(JobAcceptedEvent jobAcceptedEvent, Instant now, String processKey) {
 
         if (LOGGER.isDebugEnabled()) {
-            int latency = jobAcceptedEvent.getEventTimestamp() != null
-                ? now.getNano() - jobAcceptedEvent.getEventTimestamp().getNano()
+            long latency = jobAcceptedEvent.getEventTimestamp() != null
+                ? now.toEpochMilli() - jobAcceptedEvent.getEventTimestamp().toEpochMilli()
                 : -1;
-            LOGGER.debug("INSERT id={}, eventTimestamp={} to state={}, nanoLatency={}",
+            LOGGER.debug("INSERT id={}, eventTimestamp={} to state={}, latency={}ms",
                 jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), JobRecord.STATE_accepted, latency);
         }
         return stateRecordService.insert(jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), Instant.now(), processKey)
@@ -156,10 +156,10 @@ public class ConsumerService implements CommandLineRunner {
     private Mono<DatabaseResult> storeStateForExistingJob(JobStatusChangedEvent jobChangedEvent, Instant now) {
 
         if (LOGGER.isDebugEnabled()) {
-            int latency = jobChangedEvent.getEventTimestamp() != null
-                ? now.getNano() - jobChangedEvent.getEventTimestamp().getNano()
+            long latency = jobChangedEvent.getEventTimestamp() != null
+                ? now.toEpochMilli() - jobChangedEvent.getEventTimestamp().toEpochMilli()
                 : -1;
-            LOGGER.debug("UPDATE id={}, eventTimestamp={} to state={}, nanoLatency={}",
+            LOGGER.debug("UPDATE id={}, eventTimestamp={} to state={}, latency={}ms",
                 jobChangedEvent.getId(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getStatus(), latency);
         }
         return stateRecordService.update(jobChangedEvent.getId(), jobChangedEvent.getStatus(),
