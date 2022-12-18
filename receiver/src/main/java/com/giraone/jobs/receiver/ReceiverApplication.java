@@ -1,6 +1,7 @@
 package com.giraone.jobs.receiver;
 
 import com.giraone.jobs.receiver.config.ApplicationProperties;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -9,24 +10,15 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Collection;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ApplicationProperties.class})
 public class ReceiverApplication {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiverApplication.class);
-
-    private final Environment env;
-
-    public ReceiverApplication(Environment env) {
-        this.env = env;
-    }
 
     /**
      * Initializes documents.
@@ -36,16 +28,6 @@ public class ReceiverApplication {
      */
     @PostConstruct
     public void initApplication() {
-
-        Collection<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
-        if (activeProfiles.contains("dev") && activeProfiles.contains("prod")) {
-            LOGGER.error("You have misconfigured your application! It should not run " +
-                "with both the 'dev' and 'prod' profiles at the same time.");
-        }
-        if (activeProfiles.contains("dev") && activeProfiles.contains("cloud")) {
-            LOGGER.error("You have misconfigured your application! It should not " +
-                "run with both the 'dev' and 'cloud' profiles at the same time.");
-        }
 
         final String nodeIndexString = System.getenv("CF_INSTANCE_INDEX");
         if (nodeIndexString != null) {
@@ -85,16 +67,17 @@ public class ReceiverApplication {
         } catch (UnknownHostException e) {
             LOGGER.warn("The host name could not be determined, using `localhost` as fallback");
         }
-        LOGGER.info("\n----------------------------------------------------------\n" +
-                "\t~~~ Application '{}' is running! Access URLs:\n" +
-                "\t~~~ - Local:      {}://localhost:{}{}\n" +
-                "\t~~~ - External:   {}://{}:{}{}\n" +
-                "\t~~~ Java version:      {} / {}\n" +
-                "\t~~~ Processors:        {}\n" +
-                "\t~~~ Profile(s):        {}\n" +
-                "\t~~~ Default charset:   {}\n" +
-                "\t~~~ File encoding:     {}\n" +
-                "----------------------------------------------------------",
+        LOGGER.info("""
+                ----------------------------------------------------------
+                \t~~~ Application '{}' is running! Access URLs:
+                \t~~~ - Local:      {}://localhost:{}{}
+                \t~~~ - External:   {}://{}:{}{}
+                \t~~~ Java version:      {} / {}
+                \t~~~ Processors:        {}
+                \t~~~ Profile(s):        {}
+                \t~~~ Default charset:   {}
+                \t~~~ File encoding:     {}
+                ----------------------------------------------------------""",
             env.getProperty("spring.application.name"),
             protocol,
             serverPort,

@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import reactor.core.publisher.Hooks;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 @ConfigurationProperties(prefix = "application", ignoreUnknownFields = false)
 // exclude from test coverage
