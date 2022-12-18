@@ -33,14 +33,15 @@ public class ProcessorResume {
 
         final String processKey = jobPausedEvent.getProcessKey();
         final String pausedBucketKey = pausedDecider.getBucketIfProcessPaused(processKey);
-        LOGGER.info(">>> ProcessorResume.streamProcess {} {} pausedBucketKey={}",
-            jobPausedEvent.getId(), jobPausedEvent.getProcessKey(), pausedBucketKey);
+
         if (pausedBucketKey != null) {
-            LOGGER.info(">>> ProcessorResume.streamProcess keeping {} of {} paused", jobPausedEvent.getId(), processKey);
+            LOGGER.info(">>> Keeping {} of {} paused in bucket '{}'", jobPausedEvent.getId(), processKey, pausedBucketKey);
             return Optional.empty();
         } else {
-            LOGGER.info(">>> ProcessorResume.streamProcess re-scheduling {} of {}", jobPausedEvent.getId(), processKey);
-            return Optional.of(new JobScheduledEvent(jobPausedEvent));
+            final String agentKey = pausedDecider.getAgentKeyForProcess(processKey);
+            LOGGER.info(">>> Re-scheduling {} of {} to agent '{}'",
+                jobPausedEvent.getId(), processKey, agentKey);
+            return Optional.of(new JobScheduledEvent(jobPausedEvent, agentKey));
         }
     }
 }

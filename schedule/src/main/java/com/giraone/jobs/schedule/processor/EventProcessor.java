@@ -2,9 +2,12 @@ package com.giraone.jobs.schedule.processor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.giraone.jobs.common.ObjectMapperBuilder;
+import com.giraone.jobs.events.AbstractAssignedJobEvent;
 import com.giraone.jobs.events.AbstractJobEvent;
+import com.giraone.jobs.events.AbstractJobStatusChangedEvent;
 import com.giraone.jobs.events.JobAcceptedEvent;
 import com.giraone.jobs.events.JobCompletedEvent;
+import com.giraone.jobs.events.JobFailedEvent;
 import com.giraone.jobs.events.JobNotifiedEvent;
 import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
@@ -102,15 +105,15 @@ public class EventProcessor {
     }
 
     private Consumer<JobAcceptedEvent> performSchedule() {
-        return jobScheduledEvent -> {
-            AbstractJobEvent event = processorSchedule.streamProcess(jobScheduledEvent);
+        return jobAcceptedEvent -> {
+            AbstractJobStatusChangedEvent event = processorSchedule.streamProcess(jobAcceptedEvent);
             sendToDynamicTarget(event, jobEvent -> {
-                if (event instanceof JobScheduledEvent) {
-                    final JobScheduledEvent jobScheduledEvent1 = (JobScheduledEvent) event;
-                    return PROCESS_schedule + "-" + jobScheduledEvent1.getAgentSuffix();
-                } else {
-                    final JobPausedEvent jobPausedEvent = (JobPausedEvent) event;
+                if (event instanceof final JobScheduledEvent jobScheduledEvent) {
+                    return PROCESS_schedule + "-" + jobScheduledEvent.getAgentKey();
+                } else if (event instanceof final JobPausedEvent jobPausedEvent) {
                     return PROCESS_schedule + "-" + jobPausedEvent.getBucketSuffix();
+                } else {
+                    throw new IllegalArgumentException("Event returned by processorSchedule has invalid type " + event.getClass());
                 }
             });
         };
@@ -189,14 +192,16 @@ public class EventProcessor {
 
     private Consumer<JobScheduledEvent> performAgent(String processName) {
         return jobScheduledEvent -> {
-            AbstractJobEvent event = processorAgent.streamProcess(jobScheduledEvent);
+            AbstractAssignedJobEvent event = processorAgent.streamProcess(jobScheduledEvent);
             sendToDynamicTarget(event, jobEvent -> {
                 if (event instanceof JobCompletedEvent) {
                     LOGGER.info(">>> COMPLETED {} {} {}", processName, event.getProcessKey(), event.getMessageKey());
-                    return PROCESS_agent + event.getProcessKey() + "-out-0";
+                    return PROCESS_agent + event.getAgentKey() + "-out-0";
+                } else if (event instanceof JobFailedEvent){
+                    LOGGER.warn(">>> FAILED {} {} {}", processName, event.getProcessKey(), event.getMessageKey());
+                    return PROCESS_agent + event.getAgentKey() + "-out-failed";
                 } else {
-                    LOGGER.info(">>> FAILED {} {} {}", processName, event.getProcessKey(), event.getMessageKey());
-                    return PROCESS_agent + event.getProcessKey() + "-out-failed";
+                    throw new IllegalArgumentException("Event returned by processorAgent has invalid type " + event.getClass());
                 }
             });
         };

@@ -2,6 +2,9 @@ package com.giraone.jobs.events;
 
 import java.time.Instant;
 
+/**
+ * All events after "accepted" with their "status".
+ */
 public abstract class AbstractJobStatusChangedEvent extends AbstractJobEvent {
 
     protected String status;

@@ -47,7 +47,7 @@ class ProcessAgentInOutTest extends AbstractInOutTest {
 
         // act
         String id = TsidCreator.getTsid256().toString();
-        JobScheduledEvent jobScheduledEvent = new JobScheduledEvent("12", "A01", Instant.now(), "");
+        JobScheduledEvent jobScheduledEvent = new JobScheduledEvent("12", "V001", Instant.now(), "", "A01");
         produce(jobScheduledEvent, TOPIC_scheduled_A01);
 
         // assert
@@ -55,7 +55,7 @@ class ProcessAgentInOutTest extends AbstractInOutTest {
         assertThat(consumerRecord.key()).isNotNull();
         assertThat(consumerRecord.value()).isNotNull();
         assertThat(consumerRecord.value()).contains("\"id\":\"" + id + "\"");
-        assertThat(consumerRecord.value()).contains("\"processKey\":\"A01\"");
+        assertThat(consumerRecord.value()).contains("\"processKey\":\"V001\"");
 
         JobCompletedEvent JobCompletedEvent = objectMapper.readValue(consumerRecord.value(), JobCompletedEvent.class);
         assertThat(JobCompletedEvent.getMessageKey()).isNotNull();

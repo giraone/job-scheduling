@@ -13,6 +13,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This class has two responsibilities:
+ * <ul>
+ *     <li>Decide, whether a process is paused and return the bucket key of the paused topic to be used.</li>
+ *     <li>Map processes to agents and therefore to scheduled topics.</li>
+ * </ul>
+ * Both is done by asking the jobadmin service periodically and hold a cache for this.
+ */
 @Service
 public class PausedDecider {
 
@@ -22,6 +30,7 @@ public class PausedDecider {
     private final JobAdminClient jobAdminClient;
 
     private Map<String, String> pausedMap = new HashMap<>();
+    private Map<String, String> agentMap = new HashMap<>();
 
     public PausedDecider(SwitchOnOff switchOnOff, JobAdminClient jobAdminClient) {
         this.switchOnOff = switchOnOff;
@@ -32,6 +41,7 @@ public class PausedDecider {
     public void scheduleReload() {
 
         final Map<String, String> newPausedMap = new HashMap<>();
+        final Map<String, String> newAgentMap = new HashMap<>();
 
         final List<ProcessDTO> newProcesses = loadProcesses();
         for (ProcessDTO process: newProcesses) {
@@ -41,7 +51,7 @@ public class PausedDecider {
                 LOGGER.info(">>> {} IS-PAUSED with Paused-Bucket={} and Agent='{}'",
                     processKey, process.getBucketKeyIfPaused(), process.getAgentKey());
                 newPausedMap.put(processKey, process.getBucketKeyIfPaused());
-                // Are there any processes to be switched from ACTIVE to PAUSED?
+                // (2) Are there any processes to be switched from ACTIVE to PAUSED?
                 if (!pausedMap.containsKey(processKey)) {
                     final String bucketKey = process.getBucketKeyIfPaused();
                     LOGGER.info(">>> SWITCHING {} from ACTIVE to PAUSED with bucket '{}'", processKey, bucketKey);
@@ -51,11 +61,13 @@ public class PausedDecider {
                     }
                 }
             }
+            // (3) Build the map of process keys to agent keys
+            newAgentMap.put(processKey, process.getAgentKey());
         }
 
         for (Map.Entry<String, String> kv: pausedMap.entrySet()) {
             final String processKey = kv.getKey();
-            // Are there any processes to be switched from PAUSED to ACTIVE?
+            // (4) Are there any processes to be switched from PAUSED to ACTIVE?
             if (!newPausedMap.containsKey(processKey)) {
                 final String bucketKey = kv.getValue();
                 LOGGER.info(">>> SWITCHING {} from PAUSED with bucket '{}' to ACTIVE", processKey,bucketKey);
@@ -67,6 +79,7 @@ public class PausedDecider {
         }
 
         pausedMap = newPausedMap;
+        agentMap = newAgentMap;
     }
 
     // null = not paused, != null key of bucket
@@ -75,6 +88,15 @@ public class PausedDecider {
         final String ret = pausedMap.get(processKey);
         if (ret != null) {
             LOGGER.info(">>> {} IS-PAUSED", processKey);
+        }
+        return ret;
+    }
+
+    public String getAgentKeyForProcess(String processKey) {
+
+        final String ret = agentMap.get(processKey);
+        if (ret == null) {
+            LOGGER.error("No agent found for processKey='{}'", processKey);
         }
         return ret;
     }

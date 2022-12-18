@@ -1,6 +1,6 @@
 package com.giraone.jobs.schedule.processor;
 
-import com.giraone.jobs.events.AbstractJobEvent;
+import com.giraone.jobs.events.AbstractJobStatusChangedEvent;
 import com.giraone.jobs.events.JobAcceptedEvent;
 import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
@@ -21,7 +21,7 @@ public class ProcessorSchedule {
         this.pausedDecider = pausedDecider;
     }
 
-    public AbstractJobEvent streamProcess(JobAcceptedEvent jobAcceptedEvent) {
+    public AbstractJobStatusChangedEvent streamProcess(JobAcceptedEvent jobAcceptedEvent) {
 
         LOGGER.debug(">>> ProcessorSchedule.streamProcess {}", jobAcceptedEvent);
 
@@ -33,15 +33,17 @@ public class ProcessorSchedule {
 
         final String processKey = jobAcceptedEvent.getProcessKey();
         final String pausedBucketKey = pausedDecider.getBucketIfProcessPaused(processKey);
-        LOGGER.info(">>> ProcessorSchedule.streamProcess {} {} pausedBucketKey={}",
-            jobAcceptedEvent.getId(), jobAcceptedEvent.getProcessKey(), pausedBucketKey);
+
         if (pausedBucketKey != null) {
             final JobPausedEvent jobPausedEvent = new JobPausedEvent(pausedBucketKey, jobAcceptedEvent);
             LOGGER.info(">>> Process {} is paused. Moving job {} to paused bucket {} topic!",
                 processKey, jobPausedEvent.getMessageKey(), jobPausedEvent.getBucketSuffix());
             return jobPausedEvent;
         } else {
-            return new JobScheduledEvent(jobAcceptedEvent);
+            final String agentKey = pausedDecider.getAgentKeyForProcess(processKey);
+            LOGGER.info(">>> Scheduling {} of {} to agent '{}'",
+                jobAcceptedEvent.getId(), processKey, agentKey);
+            return new JobScheduledEvent(jobAcceptedEvent, agentKey);
         }
     }
 }

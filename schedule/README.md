@@ -18,10 +18,11 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [x] All events have *message keys* based on [TSID](https://github.com/f4b6a3/tsid-creator)
 - [x] Event ID in messages are of type String (TSID). Only within the database it is a long value (64bit).
 - [x] JobAdmin has to manage the buckets, no only the active/paused boolean
-- [ ] Processes use an n:m mapping to agents. For this there is an agentKey attribute in the process definition
-- [ ] Add a requester id (string)
-- [ ] Display buckets in JobAdmin (materialize must handle this)
-- [ ] Measure consumer lag and expose it as metric
+- [x] Processes use an n:m mapping to agents. For this there is an agentKey attribute in the process definition,
+      which is delivered by the jobadmin service to the schedule service.
+- [ ] Add a requester id (string) to the (accepted) event.
+- [ ] Display buckets in JobAdmin (materialize must handle this).
+- [ ] Measure consumer lag and expose it as metric.
 
 ### Materialize
 

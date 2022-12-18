@@ -1,6 +1,6 @@
 package com.giraone.jobs.schedule.processor;
 
-import com.giraone.jobs.events.AbstractJobEvent;
+import com.giraone.jobs.events.AbstractAssignedJobEvent;
 import com.giraone.jobs.events.JobCompletedEvent;
 import com.giraone.jobs.events.JobFailedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
@@ -18,7 +18,7 @@ public class ProcessorAgent {
 
     private static final Random RANDOM = new Random();
 
-    public AbstractJobEvent streamProcess(JobScheduledEvent jobScheduledEvent) {
+    public AbstractAssignedJobEvent streamProcess(JobScheduledEvent jobScheduledEvent) {
 
         LOGGER.debug(">>> ProcessorAgent.streamProcess {}", jobScheduledEvent);
 
@@ -29,11 +29,13 @@ public class ProcessorAgent {
         }
 
         if (RANDOM.nextInt(100) == 0) {
-            LOGGER.debug("Job {} of {} failed", jobScheduledEvent.getId(), jobScheduledEvent.getProcessKey());
+            LOGGER.warn("Job {} of {} in agent '{}' FAILED!",
+                jobScheduledEvent.getId(), jobScheduledEvent.getProcessKey(), jobScheduledEvent.getAgentKey());
             return new JobFailedEvent(jobScheduledEvent,
                 "Job " + jobScheduledEvent.getId() + " of " + jobScheduledEvent.getProcessKey() + " failed!");
         } else {
-            LOGGER.debug("Job {} of {} succeeded", jobScheduledEvent.getId(), jobScheduledEvent.getProcessKey());
+            LOGGER.info("Job {} of {} in agent '{}' SUCCEEDED.",
+                jobScheduledEvent.getId(), jobScheduledEvent.getProcessKey(), jobScheduledEvent.getAgentKey());
             return new JobCompletedEvent(jobScheduledEvent, generateLinkToResult(jobScheduledEvent));
         }
     }

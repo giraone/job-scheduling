@@ -65,7 +65,7 @@ class ProcessScheduleInOutTest extends AbstractInOutTest {
 
         // act
         String id = TsidCreator.getTsid256().toString();
-        JobAcceptedEvent jobAcceptedEvent = new JobAcceptedEvent(id, "A01", Instant.now(), "");
+        JobAcceptedEvent jobAcceptedEvent = new JobAcceptedEvent(id, "V001", Instant.now(), "");
         produce(jobAcceptedEvent, TOPIC_accepted);
 
         // assert
@@ -78,7 +78,7 @@ class ProcessScheduleInOutTest extends AbstractInOutTest {
         assertThat(consumerRecord.key()).isNotNull();
         assertThat(consumerRecord.value()).isNotNull();
         assertThat(consumerRecord.value()).contains("\"id\":\"" + id + "\"");
-        assertThat(consumerRecord.value()).contains("\"processKey\":\"A01\"");
+        assertThat(consumerRecord.value()).contains("\"processKey\":\"V001\"");
 
         if (paused) {
             JobPausedEvent jobPausedEvent = objectMapper.readValue(consumerRecord.value(), JobPausedEvent.class);

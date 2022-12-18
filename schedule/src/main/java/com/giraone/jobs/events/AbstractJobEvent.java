@@ -10,6 +10,9 @@ import com.github.f4b6a3.tsid.Tsid;
 import java.io.Serializable;
 import java.time.Instant;
 
+/**
+ * Base class for all events.
+ */
 public abstract class AbstractJobEvent implements Serializable {
 
     protected String id;

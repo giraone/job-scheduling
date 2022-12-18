@@ -3,7 +3,6 @@ package com.giraone.jobs.schedule.processor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.giraone.jobs.events.JobCompletedEvent;
 import com.giraone.jobs.events.JobNotifiedEvent;
-import com.github.f4b6a3.tsid.Tsid;
 import com.github.f4b6a3.tsid.TsidCreator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,7 +47,7 @@ class ProcessNotifyInOutTest extends AbstractInOutTest {
 
         // act
         String id = TsidCreator.getTsid256().toString();
-        JobCompletedEvent jobCompletedEvent = new JobCompletedEvent(id, "A01", Instant.now(), "link");
+        JobCompletedEvent jobCompletedEvent = new JobCompletedEvent(id, "V001", Instant.now(), "link-to-result", "A01");
         produce(jobCompletedEvent, TOPIC_completed);
 
         // assert
@@ -56,7 +55,8 @@ class ProcessNotifyInOutTest extends AbstractInOutTest {
         assertThat(consumerRecord.key()).isNotNull();
         assertThat(consumerRecord.value()).isNotNull();
         assertThat(consumerRecord.value()).contains("\"id\":\"" + id + "\"");
-        assertThat(consumerRecord.value()).contains("\"processKey\":\"A01\"");
+        assertThat(consumerRecord.value()).contains("\"processKey\":\"V001\"");
+        assertThat(consumerRecord.value()).contains("\"agentKey\":\"A01\"");
         JobNotifiedEvent JobNotifiedEvent = objectMapper.readValue(consumerRecord.value(), JobNotifiedEvent.class);
         assertThat(JobNotifiedEvent.getMessageKey()).isNotNull();
     }
