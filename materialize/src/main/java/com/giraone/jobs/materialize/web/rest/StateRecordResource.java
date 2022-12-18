@@ -15,8 +15,6 @@ import reactor.core.publisher.Mono;
 @RequestMapping(value = "/api")
 public class StateRecordResource {
 
-    private static final Pageable DEFAULT_PAGEABLE = PageRequest.of(0, 1_000, Sort.by(Sort.Order.asc(JobRecord.ATTRIBUTE_id)));
-
     private final StateRecordService stateRecordService;
 
     public StateRecordResource(StateRecordService stateRecordService) {

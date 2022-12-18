@@ -15,6 +15,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -42,6 +44,9 @@ class JobRecordResourceTest {
     @Test
     void countAllWorks() {
 
+        // arrange
+        Mockito.when(stateRecordService.countAll()).thenReturn(Mono.just(2L));
+
         // act
         Long count = webTestClient
             .get()
@@ -54,7 +59,7 @@ class JobRecordResourceTest {
             .getResponseBody();
 
         // assert
-        assertThat(count).isNotNull();
+        assertThat(count).isEqualTo(2);
     }
 
     @Test
@@ -66,8 +71,7 @@ class JobRecordResourceTest {
         long id2 = TsidCreator.getTsid256().toLong();
         JobRecord jobRecord1 = new JobRecord(id1, nowInstant, nowInstant, nowInstant, JobRecord.STATE_accepted, null, 1L);
         JobRecord jobRecord2 = new JobRecord(id2, nowInstant, nowInstant, nowInstant, JobRecord.STATE_scheduled, null, 1L);
-        Mockito.when(stateRecordService.findAll(any())).thenReturn(
-            Flux.just(jobRecord1, jobRecord2));
+        Mockito.when(stateRecordService.findAll(any())).thenReturn(Flux.just(jobRecord1, jobRecord2));
 
         // act
         List<JobRecord> list = webTestClient
