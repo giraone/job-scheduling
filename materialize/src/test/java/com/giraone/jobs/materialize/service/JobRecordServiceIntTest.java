@@ -1,6 +1,8 @@
 package com.giraone.jobs.materialize.service;
 
 import com.giraone.jobs.materialize.model.JobRecord;
+import com.github.f4b6a3.tsid.Tsid;
+import com.github.f4b6a3.tsid.TsidCreator;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -33,14 +35,16 @@ class JobRecordServiceIntTest {
         Instant nowInstant = Instant.now();
         Instant eventTime1 = nowInstant.minusSeconds(20);
         Instant eventTime2 = nowInstant.minusSeconds(20);
+        Tsid id1 = TsidCreator.getTsid256();
+        Tsid id2 = TsidCreator.getTsid256();
 
-        stateRecordService.insert("1", eventTime1, nowInstant, "A01")
+        stateRecordService.insert(id1.toString(), eventTime1, nowInstant, "A01")
             .as(StepVerifier::create)
             .then(() -> LOGGER.info("stateRecord1 inserted"))
             .expectNextCount(1)
             .verifyComplete();
 
-        stateRecordService.insert("2", eventTime2, nowInstant, "A01")
+        stateRecordService.insert(id2.toString(), eventTime2, nowInstant, "A01")
             .as(StepVerifier::create)
             .then(() -> LOGGER.info("stateRecord2 inserted"))
             .expectNextCount(1)
@@ -52,14 +56,14 @@ class JobRecordServiceIntTest {
             .then(() -> LOGGER.info("findAll called"))
             .assertNext(stateRecord -> {
                 Assertions.assertThat(stateRecord).isNotNull();
-                Assertions.assertThat(stateRecord.getId()).isEqualTo("2");
+                Assertions.assertThat(stateRecord.getId()).isEqualTo(id2.toLong());
                 Assertions.assertThat(stateRecord.getStatus()).isEqualTo(JobRecord.STATE_accepted);
                 Assertions.assertThat(stateRecord.getJobAcceptedTimestamp()).isCloseTo(eventTime2, within(1, ChronoUnit.MILLIS));
                 Assertions.assertThat(stateRecord.getLastRecordUpdateTimestamp()).isCloseTo(nowInstant, within(1000, ChronoUnit.MILLIS));
             })
             .assertNext(stateRecord -> {
                 Assertions.assertThat(stateRecord).isNotNull();
-                Assertions.assertThat(stateRecord.getId()).isEqualTo("1");
+                Assertions.assertThat(stateRecord.getId()).isEqualTo(id1.toLong());
                 Assertions.assertThat(stateRecord.getStatus()).isEqualTo(JobRecord.STATE_accepted);
                 Assertions.assertThat(stateRecord.getJobAcceptedTimestamp()).isCloseTo(eventTime1, within(1, ChronoUnit.MILLIS));
                 Assertions.assertThat(stateRecord.getLastRecordUpdateTimestamp()).isCloseTo(nowInstant, within(1000, ChronoUnit.MILLIS));
