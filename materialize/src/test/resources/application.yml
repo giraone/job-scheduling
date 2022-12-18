@@ -2,6 +2,7 @@ logging:
   level:
     root: WARN
     com.giraone: DEBUG
+    name.nkonev: DEBUG
     # for debugging producer/acknowledges
     org.apache.kafka.clients.producer.internals: DEBUG
     org.springframework.data.r2dbc: DEBUG
