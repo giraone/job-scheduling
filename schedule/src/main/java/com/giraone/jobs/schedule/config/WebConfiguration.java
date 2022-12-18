@@ -64,7 +64,7 @@ public class WebConfiguration implements WebFluxConfigurer {
     @SuppressWarnings("SameParameterValue")
     private static WebClient.Builder prepareDefaultWebclient(String acceptedMediaType, String scheme, String host) {
 
-      ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
+        ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
             .codecs(configurer -> configurer.defaultCodecs()
                 .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper)))
             .build();
