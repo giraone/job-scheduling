@@ -10,6 +10,8 @@ logging:
     org.apache.kafka.clients.consumer.ConsumerConfig: WARN
     # Suppress "Node 0 disconnected." (INFO) messages and "Broker may not be available" messages (WARN).
     org.apache.kafka.clients.NetworkClient: ERROR
+    # Suppress "Found no committed offset for partition ..." messages (INFO)
+    org.apache.kafka.clients.consumer.internals.ConsumerCoordinator: WARN
 
 spring:
   application:
