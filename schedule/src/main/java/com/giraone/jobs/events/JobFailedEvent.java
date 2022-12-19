@@ -12,11 +12,12 @@ public class JobFailedEvent extends AbstractAssignedJobEvent {
     }
 
     public JobFailedEvent(JobScheduledEvent jobScheduledEvent, String result) {
-        this(jobScheduledEvent.getId(), jobScheduledEvent.getProcessKey(), Instant.now(), result, jobScheduledEvent.getAgentKey());
+        this(jobScheduledEvent.getId(), jobScheduledEvent.getProcessKey(), jobScheduledEvent.getJobAcceptedTimestamp(),
+            Instant.now(), result, jobScheduledEvent.getAgentKey());
     }
 
-    public JobFailedEvent(String id, String processKey, Instant eventTimestamp, String payload, String agentKey) {
-        super(id, processKey, eventTimestamp, payload, "FAILED", agentKey);
+    public JobFailedEvent(String id, String processKey, Instant jobAcceptedTimestamp, Instant eventTimestamp, String payload, String agentKey) {
+        super(id, processKey, jobAcceptedTimestamp, eventTimestamp, payload, "FAILED", agentKey);
     }
 
     @Override

@@ -50,8 +50,8 @@ public class JobRecord implements Serializable {
     public JobRecord() {
     }
 
-    public JobRecord(long id, Instant jobAcceptedTimestamp, Instant now, long processId) {
-        this(id, jobAcceptedTimestamp, now, now, STATE_accepted, null, processId);
+    public JobRecord(long id, Instant jobAcceptedTimestamp, Instant lastEventTimestamp, long processId) {
+        this(id, jobAcceptedTimestamp, lastEventTimestamp, lastEventTimestamp, STATE_accepted, null, processId);
     }
 
     public JobRecord(long id, Instant jobAcceptedTimestamp,

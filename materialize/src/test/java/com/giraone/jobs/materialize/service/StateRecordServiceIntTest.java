@@ -13,7 +13,6 @@ import reactor.test.StepVerifier;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @DirtiesContext
@@ -36,18 +35,18 @@ class StateRecordServiceIntTest {
         Instant notifyTimeStamp = now.minusSeconds(1);
 
         // arrange - insert
-        stateRecordService.insert(id.toString(), createdTimeStamp, now, "V001")
+        stateRecordService.insert(id.toString(), createdTimeStamp, "V001")
             .as(StepVerifier::create)
             .verifyComplete();
 
         // act - a newer event
-        stateRecordService.update(id.toString(), "NOTIFIED", notifyTimeStamp, now, null)
+        stateRecordService.update(id.toString(), "NOTIFIED", notifyTimeStamp, null)
             .as(StepVerifier::create)
             .expectNext(1)
             .verifyComplete();
 
         // act - an older event
-        stateRecordService.update(id.toString(), "COMPLETED", completedTimeStamp, now, null)
+        stateRecordService.update(id.toString(), "COMPLETED", completedTimeStamp,  null)
             .as(StepVerifier::create)
             .expectNext(0)
             .verifyComplete();

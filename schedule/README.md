@@ -10,23 +10,29 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 
 - [x] receiver
 - [ ] materialize - R2DBC-Migrate not yet ready
-- [ ] schedule
+- [ ] schedule - including Spring Cloud Stream 4.0.0
 - [ ] jobadmin - Depends on JHipster
 
 ### Global
 
-- [x] All events have *message keys* based on [TSID](https://github.com/f4b6a3/tsid-creator)
+- [x] All events have *message keys* based on [TSID](https://github.com/f4b6a3/tsid-creator) to be time sorted and unique.
 - [x] Event ID in messages are of type String (TSID). Only within the database it is a long value (64bit).
 - [x] JobAdmin has to manage the buckets, no only the active/paused boolean
 - [x] Processes use an n:m mapping to agents. For this there is an agentKey attribute in the process definition,
       which is delivered by the jobadmin service to the schedule service.
+- [ ] Agent Key should be part of the events (done) and materialized database record.	  
 - [ ] Add a requester id (string) to the (accepted) event.
 - [ ] Display buckets in JobAdmin (materialize must handle this).
 - [ ] Measure consumer lag and expose it as metric.
 
 ### Materialize
 
-- [ ] Prevent that older events overwrite newer once - see StateRecordService.java
+- [ ] What is better: **one** ReactiveKafkaConsumerTemplate with all topics or **two** separated for insert and update?
+- [ ] Schedulers.parallel() vs Schedulers.boundedElastic() - see https://stackoverflow.com/questions/61304762/difference-between-boundedelastic-vs-parallel-scheduler
+- [ ] Analyze, if a priority for 'job-accepted' can be set, to prevent updates before inserts.
+- [x] Prevent that older update events overwriting newer once - see StateRecordService.java.
+- [ ] ConsumerServiceIntTest with R2DBC do not work.
+- [ ] StateRecordService uses hard-coded '+ 1000L' for Process-ID (remove processId or map processKey to processId)
 
 ### Schedule
 
@@ -36,6 +42,12 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [ ] When a state switches from *paused* to *active*, the processor B01 switches from *paused* to *running*
 - [ ] Partition key - see https://spring.io/blog/2021/02/03/demystifying-spring-cloud-stream-producers-with-apache-kafka-partitions
 - [x] The REST call to `jobadmin` for fetching the process states (paused, active) is tested with an integration test based on [WireMock](https://wiremock.org).
+- [ ] Builder pattern for Job models
+
+### JobAdmin
+
+- [ ] Switch off JPA caching
+- [ ] Automatische Anlage von V001, V002, V003
 
 ## Topologie
 

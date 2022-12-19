@@ -47,7 +47,7 @@ class ProcessAgentInOutTest extends AbstractInOutTest {
 
         // act
         String id = TsidCreator.getTsid256().toString();
-        JobScheduledEvent jobScheduledEvent = new JobScheduledEvent("12", "V001", Instant.now(), "", "A01");
+        JobScheduledEvent jobScheduledEvent = new JobScheduledEvent("12", "V001", Instant.now(), Instant.now(),"", "A01");
         produce(jobScheduledEvent, TOPIC_scheduled_A01);
 
         // assert

@@ -12,9 +12,10 @@ public abstract class AbstractAssignedJobEvent extends AbstractJobStatusChangedE
     protected AbstractAssignedJobEvent() {
     }
 
-    protected AbstractAssignedJobEvent(String id, String processKey, Instant eventTimestamp, String payload,
+    protected AbstractAssignedJobEvent(String id, String processKey, Instant jobAcceptedTimestamp,
+                                       Instant eventTimestamp, String payload,
                                        String status, String agentKey) {
-        super(id, processKey, eventTimestamp, payload, status);
+        super(id, processKey, jobAcceptedTimestamp, eventTimestamp, payload, status);
         this.agentKey = agentKey;
     }
 

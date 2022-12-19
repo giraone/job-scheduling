@@ -12,11 +12,12 @@ public class JobNotifiedEvent extends AbstractAssignedJobEvent {
     }
 
     public JobNotifiedEvent(JobCompletedEvent jobCompletedEvent) {
-        this(jobCompletedEvent.getId(), jobCompletedEvent.getProcessKey(), Instant.now(), jobCompletedEvent.getPayload(), jobCompletedEvent.getAgentKey());
+        this(jobCompletedEvent.getId(), jobCompletedEvent.getProcessKey(), jobCompletedEvent.getJobAcceptedTimestamp(),
+            Instant.now(), jobCompletedEvent.getPayload(), jobCompletedEvent.getAgentKey());
     }
 
-    public JobNotifiedEvent(String id, String processKey, Instant eventTimestamp, String payload, String agentKey) {
-        super(id, processKey, eventTimestamp, payload, "NOTIFIED", agentKey);
+    public JobNotifiedEvent(String id, String processKey, Instant jobAcceptedTimestamp, Instant eventTimestamp, String payload, String agentKey) {
+        super(id, processKey, jobAcceptedTimestamp, eventTimestamp, payload, "NOTIFIED", agentKey);
     }
 
     @Override

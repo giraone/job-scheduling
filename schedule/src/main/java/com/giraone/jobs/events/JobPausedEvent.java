@@ -16,11 +16,13 @@ public class JobPausedEvent extends AbstractJobStatusChangedEvent {
     }
 
     public JobPausedEvent(String pausedBucketKey, JobAcceptedEvent jobAcceptedEvent) {
-        this(jobAcceptedEvent.getId(), jobAcceptedEvent.getProcessKey(), Instant.now(), jobAcceptedEvent.getPayload(), pausedBucketKey);
+        this(jobAcceptedEvent.getId(), jobAcceptedEvent.getProcessKey(), jobAcceptedEvent.getJobAcceptedTimestamp(),
+            Instant.now(), jobAcceptedEvent.getPayload(), pausedBucketKey);
     }
 
-    public JobPausedEvent(String id, String processKey, Instant eventTimestamp, String payload, String pausedBucketKey) {
-        super(id, processKey, eventTimestamp, payload, "PAUSED");
+    public JobPausedEvent(String id, String processKey, Instant jobAcceptedTimestamp,
+                          Instant eventTimestamp, String payload, String pausedBucketKey) {
+        super(id, processKey, jobAcceptedTimestamp, eventTimestamp, payload, "PAUSED");
         this.pausedBucketKey = pausedBucketKey;
     }
 

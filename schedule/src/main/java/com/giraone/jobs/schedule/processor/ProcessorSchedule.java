@@ -6,6 +6,7 @@ import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
 import com.giraone.jobs.schedule.constants.UtilsAndConstants;
 import com.giraone.jobs.schedule.service.PausedDecider;
+import org.apache.kafka.clients.consumer.internals.ConsumerCoordinator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -36,12 +37,12 @@ public class ProcessorSchedule {
 
         if (pausedBucketKey != null) {
             final JobPausedEvent jobPausedEvent = new JobPausedEvent(pausedBucketKey, jobAcceptedEvent);
-            LOGGER.info(">>> Process {} is paused. Moving job {} to paused bucket {} topic!",
-                processKey, jobPausedEvent.getMessageKey(), jobPausedEvent.getBucketSuffix());
+            LOGGER.info(">>> PAUSED {} of {}. Moving to paused bucket topic {}!",
+                jobPausedEvent.getId(), processKey, jobPausedEvent.getBucketSuffix());
             return jobPausedEvent;
         } else {
             final String agentKey = pausedDecider.getAgentKeyForProcess(processKey);
-            LOGGER.info(">>> Scheduling {} of {} to agent '{}'",
+            LOGGER.info(">>> SCHEDULING {} of {} to agent '{}'",
                 jobAcceptedEvent.getId(), processKey, agentKey);
             return new JobScheduledEvent(jobAcceptedEvent, agentKey);
         }

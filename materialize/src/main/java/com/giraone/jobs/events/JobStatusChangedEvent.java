@@ -11,8 +11,8 @@ public class JobStatusChangedEvent extends AbstractJobEvent {
     protected JobStatusChangedEvent() {
     }
 
-    public JobStatusChangedEvent(String id, String processKey, Instant eventTimestamp, String status) {
-        super(id, processKey, eventTimestamp);
+    public JobStatusChangedEvent(String id, String processKey, Instant jobAcceptedTimestamp, Instant eventTimestamp, String status) {
+        super(id, processKey, jobAcceptedTimestamp, eventTimestamp);
         this.status = status;
     }
 

@@ -12,8 +12,8 @@ public class JobAcceptedEvent extends AbstractJobEvent {
         super();
     }
 
-    public JobAcceptedEvent(String id, String processKey, Instant eventTimestamp, String payload) {
-        super(id, processKey, eventTimestamp, payload);
+    public JobAcceptedEvent(String id, String processKey, Instant jobAcceptedTimestamp, Instant eventTimestamp, String payload) {
+        super(id, processKey, jobAcceptedTimestamp, eventTimestamp, payload);
     }
 
     @Override

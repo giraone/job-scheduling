@@ -16,18 +16,23 @@ import java.time.Instant;
 public abstract class AbstractJobEvent implements Serializable {
 
     protected String id;
+    protected String processKey;
+    @JsonDeserialize(using = TolerantInstantDeserializer.class)
+    @JsonSerialize(using = CustomInstantSerializer.class)
+    protected Instant jobAcceptedTimestamp;
     @JsonDeserialize(using = TolerantInstantDeserializer.class)
     @JsonSerialize(using = CustomInstantSerializer.class)
     protected Instant eventTimestamp;
-    protected String processKey;
+
     protected String payload;
 
     protected AbstractJobEvent() {
     }
 
-    protected AbstractJobEvent(String id, String processKey, Instant eventTimestamp, String payload) {
+    protected AbstractJobEvent(String id, String processKey, Instant jobAcceptedTimestamp, Instant eventTimestamp, String payload) {
         this.id = id;
         this.processKey = processKey;
+        this.jobAcceptedTimestamp = jobAcceptedTimestamp;
         this.eventTimestamp = eventTimestamp;
         this.payload = payload;
     }
@@ -55,6 +60,14 @@ public abstract class AbstractJobEvent implements Serializable {
         this.processKey = processKey;
     }
 
+    public Instant getJobAcceptedTimestamp() {
+        return jobAcceptedTimestamp;
+    }
+
+    public void setJobAcceptedTimestamp(Instant jobAcceptedTimestamp) {
+        this.jobAcceptedTimestamp = jobAcceptedTimestamp;
+    }
+
     public Instant getEventTimestamp() {
         return eventTimestamp;
     }
@@ -75,8 +88,9 @@ public abstract class AbstractJobEvent implements Serializable {
     public String toString() {
         return this.getClass().getSimpleName() + "{" +
             "id=" + id +
-            ", eventTimestamp=" + eventTimestamp +
             ", processKey='" + processKey + '\'' +
+            ", jobAcceptedTimestamp=" + jobAcceptedTimestamp +
+            ", eventTimestamp=" + eventTimestamp +
             ", payload='" + payload + '\'' +
             '}';
     }

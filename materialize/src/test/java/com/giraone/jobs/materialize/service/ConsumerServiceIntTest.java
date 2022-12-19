@@ -50,7 +50,7 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
     @Order(1)
     void passOneNewEvent() throws Exception {
 
-        JobAcceptedEvent event = new JobAcceptedEvent(id.toString(), "V001", Instant.now());
+        JobAcceptedEvent event = new JobAcceptedEvent(id.toString(), "V001", Instant.now(), Instant.now());
         String jsonEvent = objectMapper.writeValueAsString(event);
         String topic = applicationProperties.getTopicInsert();
         String messageKey = event.getId();
@@ -81,7 +81,7 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
     @Order(2)
     void passOneUpdateEvent() throws JsonProcessingException {
 
-        JobStatusChangedEvent event = new JobStatusChangedEvent(id.toString(), "V001", Instant.now(), "SCHEDULED");
+        JobStatusChangedEvent event = new JobStatusChangedEvent(id.toString(), "V001", Instant.now(), Instant.now(),"SCHEDULED");
         String jsonEvent = objectMapper.writeValueAsString(event);
         String topic = applicationProperties.getTopicsUpdate();
 

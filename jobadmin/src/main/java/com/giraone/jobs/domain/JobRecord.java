@@ -1,6 +1,8 @@
 package com.giraone.jobs.domain;
 
 import com.giraone.jobs.domain.enumeration.JobStatusEnum;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
 import javax.persistence.*;
@@ -14,6 +16,7 @@ import javax.validation.constraints.*;
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class JobRecord implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Id

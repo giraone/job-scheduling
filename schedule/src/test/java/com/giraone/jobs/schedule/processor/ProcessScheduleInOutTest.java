@@ -65,7 +65,7 @@ class ProcessScheduleInOutTest extends AbstractInOutTest {
 
         // act
         String id = TsidCreator.getTsid256().toString();
-        JobAcceptedEvent jobAcceptedEvent = new JobAcceptedEvent(id, "V001", Instant.now(), "");
+        JobAcceptedEvent jobAcceptedEvent = new JobAcceptedEvent(id, "V001", Instant.now(), Instant.now(), "");
         produce(jobAcceptedEvent, TOPIC_accepted);
 
         // assert

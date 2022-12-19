@@ -1,6 +1,8 @@
 package com.giraone.jobs.domain;
 
 import com.giraone.jobs.domain.enumeration.ActivationEnum;
+
+import java.io.Serial;
 import java.io.Serializable;
 import javax.persistence.*;
 import javax.validation.constraints.*;
@@ -13,6 +15,7 @@ import javax.validation.constraints.*;
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class Process implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Id

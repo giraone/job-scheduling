@@ -12,15 +12,18 @@ public class JobScheduledEvent extends AbstractAssignedJobEvent {
     }
 
     public JobScheduledEvent(JobAcceptedEvent jobAcceptedEvent, String agentKey) {
-        this(jobAcceptedEvent.getId(), jobAcceptedEvent.getProcessKey(), Instant.now(), jobAcceptedEvent.getPayload(), agentKey);
+        this(jobAcceptedEvent.getId(), jobAcceptedEvent.getProcessKey(), jobAcceptedEvent.getJobAcceptedTimestamp(),
+            Instant.now(), jobAcceptedEvent.getPayload(), agentKey);
     }
 
     public JobScheduledEvent(JobPausedEvent jobPausedEvent, String agentKey) {
-        this(jobPausedEvent.getId(), jobPausedEvent.getProcessKey(), Instant.now(), jobPausedEvent.getPayload(), agentKey);
+        this(jobPausedEvent.getId(), jobPausedEvent.getProcessKey(), jobPausedEvent.getJobAcceptedTimestamp(),
+            Instant.now(), jobPausedEvent.getPayload(), agentKey);
     }
 
-    public JobScheduledEvent(String id, String processKey, Instant eventTimestamp, String payload, String agentKey) {
-        super(id, processKey, eventTimestamp, payload, "SCHEDULED", agentKey);
+    public JobScheduledEvent(String id, String processKey, Instant jobAcceptedTimestamp,
+                             Instant eventTimestamp, String payload, String agentKey) {
+        super(id, processKey, jobAcceptedTimestamp, eventTimestamp, payload, "SCHEDULED", agentKey);
     }
 
     @Override

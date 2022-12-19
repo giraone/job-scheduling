@@ -47,7 +47,7 @@ class ProcessNotifyInOutTest extends AbstractInOutTest {
 
         // act
         String id = TsidCreator.getTsid256().toString();
-        JobCompletedEvent jobCompletedEvent = new JobCompletedEvent(id, "V001", Instant.now(), "link-to-result", "A01");
+        JobCompletedEvent jobCompletedEvent = new JobCompletedEvent(id, "V001", Instant.now(), Instant.now(), "link-to-result", "A01");
         produce(jobCompletedEvent, TOPIC_completed);
 
         // assert

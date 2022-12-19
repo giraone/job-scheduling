@@ -34,23 +34,38 @@ public class StateRecordService {
         this.r2dbcEntityTemplate = r2dbcEntityTemplate;
     }
 
-    public Mono<JobRecord> insert(String idString, Instant creationEventTimestamp, Instant now, String processKey) {
+    public Mono<JobRecord> insert(String idString, Instant jobAcceptedTimestamp, String processKey) {
 
-        long id = Tsid.from(idString).toLong();
+        final long id = Tsid.from(idString).toLong();
         // TODO: processKey ==> processId by DB query or DB view
+        final Instant lastEventTimestamp = Instant.now();
         final long processId = 1000L + Long.parseLong(processKey.substring(1), 10);
-        final JobRecord jobRecord = new JobRecord(id, creationEventTimestamp, now /*X*/, processId);
+        final JobRecord jobRecord = new JobRecord(id, jobAcceptedTimestamp, lastEventTimestamp, processId);
         jobRecord.setLastRecordUpdateTimestamp(Instant.now());
         return r2dbcEntityTemplate.insert(jobRecord);
     }
 
-    public Mono<Integer> update(String idString, String state, Instant lastEventTimestamp, Instant now, String pausedBucketKey) {
+    public Mono<Integer> upsert(String idString, Instant jobAcceptedTimestamp, String processKey, String state,
+                                Instant lastEventTimestamp, String pausedBucketKey) {
 
-        long id = Tsid.from(idString).toLong();
+        final long id = Tsid.from(idString).toLong();
+        final long processId = 1000L + Long.parseLong(processKey.substring(1), 10);
+        final JobRecord jobRecord = new JobRecord(id, jobAcceptedTimestamp, lastEventTimestamp, Instant.now(), state, pausedBucketKey, processId);
+        return r2dbcEntityTemplate.insert(jobRecord)
+            .map(jobRecordStored -> 1)
+            .doOnError(x -> {
+                update(idString, state, lastEventTimestamp, pausedBucketKey);
+            });
+    }
+
+    public Mono<Integer> update(String idString, String state, Instant lastEventTimestamp, String pausedBucketKey) {
+
+        final long id = Tsid.from(idString).toLong();
+        final Instant lastRecordUpdateTimestamp = Instant.now();
         final Update update = Update
             .update(JobRecord.ATTRIBUTE_status, state)
             .set(JobRecord.ATTRIBUTE_lastEventTimestamp, lastEventTimestamp)
-            .set(JobRecord.ATTRIBUTE_lastRecordUpdateTimestamp, now)
+            .set(JobRecord.ATTRIBUTE_lastRecordUpdateTimestamp, lastRecordUpdateTimestamp)
             .set(JobRecord.ATTRIBUTE_pausedBucketKey, pausedBucketKey);
         return r2dbcEntityTemplate
             .update(JobRecord.class)

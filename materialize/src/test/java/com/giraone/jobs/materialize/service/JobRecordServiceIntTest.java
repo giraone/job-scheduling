@@ -38,13 +38,13 @@ class JobRecordServiceIntTest {
         Tsid id1 = TsidCreator.getTsid256();
         Tsid id2 = TsidCreator.getTsid256();
 
-        stateRecordService.insert(id1.toString(), eventTime1, nowInstant, "V001")
+        stateRecordService.insert(id1.toString(), eventTime1, "V001")
             .as(StepVerifier::create)
             .then(() -> LOGGER.info("stateRecord1 inserted"))
             .expectNextCount(1)
             .verifyComplete();
 
-        stateRecordService.insert(id2.toString(), eventTime2, nowInstant, "V001")
+        stateRecordService.insert(id2.toString(), eventTime2, "V001")
             .as(StepVerifier::create)
             .then(() -> LOGGER.info("stateRecord2 inserted"))
             .expectNextCount(1)
