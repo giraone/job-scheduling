@@ -12,6 +12,7 @@ import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -45,6 +46,7 @@ public class ProducerService {
         final Tsid tsid = TsidCreator.getTsid256();
         final String id = tsid.toString();
         event.put("id", id);
+        event.put("jobAcceptedTimestamp", Instant.now());
         final String messageBody;
         try {
             messageBody = objectMapper.writeValueAsString(event);

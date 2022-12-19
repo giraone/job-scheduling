@@ -2,8 +2,10 @@ package com.giraone.jobs.materialize.service;
 
 import com.giraone.jobs.materialize.model.JobRecord;
 import com.github.f4b6a3.tsid.Tsid;
+import io.r2dbc.spi.R2dbcDataIntegrityViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -53,14 +55,21 @@ public class StateRecordService {
         final JobRecord jobRecord = new JobRecord(id, jobAcceptedTimestamp, lastEventTimestamp, Instant.now(), state, pausedBucketKey, processId);
         return r2dbcEntityTemplate.insert(jobRecord)
             .map(jobRecordStored -> 1)
-            .doOnError(x -> {
-                update(idString, state, lastEventTimestamp, pausedBucketKey);
+            .onErrorContinue(R2dbcDataIntegrityViolationException.class, (exception, errorResponse) -> {
+                LOGGER.debug("INSERT failed. Trying update. Exception = {}", exception.getMessage());
+                update(id, state, lastEventTimestamp, pausedBucketKey);
             });
     }
 
     public Mono<Integer> update(String idString, String state, Instant lastEventTimestamp, String pausedBucketKey) {
 
         final long id = Tsid.from(idString).toLong();
+        return update(id, state, lastEventTimestamp, pausedBucketKey);
+    }
+
+    private Mono<Integer> update(long id, String state, Instant lastEventTimestamp, String pausedBucketKey) {
+
+        LOGGER.error("UPDATE");
         final Instant lastRecordUpdateTimestamp = Instant.now();
         final Update update = Update
             .update(JobRecord.ATTRIBUTE_status, state)

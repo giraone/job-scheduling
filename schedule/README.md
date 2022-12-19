@@ -31,6 +31,7 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [ ] Schedulers.parallel() vs Schedulers.boundedElastic() - see https://stackoverflow.com/questions/61304762/difference-between-boundedelastic-vs-parallel-scheduler
 - [ ] Analyze, if a priority for 'job-accepted' can be set, to prevent updates before inserts.
 - [x] Prevent that older update events overwriting newer once - see StateRecordService.java.
+- [ ] R2DBC Transactional for UPSERT
 - [ ] ConsumerServiceIntTest with R2DBC do not work.
 - [ ] StateRecordService uses hard-coded '+ 1000L' for Process-ID (remove processId or map processKey to processId)
 

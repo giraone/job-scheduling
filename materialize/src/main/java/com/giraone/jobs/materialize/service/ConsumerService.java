@@ -10,6 +10,7 @@ import com.giraone.jobs.materialize.model.DatabaseResult;
 import com.giraone.jobs.materialize.model.JobRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate;
 import org.springframework.stereotype.Service;
@@ -27,24 +28,35 @@ import java.util.Map;
 @Service
 public class ConsumerService implements CommandLineRunner {
 
+    private static final boolean UPSERT = true;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerService.class);
     private static final ObjectMapper objectMapper = ObjectMapperBuilder.build(false, false);
 
-    private final ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplate;
     private final StateRecordService stateRecordService;
-    private final Scheduler scheduler = Schedulers.boundedElastic();
+    private final ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplateInserts;
+    private final ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplateUpdates;
+
+    private final Scheduler schedulerInserts = Schedulers.newBoundedElastic(10, Integer.MAX_VALUE, "schedulerInserts");
+    private final Scheduler schedulerUpdates = Schedulers.newBoundedElastic(1, Integer.MAX_VALUE, "schedulerUpdates");
+
     private final Map<String, Long> offSetsPerPartition = new HashMap<>();
 
-    public ConsumerService(ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplate, StateRecordService stateRecordService) {
-        this.reactiveKafkaConsumerTemplate = reactiveKafkaConsumerTemplate;
+    public ConsumerService(
+        StateRecordService stateRecordService,
+        @Qualifier("INSERTS") ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplateInserts,
+        @Qualifier("UPDATES") ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplateUpdates
+    ) {
+        this.reactiveKafkaConsumerTemplateInserts = reactiveKafkaConsumerTemplateInserts;
+        this.reactiveKafkaConsumerTemplateUpdates = reactiveKafkaConsumerTemplateUpdates;
         this.stateRecordService = stateRecordService;
     }
 
-    private Flux<DatabaseResult> consumeFromTopicsAndWriteToDatabase() {
+    private Flux<DatabaseResult> consumeFromInsertTopicAndWriteToDatabase() {
 
-        return reactiveKafkaConsumerTemplate
+        return reactiveKafkaConsumerTemplateInserts
             .receive()
-            .doOnNext(consumerRecord -> LOGGER.debug("received key={}, value={}, timestamp={} from topic={}, partition={}, offset={}",
+            .doOnNext(consumerRecord -> LOGGER.debug("received I key={}, value={}, timestamp={} from topic={}, partition={}, offset={}",
                 consumerRecord.key(),
                 consumerRecord.value(),
                 consumerRecord.timestamp(),
@@ -52,18 +64,28 @@ public class ConsumerService implements CommandLineRunner {
                 consumerRecord.partition(),
                 consumerRecord.offset())
             )
-            .concatMap(consumerRecord -> {
-                if (consumerRecord.topic().contains("accepted")) {
-                    return consumeNewEvent(consumerRecord);
-                } else {
-                    return consumeUpdateEvent(consumerRecord, consumerRecord.topic());
-                }
-            });
+            .concatMap(this::consumeNewEvent);
+    }
+
+    private Flux<DatabaseResult> consumeFromUpdateTopicsAndWriteToDatabase() {
+
+        return reactiveKafkaConsumerTemplateUpdates
+            .receive()
+            .doOnNext(consumerRecord -> LOGGER.debug("received U key={}, value={}, timestamp={} from topic={}, partition={}, offset={}",
+                consumerRecord.key(),
+                consumerRecord.value(),
+                consumerRecord.timestamp(),
+                consumerRecord.topic(),
+                consumerRecord.partition(),
+                consumerRecord.offset())
+            )
+            .concatMap(this::consumeUpdateEvent);
     }
 
     private Mono<DatabaseResult> consumeNewEvent(ReceiverRecord<String, String> consumerRecord) {
 
         final String messageKey = consumerRecord.key();
+        LOGGER.info("NEW TOPIC={}, KEY={}, MESSAGE={}", consumerRecord.topic(), messageKey, consumerRecord.value());
         return parseNewEvent(consumerRecord.value())
             .flatMap(event -> storeStateForNewJob(event, Instant.now(), event.getProcessKey()))
             .doOnSuccess(databaseResult -> {
@@ -80,11 +102,12 @@ public class ConsumerService implements CommandLineRunner {
             });
     }
 
-    private Mono<DatabaseResult> consumeUpdateEvent(ReceiverRecord<String, String> consumerRecord, String topic) {
+    private Mono<DatabaseResult> consumeUpdateEvent(ReceiverRecord<String, String> consumerRecord) {
 
         final String messageKey = consumerRecord.key();
-        return parseChangeEvent(consumerRecord.value(), topic)
-            .flatMap(event -> storeStateForExistingJob(event, Instant.now()))
+        LOGGER.info("UPD TOPIC={}, KEY={}, MESSAGE={}", consumerRecord.topic(), messageKey, consumerRecord.value());
+        return parseChangeEvent(consumerRecord.value())
+            .flatMap(this::storeStateForExistingJob)
             .doOnSuccess(databaseResult -> {
                 logDatabaseResult(databaseResult, consumerRecord);
                 consumerRecord.receiverOffset().commit().then(Mono.just(databaseResult));
@@ -102,6 +125,7 @@ public class ConsumerService implements CommandLineRunner {
             + "/" + consumerRecord.receiverOffset().topicPartition().partition();
         final Long offset = consumerRecord.receiverOffset().offset();
         final Long lastOffset = offSetsPerPartition.get(topicPartition);
+        // TODO
         //if (lastOffset == null || offset - lastOffset == 99) {
             LOGGER.info("Commit % 100 with topic/partition={}, offset={}", topicPartition, offset);
         //}
@@ -131,7 +155,7 @@ public class ConsumerService implements CommandLineRunner {
         }
     }
 
-    private Mono<JobStatusChangedEvent> parseChangeEvent(String message, String topic) {
+    private Mono<JobStatusChangedEvent> parseChangeEvent(String message) {
         try {
             final JobStatusChangedEvent jobStatusChangedEvent = objectMapper.readValue(message, JobStatusChangedEvent.class);
             return Mono.just(jobStatusChangedEvent);
@@ -149,31 +173,44 @@ public class ConsumerService implements CommandLineRunner {
             LOGGER.debug("INSERT id={}, eventTimestamp={} to state={}, latency={}ms",
                 jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), JobRecord.STATE_accepted, latency);
         }
-        return stateRecordService.insert(jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), Instant.now(), processKey)
+        return stateRecordService.insert(jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), processKey)
             .map(stateRecord -> new DatabaseResult(jobAcceptedEvent.getId(), true, DatabaseOperation.insert));
     }
 
-    private Mono<DatabaseResult> storeStateForExistingJob(JobStatusChangedEvent jobChangedEvent, Instant now) {
+    private Mono<DatabaseResult> storeStateForExistingJob(JobStatusChangedEvent jobChangedEvent) {
 
         if (LOGGER.isDebugEnabled()) {
             long latency = jobChangedEvent.getEventTimestamp() != null
-                ? now.toEpochMilli() - jobChangedEvent.getEventTimestamp().toEpochMilli()
+                ? Instant.now().toEpochMilli() - jobChangedEvent.getEventTimestamp().toEpochMilli()
                 : -1;
             LOGGER.debug("UPDATE id={}, eventTimestamp={} to state={}, latency={}ms",
                 jobChangedEvent.getId(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getStatus(), latency);
         }
-        return stateRecordService.update(jobChangedEvent.getId(), jobChangedEvent.getStatus(),
-                jobChangedEvent.getEventTimestamp(), now, jobChangedEvent.getPausedBucketKey())
-            .map(updateCount -> new DatabaseResult(jobChangedEvent.getId(), updateCount != null && updateCount > 0, DatabaseOperation.update));
+        if (UPSERT) {
+            return stateRecordService.upsert(jobChangedEvent.getId(), jobChangedEvent.getJobAcceptedTimestamp(), jobChangedEvent.getProcessKey(),
+                    jobChangedEvent.getStatus(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getPausedBucketKey())
+                .map(updateCount -> new DatabaseResult(jobChangedEvent.getId(), updateCount != null && updateCount > 0, DatabaseOperation.update));
+        } else {
+            return stateRecordService.update(jobChangedEvent.getId(), jobChangedEvent.getStatus(),
+                    jobChangedEvent.getEventTimestamp(), jobChangedEvent.getPausedBucketKey())
+                .map(updateCount -> new DatabaseResult(jobChangedEvent.getId(), updateCount != null && updateCount > 0, DatabaseOperation.update));
+        }
     }
 
     @Override
     public void run(String... args) {
-        LOGGER.info("STARTING ConsumerService on {}", scheduler);
+
+        LOGGER.info("STARTING ConsumerService for INSERTS on {}", schedulerInserts);
         // we have to trigger the consumption
-        consumeFromTopicsAndWriteToDatabase()
+        consumeFromInsertTopicAndWriteToDatabase()
             // publish on scheduler, because storeState uses block() and so receiver thread itself is not blocked
-            .publishOn(scheduler)
+            .publishOn(schedulerInserts)
+            .subscribe();
+
+        LOGGER.info("STARTING ConsumerService for UPDATES on {}", schedulerUpdates);
+        consumeFromUpdateTopicsAndWriteToDatabase()
+            // publish on scheduler, because storeState uses block() and so receiver thread itself is not blocked
+            .publishOn(schedulerUpdates)
             .subscribe();
     }
 }
