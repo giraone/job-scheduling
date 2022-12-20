@@ -48,16 +48,16 @@ public class PausedDecider {
             final String processKey = process.getKey();
             // (1) Build the map of process keys to paused bucket keys
             if (process.getActivation() == ActivationEnum.PAUSED) {
-                LOGGER.info(">>> {} IS-PAUSED with Paused-Bucket={} and Agent='{}'",
+                LOGGER.info("<-> {} IS-PAUSED with bucket='{}' and agent='{}'",
                     processKey, process.getBucketKeyIfPaused(), process.getAgentKey());
                 newPausedMap.put(processKey, process.getBucketKeyIfPaused());
                 // (2) Are there any processes to be switched from ACTIVE to PAUSED?
                 if (!pausedMap.containsKey(processKey)) {
                     final String bucketKey = process.getBucketKeyIfPaused();
-                    LOGGER.info(">>> SWITCHING {} from ACTIVE to PAUSED with bucket '{}'", processKey, bucketKey);
+                    LOGGER.info("<-> SWITCHING {} from ACTIVE to PAUSED with bucket='{}'", processKey, bucketKey);
                     boolean ok = switchOnOff.changeStateToPausedForProcessResume(bucketKey, true);
                     if (!ok) {
-                        LOGGER.error(">>> SWITCHING {} from ACTIVE to PAUSED with bucket '{}' FAILED!", processKey, bucketKey);
+                        LOGGER.error("<-> SWITCHING {} from ACTIVE to PAUSED with bucket='{}' FAILED!", processKey, bucketKey);
                     }
                 }
             }
@@ -70,10 +70,10 @@ public class PausedDecider {
             // (4) Are there any processes to be switched from PAUSED to ACTIVE?
             if (!newPausedMap.containsKey(processKey)) {
                 final String bucketKey = kv.getValue();
-                LOGGER.info(">>> SWITCHING {} from PAUSED with bucket '{}' to ACTIVE", processKey,bucketKey);
+                LOGGER.info("<-> SWITCHING {} from PAUSED with bucket '{}' to ACTIVE", processKey,bucketKey);
                 boolean ok = switchOnOff.changeStateToPausedForProcessResume(bucketKey, false);
                 if (!ok) {
-                    LOGGER.error(">>> SWITCHING {} from PAUSED with bucket '{}' to ACTIVE", processKey,bucketKey);
+                    LOGGER.error("<-> SWITCHING {} from PAUSED with bucket '{}' to ACTIVE", processKey,bucketKey);
                 }
             }
         }
@@ -85,11 +85,7 @@ public class PausedDecider {
     // null = not paused, != null key of bucket
     public String getBucketIfProcessPaused(String processKey) {
 
-        final String ret = pausedMap.get(processKey);
-        if (ret != null) {
-            LOGGER.info(">>> {} IS-PAUSED", processKey);
-        }
-        return ret;
+        return pausedMap.get(processKey);
     }
 
     public String getAgentKeyForProcess(String processKey) {

@@ -12,6 +12,8 @@ logging:
     org.apache.kafka.clients.NetworkClient: ERROR
     # Suppress "Found no committed offset for partition ..." messages (INFO)
     org.apache.kafka.clients.consumer.internals.ConsumerCoordinator: WARN
+    # Suppress "Resetting offset for partition ..." messages (INFO)
+    org.apache.kafka.clients.consumer.internals.SubscriptionState: WARN
 
 spring:
   application:

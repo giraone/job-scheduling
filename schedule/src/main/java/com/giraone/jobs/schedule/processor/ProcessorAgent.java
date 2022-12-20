@@ -20,7 +20,7 @@ public class ProcessorAgent {
 
     public AbstractAssignedJobEvent streamProcess(JobScheduledEvent jobScheduledEvent) {
 
-        LOGGER.debug(">>> ProcessorAgent.streamProcess {}", jobScheduledEvent);
+        LOGGER.debug("<<<< ProcessorAgent {}", jobScheduledEvent);
 
         UtilsAndConstants.simulationModeSleep();
 

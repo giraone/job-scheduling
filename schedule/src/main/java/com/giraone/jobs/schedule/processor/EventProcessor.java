@@ -15,18 +15,23 @@ import com.giraone.jobs.schedule.config.ApplicationProperties;
 import com.giraone.jobs.schedule.exceptions.DocumentedErrorOutput;
 import com.giraone.jobs.schedule.stopper.DefaultProcessingStopperImpl;
 import com.giraone.jobs.schedule.stopper.ProcessingStopper;
+import com.giraone.jobs.schedule.stopper.SwitchOnOff;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.cloud.stream.binder.Binding;
 import org.springframework.cloud.stream.binding.BindingsLifecycleController;
 import org.springframework.cloud.stream.endpoint.BindingsEndpoint;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.ContextStartedEvent;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +47,7 @@ import java.util.function.Function;
  * </ul>
  */
 @Component
-public class EventProcessor {
+public class EventProcessor implements ApplicationListener<ApplicationStartedEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventProcessor.class);
     private static final ObjectMapper mapper = ObjectMapperBuilder.build(false, false);
@@ -67,6 +72,7 @@ public class EventProcessor {
     );
 
     private final ApplicationProperties applicationProperties;
+    private final SwitchOnOff switchOnOff;
     private final BindingsEndpoint bindingsEndpoint;
     private final StreamBridge streamBridge;
     private final ProcessorSchedule processorSchedule;
@@ -75,7 +81,9 @@ public class EventProcessor {
     private final ProcessorNotify processorNotify;
 
     public EventProcessor(ApplicationProperties applicationProperties,
-                          BindingsEndpoint bindingsEndpoint, StreamBridge streamBridge,
+                          SwitchOnOff switchOnOff,
+                          BindingsEndpoint bindingsEndpoint,
+                          StreamBridge streamBridge,
                           ProcessorSchedule processorSchedule,
                           ProcessorResume processorResume,
                           ProcessorAgent processorAgent,
@@ -83,12 +91,19 @@ public class EventProcessor {
     ) {
 
         this.applicationProperties = applicationProperties;
+        this.switchOnOff = switchOnOff;
         this.bindingsEndpoint = bindingsEndpoint;
         this.streamBridge = streamBridge;
         this.processorSchedule = processorSchedule;
         this.processorResume = processorResume;
         this.processorAgent = processorAgent;
         this.processorNotify = processorNotify;
+    }
+
+    @Override
+    public void onApplicationEvent(ApplicationStartedEvent event) {
+        this.switchOnOff.changeStateToPausedForProcessResume("B01", true);
+        this.switchOnOff.changeStateToPausedForProcessResume("B02", true);
     }
 
     //- SCHEDULE -------------------------------------------------------------------------------------------------------
@@ -145,12 +160,14 @@ public class EventProcessor {
 
     private Consumer<JobPausedEvent> performResume(String processName) {
         return jobPausedEvent -> {
-            Optional<JobScheduledEvent> jobScheduledEvent = processorResume.streamProcess(jobPausedEvent);
-            if (jobScheduledEvent.isPresent()) {
-                LOGGER.debug(">>> Re-scheduling {} {}", processName, jobScheduledEvent);
-                sendToDynamicTarget(jobScheduledEvent.get(), jobEvent -> processName + "-" + jobEvent.getProcessKey());
+            Optional<JobScheduledEvent> jobScheduledEventOptional = processorResume.streamProcess(jobPausedEvent);
+            if (jobScheduledEventOptional.isPresent()) {
+                final JobScheduledEvent jobScheduledEvent = jobScheduledEventOptional.get();
+                final String binding = processName + "-" + jobScheduledEvent.getAgentKey();
+                sendToDynamicTarget(jobScheduledEvent, jobEvent -> binding);
             } else {
-                // Kein ACK
+                LOGGER.warn(">>> STILL-PAUSED '{}'", processName);
+                // TODO: Kein ACK
             }
         };
     }
@@ -195,10 +212,10 @@ public class EventProcessor {
             AbstractAssignedJobEvent event = processorAgent.streamProcess(jobScheduledEvent);
             sendToDynamicTarget(event, jobEvent -> {
                 if (event instanceof JobCompletedEvent) {
-                    LOGGER.info(">>>> COMPLETED {} of {} in agent {}", event.getMessageKey(), event.getProcessKey(), event.getAgentKey());
+                    LOGGER.info(">>> COMPLETED     {} of {} in agent '{}'", event.getMessageKey(), event.getProcessKey(), event.getAgentKey());
                     return PROCESS_agent + event.getAgentKey() + "-out-0";
-                } else if (event instanceof JobFailedEvent){
-                    LOGGER.warn(">>>> FAILED {} of {} in agent {}", event.getMessageKey(), event.getProcessKey(), event.getAgentKey());
+                } else if (event instanceof JobFailedEvent) {
+                    LOGGER.warn(">>> FAILED        {} of {} in agent '{}'", event.getMessageKey(), event.getProcessKey(), event.getAgentKey());
                     return PROCESS_agent + event.getAgentKey() + "-out-failed";
                 } else {
                     throw new IllegalArgumentException("Event returned by processorAgent has invalid type " + event.getClass());
@@ -316,7 +333,7 @@ public class EventProcessor {
     protected boolean sendToDynamicTarget(AbstractJobEvent jobEvent, Function<AbstractJobEvent, String> dynamicTarget) {
         final String bindingName = dynamicTarget.apply(jobEvent);
         if (bindingName == null) {
-            LOGGER.warn(">>> No dynamic target for {}!", jobEvent);
+            LOGGER.warn("No dynamic target for {}!", jobEvent);
             return false;
         }
         final Message<AbstractJobEvent> message = MessageBuilder.withPayload(jobEvent)
@@ -325,7 +342,7 @@ public class EventProcessor {
 
         boolean ok = streamBridge.send(bindingName, message);
         if (!ok) {
-            LOGGER.error(">>> Cannot send event to out binding \"{}\"!", bindingName);
+            LOGGER.error("Cannot send event to out binding \"{}\"!", bindingName);
             return false;
         } else {
             LOGGER.debug("SENT TO destination TOPIC of binding {}", bindingName);
@@ -338,13 +355,14 @@ public class EventProcessor {
     //------------------------------------------------------------------------------------------------------------------
 
     protected boolean handleProcessingSuccess(String processName, String messageKey) {
-        LOGGER.info(">>> SUCCESS in process {} for message={}.", processName, messageKey);
+
+        LOGGER.debug("+++ SUCCESS in process {} for message={}.", processName, messageKey);
         if (!applicationProperties.isDisableStopper()) {
             final ProcessingStopper processingStopper = EventProcessor.STOPPER.get(processName);
             if (processingStopper != null) {
                 processingStopper.addSuccessAndCheckResume();
             } else {
-                LOGGER.error(">>> No process with name \"{}\"!", processName);
+                LOGGER.error("No process with name \"{}\"!", processName);
             }
         }
         return true;
@@ -358,11 +376,11 @@ public class EventProcessor {
             .setHeader(KafkaHeaders.MESSAGE_KEY, messageKey).build();
         final String bindingNameError = processName + "-out-error";
         final String bindingNameConsumer = processName + "-in-0";
-        LOGGER.error(">>> EXCEPTION in process {} for message={}! Sending problem to out binding \"{}\".",
+        LOGGER.error("+++ EXCEPTION in process {} for message={}! Sending problem to out binding \"{}\".",
             processName, messageValue, bindingNameError, exception);
         boolean ok = streamBridge.send(bindingNameError, documentedErrorOutputMessage);
         if (!ok) {
-            LOGGER.error(">>> Cannot send problem to out binding \"{}\"!", bindingNameError);
+            LOGGER.error("Cannot send problem to out binding \"{}\"!", bindingNameError);
         }
 
         if (!applicationProperties.isDisableStopper()) {
@@ -370,18 +388,17 @@ public class EventProcessor {
             if (processingStopper != null) {
                 boolean stop = processingStopper.addErrorAndCheckStop();
                 if (stop) {
-                    LOGGER.error(">>> STOPPING {} - - - STOPPING - - - STOPPING - - -", bindingNameConsumer);
+                    LOGGER.error("+++ STOPPING {} - - - STOPPING - - - STOPPING - - -", bindingNameConsumer);
                     Binding<?> state = bindingsEndpoint.queryState(bindingNameConsumer);
                     if (state.isRunning()) {
                         bindingsEndpoint.changeState(bindingNameConsumer, BindingsLifecycleController.State.STOPPED);
                     }
                 }
             } else {
-                LOGGER.error(">>> No process with name \"{}\"!", processName);
+                LOGGER.error("+++ No process with name \"{}\"!", processName);
             }
         }
 
         return false;
     }
-
 }

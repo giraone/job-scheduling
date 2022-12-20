@@ -27,7 +27,7 @@ public class SwitchOnOff {
         }
 
         if (!state.isRunning()) {
-            LOGGER.info(">>> STARTING {} - - - STARTING - - - STARTING - - -", bindingNameConsumer);
+                LOGGER.info("~~~ STARTING ~~~~~~~~ {}", bindingNameConsumer);
             bindingsEndpoint.changeState(bindingNameConsumer, BindingsLifecycleController.State.STARTED);
             try {
                 Thread.sleep(2000L);
@@ -40,29 +40,28 @@ public class SwitchOnOff {
 
         if (paused) {
             if (!state.isPaused()) {
-                LOGGER.info(">>> PAUSING {} - - - PAUSING - - - PAUSING - - -", bindingNameConsumer);
+                LOGGER.info("~~~ PAUSING ~~~~~~~~~ {}", bindingNameConsumer);
                 bindingsEndpoint.changeState(bindingNameConsumer, BindingsLifecycleController.State.PAUSED);
 
             } else {
-                LOGGER.warn(">>> Attempt to PAUSE {}, but is running={}, paused={}", bindingNameConsumer, state.isRunning(), state.isPaused());
+                LOGGER.warn("~~~ Attempt to PAUSE  {}, but is running={}, paused={}", bindingNameConsumer, state.isRunning(), state.isPaused());
             }
         } else {
             if (state.isPaused()) {
-                LOGGER.info(">>> RESUMING {} - - - RESUMING - - - RESUMING - - -", bindingNameConsumer);
+                LOGGER.info("~~~ RESUMING ~~~~~~~~ {}", bindingNameConsumer);
                 bindingsEndpoint.changeState(bindingNameConsumer, BindingsLifecycleController.State.RESUMED);
             } else {
-                LOGGER.warn(">>> Attempt to RESUME {}, but is running={}, paused={}", bindingNameConsumer, state.isRunning(), state.isPaused());
+                LOGGER.warn("~~~ Attempt to RESUME {}, but is running={}, paused={}", bindingNameConsumer, state.isRunning(), state.isPaused());
             }
         }
         final Binding<?> newState = bindingsEndpoint.queryState(bindingNameConsumer);
-        LOGGER.info(">>> NEW STATE = running={}, paused={}", newState.isRunning(), newState.isPaused());
+                LOGGER.info("~~~ NEW-STATE ~~~~~~~ {}: running={}, paused={}", bindingNameConsumer, newState.isRunning(), newState.isPaused());
         return newState.isPaused();
     }
 
     public boolean isRunning(String processorName) {
 
         final String bindingNameConsumer = processorName + "-in-0";
-        LOGGER.debug(">>> IS RUNNING? {}", bindingNameConsumer);
         Binding<?> state = bindingsEndpoint.queryState(bindingNameConsumer);
         return state.isRunning();
     }
@@ -70,7 +69,6 @@ public class SwitchOnOff {
     public boolean isPaused(String processorName) {
 
         final String bindingNameConsumer = processorName + "-in-0";
-        LOGGER.debug(">>> IS PAUSED? {}", bindingNameConsumer);
         Binding<?> state = bindingsEndpoint.queryState(bindingNameConsumer);
         return state.isPaused();
     }

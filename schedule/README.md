@@ -226,7 +226,7 @@ public class EventProcessor {
                 LOGGER.info("Initializing UncaughtExceptionHandler using EventProcessor.streamsCustomizer");
                 factoryBean.setKafkaStreamsCustomizer(kafkaStreams -> kafkaStreams.setUncaughtExceptionHandler(
                     (thread, exception) -> {
-                        LOGGER.error(">>> UNCAUGHT EXCEPTION thread={}", thread.getName(), exception);
+                        LOGGER.error("UNCAUGHT EXCEPTION thread={}", thread.getName(), exception);
                     }));
             }
 

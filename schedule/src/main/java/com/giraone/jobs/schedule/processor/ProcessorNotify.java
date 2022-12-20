@@ -14,7 +14,7 @@ public class ProcessorNotify {
 
     public JobNotifiedEvent streamProcess(JobCompletedEvent jobCompletedEvent) {
 
-        LOGGER.debug(">>> ProcessorNotify.streamProcess {}", jobCompletedEvent);
+        LOGGER.debug("<<<< ProcessorNotify {}", jobCompletedEvent);
 
         UtilsAndConstants.simulationModeSleep();
 

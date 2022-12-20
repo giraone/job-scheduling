@@ -23,7 +23,7 @@ public class ProcessorResume {
 
     public Optional<JobScheduledEvent> streamProcess(JobPausedEvent jobPausedEvent) {
 
-        LOGGER.debug(">>> ProcessorResume.streamProcess {}", jobPausedEvent);
+        LOGGER.debug("<<<< ProcessorResume {}", jobPausedEvent);
 
         UtilsAndConstants.simulationModeSleep();
 
@@ -35,11 +35,11 @@ public class ProcessorResume {
         final String pausedBucketKey = pausedDecider.getBucketIfProcessPaused(processKey);
 
         if (pausedBucketKey != null) {
-            LOGGER.info(">>> Keeping {} of {} paused in bucket '{}'", jobPausedEvent.getId(), processKey, pausedBucketKey);
+            LOGGER.info(">>> KEEPING       {} of {} in bucket '{}'", jobPausedEvent.getId(), processKey, pausedBucketKey);
             return Optional.empty();
         } else {
             final String agentKey = pausedDecider.getAgentKeyForProcess(processKey);
-            LOGGER.info(">>> Re-scheduling {} of {} to agent '{}'",
+            LOGGER.info(">>> RE-SCHEDULING {} of {} to agent '{}'",
                 jobPausedEvent.getId(), processKey, agentKey);
             return Optional.of(new JobScheduledEvent(jobPausedEvent, agentKey));
         }
