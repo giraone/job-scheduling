@@ -2,6 +2,15 @@
 
 SCS based solution for job scheduler based on Staged Event Driven Architecture(SEDA).
 
+## Setup
+
+### Ports
+
+- receiver: http://localhost:8090
+- materialize: http://localhost:8091
+- schedule: http://localhost:8092
+- jobadmin: http://localhost:8093
+
 ## TODO
 
 ### Java 17 / Spring Boot 3.0.0
@@ -36,25 +45,26 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [ ] Schedulers.parallel() vs Schedulers.boundedElastic() - see https://stackoverflow.com/questions/61304762/difference-between-boundedelastic-vs-parallel-scheduler
 - [ ] Analyze, if a priority for 'job-accepted' can be set, to prevent updates before inserts.
 - [x] Prevent that older update events overwriting newer once - see StateRecordService.java.
-- [ ] R2DBC Transactional for UPSERT
+- [ ] R2DBC Transactional for UPSERT.
 - [ ] ConsumerServiceIntTest with R2DBC do not work.
-- [ ] StateRecordService uses hard-coded '+ 1000L' for Process-ID (remove processId or map processKey to processId)
+- [ ] StateRecordService uses hard-coded '+ 1000L' for Process-ID (remove processId or map processKey to processId).
 
 ### Schedule
 
+- [x] The REST call to `jobadmin` for fetching the process states (paused, active) is tested with an integration test based on [WireMock](https://wiremock.org).
 - [x] Pausing is added in state *accepted*. Here the job event are either passed to topic `scheduled` or `paused`.
 - [x] The job states are fetched periodically using `@Schedule` in [PausedDecider.java](src/main/java/com/giraone/jobs/schedule/processor/PausedDecider.java)
-- [ ] When a state switches from *active* to *paused*, the processor B01 switches from *running* to *paused*
-- [ ] When a state switches from *paused* to *active*, the processor B01 switches from *paused* to *running*
+- [x] When a state switches from *active* to *paused*, the processor Bxx switches from *running* to *paused*.
+- [x] When a state switches from *paused* to *active*, the processor Bxx switches from *paused* to *running*.
+- [ ] How to start the processor Bxx in state `running=true, paused=true`? Property `auto-startup: false` leads to `running=false, paused=false`.
 - [ ] Partition key - see https://spring.io/blog/2021/02/03/demystifying-spring-cloud-stream-producers-with-apache-kafka-partitions
-- [x] The REST call to `jobadmin` for fetching the process states (paused, active) is tested with an integration test based on [WireMock](https://wiremock.org).
-- [ ] Builder pattern for Job models
+- [ ] Builder pattern for Job models.
 
 ### JobAdmin
 
-- [x] The DTO uses the TSID String value, where the entity is a TSID long value
-- [ ] Switch off JPA caching
-- [ ] Automatische Anlage von V001, V002, V003
+- [x] The DTO uses the TSID String value, where the entity is a TSID long value.
+- [ ] Switch off JPA caching.
+- [ ] Automatische Anlage von V001, V002, V003.
 
 ## Topologie
 
@@ -233,41 +243,41 @@ public class EventProcessor {
  
 ## Full-Stop (Start/Stop/Pause/Resume)
 
-* Assuming application runs on port 8070.*
+* Assuming application runs on port 8092.*
 
 ### Status
 
 ```bash
-curl -H "Accept: application/json" -X GET http://localhost:8070/actuator/bindings/processSchedule-in-0
-curl -H "Accept: application/json" -X GET http://localhost:8070/actuator/bindings/processResumeB01-in-0
+curl -H "Accept: application/json" -X GET http://localhost:8092/actuator/bindings/processSchedule-in-0
+curl -H "Accept: application/json" -X GET http://localhost:8092/actuator/bindings/processResumeB01-in-0
 ```
 
 ### Stop
 
 ```bash
-curl -d '{"state":"STOPPED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processSchedule-in-0
-curl -d '{"state":"STOPPED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processResumeB01-in-0
+curl -d '{"state":"STOPPED"}' -H "Content-Type: application/json" -X POST http://localhost:8092/actuator/bindings/processSchedule-in-0
+curl -d '{"state":"STOPPED"}' -H "Content-Type: application/json" -X POST http://localhost:8092/actuator/bindings/processResumeB01-in-0
 ```
 
 ### Start
 
 ```bash
-curl -d '{"state":"STARTED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processSchedule-in-0
-curl -d '{"state":"STARTED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processResumeB01-in-0
+curl -d '{"state":"STARTED"}' -H "Content-Type: application/json" -X POST http://localhost:8092/actuator/bindings/processSchedule-in-0
+curl -d '{"state":"STARTED"}' -H "Content-Type: application/json" -X POST http://localhost:8092/actuator/bindings/processResumeB01-in-0
 ```
 
 ### Pause
 
 ```bash
-curl -d '{"state":"PAUSED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processSchedule-in-0
-curl -d '{"state":"PAUSED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processResumeB01-in-0
+curl -d '{"state":"PAUSED"}' -H "Content-Type: application/json" -X POST http://localhost:8092/actuator/bindings/processSchedule-in-0
+curl -d '{"state":"PAUSED"}' -H "Content-Type: application/json" -X POST http://localhost:8092/actuator/bindings/processResumeB01-in-0
 ```
 
 ### Pause
 
 ```bash
-curl -d '{"state":"RESUMED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processSchedule-in-0
-curl -d '{"state":"RESUMED"}' -H "Content-Type: application/json" -X POST http://localhost:8070/actuator/bindings/processResumeB01-in-0
+curl -d '{"state":"RESUMED"}' -H "Content-Type: application/json" -X POST http://localhost:8092/actuator/bindings/processSchedule-in-0
+curl -d '{"state":"RESUMED"}' -H "Content-Type: application/json" -X POST http://localhost:8092/actuator/bindings/processResumeB01-in-0
 ```
 
 ## Infos and Tutorials
