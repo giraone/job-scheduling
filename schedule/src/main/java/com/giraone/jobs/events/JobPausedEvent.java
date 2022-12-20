@@ -1,7 +1,5 @@
 package com.giraone.jobs.events;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.io.Serial;
 import java.time.Instant;
 
@@ -31,8 +29,7 @@ public class JobPausedEvent extends AbstractJobStatusChangedEvent {
         return "PAUSED";
     }
 
-    @JsonIgnore
-    public String getBucketSuffix() {
+    public String getPausedBucketKey() {
         return pausedBucketKey;
     }
 }

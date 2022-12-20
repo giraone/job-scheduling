@@ -36,12 +36,12 @@ public class ProcessorSchedule {
 
         if (pausedBucketKey != null) {
             final JobPausedEvent jobPausedEvent = new JobPausedEvent(pausedBucketKey, jobAcceptedEvent);
-            LOGGER.info(">>> PAUSED {} of {}. Moving to paused bucket topic {}!",
-                jobPausedEvent.getId(), processKey, jobPausedEvent.getBucketSuffix());
+            LOGGER.info(">>>> PAUSED {} of {}. Moving to paused bucket topic {}!",
+                jobPausedEvent.getId(), processKey, jobPausedEvent.getPausedBucketKey());
             return jobPausedEvent;
         } else {
             final String agentKey = pausedDecider.getAgentKeyForProcess(processKey);
-            LOGGER.info(">>> SCHEDULING {} of {} to agent '{}'",
+            LOGGER.info(">>>> SCHEDULING {} of {} to agent '{}'",
                 jobAcceptedEvent.getId(), processKey, agentKey);
             return new JobScheduledEvent(jobAcceptedEvent, agentKey);
         }

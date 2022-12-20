@@ -34,7 +34,7 @@ public class ProcessorAgent {
             return new JobFailedEvent(jobScheduledEvent,
                 "Job " + jobScheduledEvent.getId() + " of " + jobScheduledEvent.getProcessKey() + " failed!");
         } else {
-            LOGGER.info("Job {} of {} in agent '{}' SUCCEEDED.",
+            LOGGER.debug("Job {} of {} in agent '{}' SUCCEEDED.",
                 jobScheduledEvent.getId(), jobScheduledEvent.getProcessKey(), jobScheduledEvent.getAgentKey());
             return new JobCompletedEvent(jobScheduledEvent, generateLinkToResult(jobScheduledEvent));
         }

@@ -111,7 +111,7 @@ public class EventProcessor {
                 if (event instanceof final JobScheduledEvent jobScheduledEvent) {
                     return PROCESS_schedule + "-" + jobScheduledEvent.getAgentKey();
                 } else if (event instanceof final JobPausedEvent jobPausedEvent) {
-                    return PROCESS_schedule + "-" + jobPausedEvent.getBucketSuffix();
+                    return PROCESS_schedule + "-" + jobPausedEvent.getPausedBucketKey();
                 } else {
                     throw new IllegalArgumentException("Event returned by processorSchedule has invalid type " + event.getClass());
                 }
@@ -147,7 +147,7 @@ public class EventProcessor {
         return jobPausedEvent -> {
             Optional<JobScheduledEvent> jobScheduledEvent = processorResume.streamProcess(jobPausedEvent);
             if (jobScheduledEvent.isPresent()) {
-                LOGGER.info(">>> Re-scheduling {} {}", processName, jobScheduledEvent);
+                LOGGER.debug(">>> Re-scheduling {} {}", processName, jobScheduledEvent);
                 sendToDynamicTarget(jobScheduledEvent.get(), jobEvent -> processName + "-" + jobEvent.getProcessKey());
             } else {
                 // Kein ACK
@@ -195,10 +195,10 @@ public class EventProcessor {
             AbstractAssignedJobEvent event = processorAgent.streamProcess(jobScheduledEvent);
             sendToDynamicTarget(event, jobEvent -> {
                 if (event instanceof JobCompletedEvent) {
-                    LOGGER.info(">>> COMPLETED {} {} {}", processName, event.getProcessKey(), event.getMessageKey());
+                    LOGGER.info(">>>> COMPLETED {} of {} in agent {}", event.getMessageKey(), event.getProcessKey(), event.getAgentKey());
                     return PROCESS_agent + event.getAgentKey() + "-out-0";
                 } else if (event instanceof JobFailedEvent){
-                    LOGGER.warn(">>> FAILED {} {} {}", processName, event.getProcessKey(), event.getMessageKey());
+                    LOGGER.warn(">>>> FAILED {} of {} in agent {}", event.getMessageKey(), event.getProcessKey(), event.getAgentKey());
                     return PROCESS_agent + event.getAgentKey() + "-out-failed";
                 } else {
                     throw new IllegalArgumentException("Event returned by processorAgent has invalid type " + event.getClass());
