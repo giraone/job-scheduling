@@ -60,7 +60,7 @@ public class ProducerService {
                 counterFailed.incrementAndGet();
             })
             .doOnNext(r -> {
-                LOGGER.info("Send to topic \"{}\" successful.", topic);
+                LOGGER.debug("Send to topic \"{}\" successful.", topic);
                 counterSent.incrementAndGet();
             })
             .map(r -> id);
