@@ -8,6 +8,9 @@ import com.giraone.jobs.materialize.common.ObjectMapperBuilder;
 import com.giraone.jobs.materialize.model.DatabaseOperation;
 import com.giraone.jobs.materialize.model.DatabaseResult;
 import com.giraone.jobs.materialize.model.JobRecord;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,6 +23,7 @@ import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.kafka.receiver.ReceiverRecord;
 
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +34,14 @@ public class ConsumerService implements CommandLineRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerService.class);
     private static final ObjectMapper objectMapper = ObjectMapperBuilder.build(false, false);
 
+    private static final String METRICS_PREFIX = "materialize";
+    private static final String METRICS_JOBS_INSERT_SUCCESS = "jobs.insert.success";
+    private static final String METRICS_JOBS_INSERT_FAILURE = "jobs.insert.failure";
+    private static final String METRICS_JOBS_UPDATE_SUCCESS = "jobs.update.success";
+    private static final String METRICS_JOBS_UPDATE_FAILURE = "jobs.update.failure";
+    
     private final StateRecordService stateRecordService;
+    private final MeterRegistry meterRegistry;
     private final ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplateInserts;
     private final ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplateUpdates;
 
@@ -39,18 +50,41 @@ public class ConsumerService implements CommandLineRunner {
 
     private final Map<String, Long> offSetsPerPartition = new HashMap<>();
 
+    private Counter insertSuccessCounter;
+    private Counter insertErrorCounter;
+    private Counter updateSuccessCounter;
+    private Counter updateErrorCounter;
+
     public ConsumerService(
         StateRecordService stateRecordService,
+        MeterRegistry meterRegistry,
         @Qualifier("INSERTS") ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplateInserts,
         @Qualifier("UPDATES") ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplateUpdates
     ) {
+        this.stateRecordService = stateRecordService;
+        this.meterRegistry = meterRegistry;
         this.reactiveKafkaConsumerTemplateInserts = reactiveKafkaConsumerTemplateInserts;
         this.reactiveKafkaConsumerTemplateUpdates = reactiveKafkaConsumerTemplateUpdates;
-        this.stateRecordService = stateRecordService;
     }
 
     //------------------------------------------------------------------------------------------------------------------
 
+    @PostConstruct
+    private void init() {
+        this.insertSuccessCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_INSERT_SUCCESS)
+            .description("Counter for all received jobs, that are successfully passed to Kafka.")
+            .register(meterRegistry);
+        this.insertErrorCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_INSERT_FAILURE)
+            .description("Counter for all received jobs, that are successfully passed to Kafka.")
+            .register(meterRegistry);
+        this.updateSuccessCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_INSERT_SUCCESS)
+            .description("Counter for all received jobs, that are successfully passed to Kafka.")
+            .register(meterRegistry);
+        this.updateErrorCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_INSERT_FAILURE)
+            .description("Counter for all received jobs, that are successfully passed to Kafka.")
+            .register(meterRegistry);
+    }
+    
     @Override
     public void run(String... args) {
 
@@ -68,9 +102,8 @@ public class ConsumerService implements CommandLineRunner {
             .subscribe();
     }
 
-    //------------------------------------------------------------------------------------------------------------------
-
-    private Flux<DatabaseResult> consumeFromInsertTopicAndWriteToDatabase() {
+    @Timed(value = "materialize.jobs.new.time", description = "Time taken to store new jobs.")
+    public Flux<DatabaseResult> consumeFromInsertTopicAndWriteToDatabase() {
 
         return reactiveKafkaConsumerTemplateInserts
             .receive()
@@ -85,7 +118,8 @@ public class ConsumerService implements CommandLineRunner {
             .concatMap(this::consumeNewEvent);
     }
 
-    private Flux<DatabaseResult> consumeFromUpdateTopicsAndWriteToDatabase() {
+    @Timed(value = "materialize.jobs.update.time", description = "Time taken to update existing jobs.")
+    public Flux<DatabaseResult> consumeFromUpdateTopicsAndWriteToDatabase() {
 
         return reactiveKafkaConsumerTemplateUpdates
             .receive()
@@ -100,6 +134,8 @@ public class ConsumerService implements CommandLineRunner {
             .concatMap(this::consumeUpdateEvent);
     }
 
+    //------------------------------------------------------------------------------------------------------------------
+
     private Mono<DatabaseResult> consumeNewEvent(ReceiverRecord<String, String> consumerRecord) {
 
         final String messageKey = consumerRecord.key();
@@ -107,16 +143,16 @@ public class ConsumerService implements CommandLineRunner {
         return parseNewEvent(consumerRecord.value())
             .flatMap(event -> storeStateForNewJob(event, Instant.now(), event.getProcessKey()))
             .doOnSuccess(databaseResult -> {
+                this.insertSuccessCounter.increment();
                 logDatabaseResult(databaseResult, consumerRecord);
                 consumerRecord.receiverOffset().commit().then(Mono.just(databaseResult));
             })
             .onErrorResume(throwable -> {
+                this.insertErrorCounter.increment();
                 final DatabaseResult databaseResult = new DatabaseResult(messageKey, false, DatabaseOperation.insert);
                 logError(databaseResult, consumerRecord, throwable);
                 consumerRecord.receiverOffset().commit();
-                LOGGER.error("Erroneous message committed with partition={}, offset={}",
-                    consumerRecord.receiverOffset().topicPartition(), consumerRecord.receiverOffset().offset());
-                return Mono.just(databaseResult);
+                return logError(messageKey, consumerRecord, throwable);
             });
     }
 
@@ -128,10 +164,17 @@ public class ConsumerService implements CommandLineRunner {
             .flatMap(this::storeStateForExistingJob)
             .switchIfEmpty(logError(messageKey, consumerRecord, null))
             .doOnSuccess(databaseResult -> {
+                this.updateSuccessCounter.increment();
                 logDatabaseResult(databaseResult, consumerRecord);
                 consumerRecord.receiverOffset().commit().then(Mono.just(databaseResult));
             })
-            .onErrorResume(throwable -> logError(messageKey, consumerRecord, throwable));
+            .onErrorResume(throwable -> {
+                this.updateErrorCounter.increment();
+                consumerRecord.receiverOffset().commit();
+                LOGGER.error("Erroneous message committed with partition={}, offset={}",
+                    consumerRecord.receiverOffset().topicPartition(), consumerRecord.receiverOffset().offset());
+                return logError(messageKey, consumerRecord, throwable);
+            });
     }
 
     //------------------------------------------------------------------------------------------------------------------

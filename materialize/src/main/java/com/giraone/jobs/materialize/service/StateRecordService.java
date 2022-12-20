@@ -71,12 +71,11 @@ public class StateRecordService {
                 LOGGER.warn("UPDATE failed: {}", exception.getMessage());
             })
             .onErrorReturn(0)
-            .flatMap(x -> {
-                if (x == 0) {
+            .flatMap(count -> {
+                if (count == 0) {
                     LOGGER.warn("UPDATE failed! Trying INSERT.");
                     return insert(idString, jobAcceptedTimestamp, processKey).map(jobRecord -> 1);
                 } else {
-                    LOGGER.debug("UPDATE succeeded.");
                     return Mono.just(1);
                 }
             });

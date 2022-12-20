@@ -54,6 +54,11 @@
       <artifactId>reactor-kafka</artifactId>
       <version>${reactor.kafka.version}</version>
     </dependency>
+    <!-- for custom metrics -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
+    </dependency>
 
     <!-- Connection pool for R2DBX - see https://github.com/r2dbc/r2dbc-pool -->
     <dependency>

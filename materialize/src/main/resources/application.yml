@@ -1,7 +1,7 @@
 logging:
   level:
     root: WARN
-    com.giraone: INFO
+    com.giraone: DEBUG
     # set the 4 lines to warn to suppress large config list output on startup
     org.apache.kafka.common.config.AbstractConfig: WARN
     org.apache.kafka.clients.admin.AdminClientConfig: WARN
@@ -39,6 +39,9 @@ spring:
       idle_in_transaction_session_timeout: 30000
       # R2DBC properties
       connectTimeout: PT60S
+  jmx:
+    enabled: true
+
 application:
   topic-insert: 'job-accepted'
   topics-update: 'job-scheduled-A01,job-scheduled-A02,job-scheduled-A03,job-failed-A01,job-failed-A02,job-failed-A03,job-paused-B01,job-paused-B02,job-completed,job-notified,job-delivered'
