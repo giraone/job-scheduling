@@ -27,6 +27,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
       max-poll-records: 1
     bootstrap-servers: 'localhost:9092'
+    auto-create-topics: false
     jaas:
       enabled: false
     security:

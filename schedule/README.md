@@ -11,7 +11,7 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 - schedule: http://localhost:8092
 - jobadmin: http://localhost:8093
 
-## TODO
+## TODOs
 
 ### Java 17 / Spring Boot 3.0.0
 
@@ -40,13 +40,13 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 
 ### Materialize
 
-- [x] Metrics (success and failure counter for insert and update) added
+- [x] Metrics (success and failure counter for insert and update, latency timer) added
 - [ ] What is better: **one** ReactiveKafkaConsumerTemplate with all topics or **two** separated for insert and update?
 - [ ] Schedulers.parallel() vs Schedulers.boundedElastic() - see https://stackoverflow.com/questions/61304762/difference-between-boundedelastic-vs-parallel-scheduler
 - [ ] Analyze, if a priority for 'job-accepted' can be set, to prevent updates before inserts.
 - [x] Prevent that older update events overwriting newer once - see StateRecordService.java.
-- [ ] R2DBC Transactional for UPSERT.
-- [ ] ConsumerServiceIntTest with R2DBC do not work.
+- [x] R2DBC Transactional for UPSERT.
+- [ ] ConsumerServiceIntTest with R2DBC does not work.
 - [ ] StateRecordService uses hard-coded '+ 1000L' for Process-ID (remove processId or map processKey to processId).
 
 ### Schedule
@@ -56,15 +56,40 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [x] The job states are fetched periodically using `@Schedule` in [PausedDecider.java](src/main/java/com/giraone/jobs/schedule/processor/PausedDecider.java)
 - [x] When a state switches from *active* to *paused*, the processor Bxx switches from *running* to *paused*.
 - [x] When a state switches from *paused* to *active*, the processor Bxx switches from *paused* to *running*.
-- [ ] How to start the processor Bxx in state `running=true, paused=true`? Property `auto-startup: false` leads to `running=false, paused=false`.
+- [ ] How to start the processor Bxx in state `running=true, paused=true` correctly? Property `auto-startup: false` leads to `running=false, paused=false`.
+      Currently, this handle twice: with `auto-startup: false` and additionally via `ApplicationStartedEvent` in
+     [EventProcessor.java](src/main/java/com/giraone/jobs/schedule/processor/EventProcessor.java)
 - [ ] Partition key - see https://spring.io/blog/2021/02/03/demystifying-spring-cloud-stream-producers-with-apache-kafka-partitions
 - [ ] Builder pattern for Job models.
+- [ ] auto-create-topics: false not working with StreamBridge
 
 ### JobAdmin
 
 - [x] The DTO uses the TSID String value, where the entity is a TSID long value.
+- [ ] Bug in sort by status
 - [ ] Switch off JPA caching.
-- [ ] Automatische Anlage von V001, V002, V003.
+- [ ] Automatic creation of V001, V002, V003, V004 process definitions.
+- [ ] Inverse filter
+
+## Problems with "materialize"
+
+Receiving example (notify before scheduled/completed):
+
+```
+2022-12-20 21:13:48.962 >>> NEW KEY=0AX5H6H8XG5CK, TOPIC=job-accepted,      "eventTimestamp":"2022-12-20T20:13:47.205Z"
+2022-12-20 21:13:50.797 >>> UPD KEY=0AX5H6H8XG5CK, TOPIC=job-notified,      "eventTimestamp":"2022-12-20T20:13:47.300Z"
+2022-12-20 21:13:50.858 >>> UPD KEY=0AX5H6H8XG5CK, TOPIC=job-scheduled-A01, "eventTimestamp":"2022-12-20T20:13:47.252Z"
+2022-12-20 21:13:50.895 >>> UPD KEY=0AX5H6H8XG5CK, TOPIC=job-completed,     "eventTimestamp":"2022-12-20T20:13:47.260Z"
+```
+
+### Solutions
+
+1. findAndUpdateOrInsert
+  - Working, but theoretically not perfect.
+2. upsert
+  - The update must be performed with the timestamp check, so the update before insert is solved, but not the timing with the updates.
+3. insertUpdate
+  - Not working because of rollback on the insert: `current transaction is aborted, commands ignored until end of transaction block`.
 
 ## Topologie
 
