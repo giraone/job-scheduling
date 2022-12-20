@@ -25,8 +25,13 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [ ] Display buckets in JobAdmin (materialize must handle this).
 - [ ] Measure consumer lag and expose it as metric.
 
+### Receiver
+
+- [x] Metrics (success and failure counter, request time) for job request added
+
 ### Materialize
 
+- [x] Metrics (success and failure counter for insert and update) added
 - [ ] What is better: **one** ReactiveKafkaConsumerTemplate with all topics or **two** separated for insert and update?
 - [ ] Schedulers.parallel() vs Schedulers.boundedElastic() - see https://stackoverflow.com/questions/61304762/difference-between-boundedelastic-vs-parallel-scheduler
 - [ ] Analyze, if a priority for 'job-accepted' can be set, to prevent updates before inserts.
@@ -47,6 +52,7 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 
 ### JobAdmin
 
+- [x] The DTO uses the TSID String value, where the entity is a TSID long value
 - [ ] Switch off JPA caching
 - [ ] Automatische Anlage von V001, V002, V003
 

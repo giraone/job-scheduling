@@ -18,10 +18,9 @@ import java.util.Map;
 @RequestMapping(value = "/api")
 public class JobReceiveResource {
 
-    private static final String METRICS_PREFIX = "receiver";
-    private static final String METRICS_TAG_KEY_GROUP = "jobs.received";
-    private static final String METRICS_TAG_VALUE_SUCCESS = "success";
-    private static final String METRICS_TAG_VALUE_FAILURE = "failure";
+    private static final String METRICS_PREFIX = "receiver.jobs.received";
+    private static final String METRICS_JOBS_VALUE_SUCCESS = "success";
+    private static final String METRICS_JOBS_VALUE_FAILURE = "failure";
 
     private Counter successCounter;
     private Counter errorCounter;
@@ -36,12 +35,10 @@ public class JobReceiveResource {
 
     @PostConstruct
     private void init() {
-        this.successCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_TAG_KEY_GROUP + "." + METRICS_TAG_VALUE_SUCCESS)
-            .tag(METRICS_TAG_KEY_GROUP, METRICS_TAG_VALUE_SUCCESS)
+        this.successCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_VALUE_SUCCESS)
             .description("Counter for all received jobs, that are successfully passed to Kafka.")
             .register(meterRegistry);
-        this.errorCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_TAG_KEY_GROUP + "." + METRICS_TAG_VALUE_FAILURE)
-            .tag(METRICS_TAG_KEY_GROUP, METRICS_TAG_VALUE_FAILURE)
+        this.errorCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_VALUE_FAILURE)
             .description("Counter for all received jobs, that are successfully passed to Kafka.")
             .register(meterRegistry);
     }
