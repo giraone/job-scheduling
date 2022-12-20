@@ -49,6 +49,12 @@
       <artifactId>reactor-kafka</artifactId>
       <version>${reactor.kafka.version}</version>
     </dependency>
+    <!-- for custom metrics -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
+    </dependency>
+
     <!-- ID generator -->
     <dependency>
       <groupId>com.github.f4b6a3</groupId>

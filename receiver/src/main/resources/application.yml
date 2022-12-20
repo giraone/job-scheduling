@@ -14,10 +14,11 @@ management:
   endpoints:
     web:
       exposure:
-        include: ['health', 'loggers']
+        include: ['health', 'info', 'loggers', 'metrics']
 
 server:
   port: 8090
+
 
 spring:
   application:
@@ -29,6 +30,8 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all
       retries: 10
+  jmx:
+    enabled: true
 
 application:
   job-accepted-topic: 'job-accepted'
