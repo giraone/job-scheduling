@@ -1,6 +1,10 @@
 package com.giraone.jobs.receiver.web.rest;
 
 import com.giraone.jobs.receiver.service.ProducerService;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,10 +18,32 @@ import java.util.Map;
 @RequestMapping(value = "/api")
 public class JobReceiveResource {
 
-    private final ProducerService producerService;
+    private static final String METRICS_PREFIX = "receiver";
+    private static final String METRICS_TAG_KEY_GROUP = "jobs.received";
+    private static final String METRICS_TAG_VALUE_SUCCESS = "success";
+    private static final String METRICS_TAG_VALUE_FAILURE = "failure";
 
-    public JobReceiveResource(ProducerService producerService) {
+    private Counter successCounter;
+    private Counter errorCounter;
+
+    private final ProducerService producerService;
+    private final MeterRegistry meterRegistry;
+
+    public JobReceiveResource(ProducerService producerService, MeterRegistry meterRegistry) {
         this.producerService = producerService;
+        this.meterRegistry = meterRegistry;
+    }
+
+    @PostConstruct
+    private void init() {
+        this.successCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_TAG_KEY_GROUP + "." + METRICS_TAG_VALUE_SUCCESS)
+            .tag(METRICS_TAG_KEY_GROUP, METRICS_TAG_VALUE_SUCCESS)
+            .description("Counter for all received jobs, that are successfully passed to Kafka.")
+            .register(meterRegistry);
+        this.errorCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_TAG_KEY_GROUP + "." + METRICS_TAG_VALUE_FAILURE)
+            .tag(METRICS_TAG_KEY_GROUP, METRICS_TAG_VALUE_FAILURE)
+            .description("Counter for all received jobs, that are successfully passed to Kafka.")
+            .register(meterRegistry);
     }
 
     @GetMapping("/metrics")
@@ -25,9 +51,13 @@ public class JobReceiveResource {
         return this.producerService.getMetrics();
     }
 
+    @Timed(value = "receiver.jobs.time", description = "Time taken to pass job to Kafka")
     @PostMapping("/jobs")
-    public Mono<Map<String, Object>> create(@RequestBody Map<String, Object> event) {
+    public Mono<Map<String, String>> create(@RequestBody Map<String, Object> event) {
         return this.producerService.send(event)
-            .map(key -> Map.of("key", key));
+            .map(key -> Map.of("key", key))
+            .doOnSuccess(any -> successCounter.increment())
+            .doOnError(any -> errorCounter.increment())
+            ;
     }
 }
