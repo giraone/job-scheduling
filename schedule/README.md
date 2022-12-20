@@ -85,6 +85,7 @@ Receiving example (notify before scheduled/completed):
 ### Solutions
 
 1. findAndUpdateOrInsert
+  - Duplicate insert still possible.
   - Working, but theoretically not perfect.
 2. upsert
   - The update must be performed with the timestamp check, so the update before insert is solved, but not the timing with the updates.
