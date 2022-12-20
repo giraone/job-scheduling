@@ -1,11 +1,13 @@
 package com.giraone.jobs.service.dto;
 
 import com.giraone.jobs.domain.enumeration.JobStatusEnum;
+import com.github.f4b6a3.tsid.Tsid;
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
-import javax.validation.constraints.*;
 
 /**
  * A DTO for the {@link com.giraone.jobs.domain.JobRecord} entity.
@@ -14,7 +16,7 @@ import javax.validation.constraints.*;
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class JobRecordDTO implements Serializable {
 
-    private Long id;
+    private String id;
 
     /**
      * Timestamp, when job was accepted.
@@ -52,11 +54,16 @@ public class JobRecordDTO implements Serializable {
 
     private ProcessDTO process;
 
-    public Long getId() {
+    // ADAPTED
+    public String getId() {
         return id;
     }
-
-    public void setId(Long id) {
+    // ADAPTED
+    public long getLongId() {
+        return Tsid.from(id).toLong();
+    }
+    // ADAPTED
+    public void setId(String id) {
         this.id = id;
     }
 

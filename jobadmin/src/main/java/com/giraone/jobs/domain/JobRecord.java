@@ -1,6 +1,7 @@
 package com.giraone.jobs.domain;
 
 import com.giraone.jobs.domain.enumeration.JobStatusEnum;
+import com.github.f4b6a3.tsid.Tsid;
 
 import java.io.Serial;
 import java.io.Serializable;

@@ -17,7 +17,7 @@ class JobRecordTest {
         assertThat(jobRecord1).isEqualTo(jobRecord2);
         jobRecord2.setId(2L);
         assertThat(jobRecord1).isNotEqualTo(jobRecord2);
-        jobRecord1.setId(null);
+        jobRecord1.setId((Long) null); // ADAPTED
         assertThat(jobRecord1).isNotEqualTo(jobRecord2);
     }
 }

@@ -3,7 +3,7 @@ import { IProcess } from 'app/entities/process/process.model';
 import { JobStatusEnum } from 'app/entities/enumerations/job-status-enum.model';
 
 export interface IJobRecord {
-  id: number;
+  id: string;
   jobAcceptedTimestamp?: dayjs.Dayjs | null;
   lastEventTimestamp?: dayjs.Dayjs | null;
   lastRecordUpdateTimestamp?: dayjs.Dayjs | null;

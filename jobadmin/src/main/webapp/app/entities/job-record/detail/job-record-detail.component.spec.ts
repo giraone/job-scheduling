@@ -14,7 +14,7 @@ describe('JobRecord Management Detail Component', () => {
       providers: [
         {
           provide: ActivatedRoute,
-          useValue: { data: of({ jobRecord: { id: 123 } }) },
+          useValue: { data: of({ jobRecord: { id: '123' } }) },
         },
       ],
     })
@@ -30,7 +30,7 @@ describe('JobRecord Management Detail Component', () => {
       comp.ngOnInit();
 
       // THEN
-      expect(comp.jobRecord).toEqual(expect.objectContaining({ id: 123 }));
+      expect(comp.jobRecord).toEqual(expect.objectContaining({ id: '123' }));
     });
   });
 });

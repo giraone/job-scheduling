@@ -44,7 +44,7 @@ export class JobRecordComponent implements OnInit {
     protected modalService: NgbModal
   ) {}
 
-  trackId = (_index: number, item: IJobRecord): number => this.jobRecordService.getJobRecordIdentifier(item);
+  trackId = (_index: number, item: IJobRecord): string => this.jobRecordService.getJobRecordIdentifier(item);
 
   ngOnInit(): void {
     this.load();

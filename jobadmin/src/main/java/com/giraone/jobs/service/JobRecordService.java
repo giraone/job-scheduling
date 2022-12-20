@@ -67,7 +67,7 @@ public class JobRecordService {
         log.debug("Request to partially update JobRecord : {}", jobRecordDTO);
 
         return jobRecordRepository
-            .findById(jobRecordDTO.getId())
+            .findById(jobRecordDTO.getLongId())
             .map(existingJobRecord -> {
                 jobRecordMapper.partialUpdate(existingJobRecord, jobRecordDTO);
 

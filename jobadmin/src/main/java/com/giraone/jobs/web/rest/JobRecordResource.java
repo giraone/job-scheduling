@@ -12,6 +12,8 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+
+import com.github.f4b6a3.tsid.Tsid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.api.annotations.ParameterObject;
@@ -90,7 +92,7 @@ public class JobRecordResource {
      */
     @PutMapping("/job-records/{id}")
     public ResponseEntity<JobRecordDTO> updateJobRecord(
-        @PathVariable(value = "id", required = false) final Long id,
+        @PathVariable(value = "id", required = false) final String id,
         @Valid @RequestBody JobRecordDTO jobRecordDTO
     ) throws URISyntaxException {
         log.debug("REST request to update JobRecord : {}, {}", id, jobRecordDTO);
@@ -101,14 +103,14 @@ public class JobRecordResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        if (!jobRecordRepository.existsById(id)) {
+        if (!jobRecordRepository.existsById(Tsid.from(id).toLong())) {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
         JobRecordDTO result = jobRecordService.update(jobRecordDTO);
         return ResponseEntity
             .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, jobRecordDTO.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, jobRecordDTO.getId()))
             .body(result);
     }
 
@@ -174,9 +176,9 @@ public class JobRecordResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the jobRecordDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/job-records/{id}")
-    public ResponseEntity<JobRecordDTO> getJobRecord(@PathVariable Long id) {
+    public ResponseEntity<JobRecordDTO> getJobRecord(@PathVariable String id) {
         log.debug("REST request to get JobRecord : {}", id);
-        Optional<JobRecordDTO> jobRecordDTO = jobRecordService.findOne(id);
+        Optional<JobRecordDTO> jobRecordDTO = jobRecordService.findOne(Tsid.from(id).toLong());
         return ResponseUtil.wrapOrNotFound(jobRecordDTO);
     }
 
@@ -187,9 +189,9 @@ public class JobRecordResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/job-records/{id}")
-    public ResponseEntity<Void> deleteJobRecord(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteJobRecord(@PathVariable String id) {
         log.debug("REST request to delete JobRecord : {}", id);
-        jobRecordService.delete(id);
+        jobRecordService.delete(Tsid.from(id).toLong());
         return ResponseEntity
             .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))

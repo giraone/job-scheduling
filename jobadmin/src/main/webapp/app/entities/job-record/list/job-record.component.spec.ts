@@ -51,7 +51,7 @@ describe('JobRecord Management Component', () => {
     jest.spyOn(service, 'query').mockReturnValue(
       of(
         new HttpResponse({
-          body: [{ id: 123 }],
+          body: [{ id: '123' }],
           headers,
         })
       )
@@ -64,12 +64,12 @@ describe('JobRecord Management Component', () => {
 
     // THEN
     expect(service.query).toHaveBeenCalled();
-    expect(comp.jobRecords?.[0]).toEqual(expect.objectContaining({ id: 123 }));
+    expect(comp.jobRecords?.[0]).toEqual(expect.objectContaining({ id: '123' }));
   });
 
   describe('trackId', () => {
     it('Should forward to jobRecordService', () => {
-      const entity = { id: 123 };
+      const entity = { id: '123' };
       jest.spyOn(service, 'getJobRecordIdentifier');
       const id = comp.trackId(0, entity);
       expect(service.getJobRecordIdentifier).toHaveBeenCalledWith(entity);

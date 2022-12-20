@@ -88,7 +88,7 @@ describe('JobRecord Management Update Component', () => {
     it('Should call update service on save for existing entity', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IJobRecord>>();
-      const jobRecord = { id: 123 };
+      const jobRecord = { id: '123' };
       jest.spyOn(jobRecordFormService, 'getJobRecord').mockReturnValue(jobRecord);
       jest.spyOn(jobRecordService, 'update').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
@@ -111,7 +111,7 @@ describe('JobRecord Management Update Component', () => {
     it('Should call create service on save for new entity', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IJobRecord>>();
-      const jobRecord = { id: 123 };
+      const jobRecord = { id: '123' };
       jest.spyOn(jobRecordFormService, 'getJobRecord').mockReturnValue({ id: null });
       jest.spyOn(jobRecordService, 'create').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
@@ -134,7 +134,7 @@ describe('JobRecord Management Update Component', () => {
     it('Should set isSaving to false on error', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<IJobRecord>>();
-      const jobRecord = { id: 123 };
+      const jobRecord = { id: '123' };
       jest.spyOn(jobRecordService, 'update').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ jobRecord });
@@ -155,8 +155,8 @@ describe('JobRecord Management Update Component', () => {
   describe('Compare relationships', () => {
     describe('compareProcess', () => {
       it('Should forward to processService', () => {
-        const entity = { id: 123 };
-        const entity2 = { id: 456 };
+        const entity = { id: '123' };
+        const entity2 = { id: '456' };
         jest.spyOn(processService, 'compareProcess');
         comp.compareProcess(entity, entity2);
         expect(processService.compareProcess).toHaveBeenCalledWith(entity, entity2);

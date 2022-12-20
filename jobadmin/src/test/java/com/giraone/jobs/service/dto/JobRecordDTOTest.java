@@ -11,12 +11,12 @@ class JobRecordDTOTest {
     void dtoEqualsVerifier() throws Exception {
         TestUtil.equalsVerifier(JobRecordDTO.class);
         JobRecordDTO jobRecordDTO1 = new JobRecordDTO();
-        jobRecordDTO1.setId(1L);
+        jobRecordDTO1.setId("1"); // ADAPTED
         JobRecordDTO jobRecordDTO2 = new JobRecordDTO();
         assertThat(jobRecordDTO1).isNotEqualTo(jobRecordDTO2);
         jobRecordDTO2.setId(jobRecordDTO1.getId());
         assertThat(jobRecordDTO1).isEqualTo(jobRecordDTO2);
-        jobRecordDTO2.setId(2L);
+        jobRecordDTO2.setId("2"); // ADAPTED
         assertThat(jobRecordDTO1).isNotEqualTo(jobRecordDTO2);
         jobRecordDTO1.setId(null);
         assertThat(jobRecordDTO1).isNotEqualTo(jobRecordDTO2);
