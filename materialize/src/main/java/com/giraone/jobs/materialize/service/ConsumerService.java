@@ -16,7 +16,6 @@ import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoOperator;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.kafka.receiver.ReceiverRecord;
@@ -27,8 +26,6 @@ import java.util.Map;
 
 @Service
 public class ConsumerService implements CommandLineRunner {
-
-    private static final boolean UPSERT = true;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerService.class);
     private static final ObjectMapper objectMapper = ObjectMapperBuilder.build(false, false);
@@ -51,6 +48,27 @@ public class ConsumerService implements CommandLineRunner {
         this.reactiveKafkaConsumerTemplateUpdates = reactiveKafkaConsumerTemplateUpdates;
         this.stateRecordService = stateRecordService;
     }
+
+    //------------------------------------------------------------------------------------------------------------------
+
+    @Override
+    public void run(String... args) {
+
+        LOGGER.info("STARTING ConsumerService for INSERTS on {}", schedulerInserts);
+        // we have to trigger the consumption
+        consumeFromInsertTopicAndWriteToDatabase()
+            // publish on scheduler, because storeState uses block() and so receiver thread itself is not blocked
+            .publishOn(schedulerInserts)
+            .subscribe();
+
+        LOGGER.info("STARTING ConsumerService for UPDATES on {}", schedulerUpdates);
+        consumeFromUpdateTopicsAndWriteToDatabase()
+            // publish on scheduler, because storeState uses block() and so receiver thread itself is not blocked
+            .publishOn(schedulerUpdates)
+            .subscribe();
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     private Flux<DatabaseResult> consumeFromInsertTopicAndWriteToDatabase() {
 
@@ -93,12 +111,12 @@ public class ConsumerService implements CommandLineRunner {
                 consumerRecord.receiverOffset().commit().then(Mono.just(databaseResult));
             })
             .onErrorResume(throwable -> {
-                final DatabaseResult result = new DatabaseResult(messageKey, false, DatabaseOperation.insert);
-                logError(result, consumerRecord, throwable);
+                final DatabaseResult databaseResult = new DatabaseResult(messageKey, false, DatabaseOperation.insert);
+                logError(databaseResult, consumerRecord, throwable);
                 consumerRecord.receiverOffset().commit();
                 LOGGER.error("Erroneous message committed with partition={}, offset={}",
                     consumerRecord.receiverOffset().topicPartition(), consumerRecord.receiverOffset().offset());
-                return MonoOperator.just(result);
+                return Mono.just(databaseResult);
             });
     }
 
@@ -108,34 +126,21 @@ public class ConsumerService implements CommandLineRunner {
         LOGGER.info("UPD TOPIC={}, KEY={}, MESSAGE={}", consumerRecord.topic(), messageKey, consumerRecord.value());
         return parseChangeEvent(consumerRecord.value())
             .flatMap(this::storeStateForExistingJob)
+            .switchIfEmpty(logError(messageKey, consumerRecord, null))
             .doOnSuccess(databaseResult -> {
                 logDatabaseResult(databaseResult, consumerRecord);
                 consumerRecord.receiverOffset().commit().then(Mono.just(databaseResult));
             })
-            .onErrorResume(throwable -> {
-                final DatabaseResult result = new DatabaseResult(messageKey, false, DatabaseOperation.update);
-                logError(result, consumerRecord, throwable);
-                consumerRecord.receiverOffset().commit();
-                return MonoOperator.just(result);
-            });
+            .onErrorResume(throwable -> logError(messageKey, consumerRecord, throwable));
     }
 
-    private void logDatabaseResult(DatabaseResult databaseResult, ReceiverRecord<String, String> consumerRecord) {
-        final String topicPartition = consumerRecord.receiverOffset().topicPartition().topic()
-            + "/" + consumerRecord.receiverOffset().topicPartition().partition();
-        final Long offset = consumerRecord.receiverOffset().offset();
-        final Long lastOffset = offSetsPerPartition.get(topicPartition);
-        // TODO
-        //if (lastOffset == null || offset - lastOffset == 99) {
-            LOGGER.info("Commit % 100 with topic/partition={}, offset={}", topicPartition, offset);
-        //}
-        offSetsPerPartition.put(topicPartition, offset);
-        if (databaseResult.isSuccess()) {
-            LOGGER.debug("Successfully consumed and committed {} {}", databaseResult.getOperation(), databaseResult.getEntityId());
-        } else {
-            LOGGER.warn("Database failure for {} id={} with topic/partition={}, offset={}",
-                databaseResult.getOperation(), databaseResult.getEntityId(), topicPartition, offset);
-        }
+    //------------------------------------------------------------------------------------------------------------------
+
+    private Mono<DatabaseResult> logError(String messageKey, ReceiverRecord<String,String> consumerRecord, Throwable throwable) {
+        final DatabaseResult databaseResult = new DatabaseResult(messageKey, false, DatabaseOperation.update);
+        logError(databaseResult, consumerRecord, throwable);
+        consumerRecord.receiverOffset().commit();
+        return Mono.just(databaseResult);
     }
 
     private void logError(DatabaseResult databaseResult, ReceiverRecord<String, String> consumerRecord, Throwable throwable) {
@@ -144,8 +149,29 @@ public class ConsumerService implements CommandLineRunner {
         final Long offset = consumerRecord.receiverOffset().offset();
         offSetsPerPartition.put(topicPartition, offset);
         LOGGER.warn("Error for {} with topic/partition={}, offset={}, error={}",
-            databaseResult.getOperation(), topicPartition, offset, throwable.getMessage());
+            databaseResult.getOperation(), topicPartition, offset, throwable != null ? throwable.getMessage() : "-");
     }
+
+    private void logDatabaseResult(DatabaseResult databaseResult, ReceiverRecord<String, String> consumerRecord) {
+        final String topicPartition = consumerRecord.receiverOffset().topicPartition().topic()
+            + "/" + consumerRecord.receiverOffset().topicPartition().partition();
+        final Long offset = consumerRecord.receiverOffset().offset();
+        // TODO
+        // final Long lastOffset = offSetsPerPartition.get(topicPartition);
+        //if (lastOffset == null || offset - lastOffset == 99) {
+        LOGGER.info("Commit % 100 with topic/partition={}, offset={}", topicPartition, offset);
+        //}
+        offSetsPerPartition.put(topicPartition, offset);
+        if (databaseResult.isSuccess()) {
+            LOGGER.debug("Successfully consumed and committed {} {}",
+                databaseResult.getOperation(), databaseResult.getEntityId());
+        } else {
+            LOGGER.error("Database failure for topic/partition={}, offset={}: databaseResult == null",
+                topicPartition, offset);
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     private Mono<JobAcceptedEvent> parseNewEvent(String message) {
         try {
@@ -186,31 +212,9 @@ public class ConsumerService implements CommandLineRunner {
             LOGGER.debug("UPDATE id={}, eventTimestamp={} to state={}, latency={}ms",
                 jobChangedEvent.getId(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getStatus(), latency);
         }
-        if (UPSERT) {
-            return stateRecordService.upsert(jobChangedEvent.getId(), jobChangedEvent.getJobAcceptedTimestamp(), jobChangedEvent.getProcessKey(),
-                    jobChangedEvent.getStatus(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getPausedBucketKey())
-                .map(updateCount -> new DatabaseResult(jobChangedEvent.getId(), updateCount != null && updateCount > 0, DatabaseOperation.update));
-        } else {
-            return stateRecordService.update(jobChangedEvent.getId(), jobChangedEvent.getStatus(),
-                    jobChangedEvent.getEventTimestamp(), jobChangedEvent.getPausedBucketKey())
-                .map(updateCount -> new DatabaseResult(jobChangedEvent.getId(), updateCount != null && updateCount > 0, DatabaseOperation.update));
-        }
-    }
 
-    @Override
-    public void run(String... args) {
-
-        LOGGER.info("STARTING ConsumerService for INSERTS on {}", schedulerInserts);
-        // we have to trigger the consumption
-        consumeFromInsertTopicAndWriteToDatabase()
-            // publish on scheduler, because storeState uses block() and so receiver thread itself is not blocked
-            .publishOn(schedulerInserts)
-            .subscribe();
-
-        LOGGER.info("STARTING ConsumerService for UPDATES on {}", schedulerUpdates);
-        consumeFromUpdateTopicsAndWriteToDatabase()
-            // publish on scheduler, because storeState uses block() and so receiver thread itself is not blocked
-            .publishOn(schedulerUpdates)
-            .subscribe();
+        return stateRecordService.upsert(jobChangedEvent.getId(), jobChangedEvent.getJobAcceptedTimestamp(), jobChangedEvent.getProcessKey(),
+                jobChangedEvent.getStatus(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getPausedBucketKey())
+            .map(updateCount -> new DatabaseResult(jobChangedEvent.getId(), updateCount != null && updateCount > 0, DatabaseOperation.update));
     }
 }
