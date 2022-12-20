@@ -2,9 +2,12 @@ package com.giraone.jobs.materialize.service;
 
 import com.giraone.jobs.materialize.model.JobRecord;
 import com.github.f4b6a3.tsid.Tsid;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import io.r2dbc.spi.R2dbcDataIntegrityViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,9 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.giraone.jobs.materialize.model.JobRecord.STATE_accepted;
 import static org.springframework.data.domain.Sort.by;
@@ -32,16 +37,33 @@ public class StateRecordService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StateRecordService.class);
 
-    private final R2dbcEntityTemplate r2dbcEntityTemplate;
+    private static final String METRICS_PREFIX = "materialize";
+    private static final String METRICS_JOBS_LATENCY = "jobs.latency";
+    private static final Integer PERCENTILE_PRECISION = 2;
 
-    public StateRecordService(R2dbcEntityTemplate r2dbcEntityTemplate) {
+    private final R2dbcEntityTemplate r2dbcEntityTemplate;
+    private final MeterRegistry meterRegistry;
+
+    private Timer latencyTimer;
+
+    public StateRecordService(R2dbcEntityTemplate r2dbcEntityTemplate, MeterRegistry meterRegistry) {
         this.r2dbcEntityTemplate = r2dbcEntityTemplate;
+        this.meterRegistry = meterRegistry;
+    }
+
+    @PostConstruct
+    private void init() {
+        this.latencyTimer = Timer.builder(METRICS_PREFIX + "." + METRICS_JOBS_LATENCY)
+            .publishPercentileHistogram()
+            .percentilePrecision(PERCENTILE_PRECISION)
+            .description("Measurement of the materialize latency in milliseconds")
+            .register(meterRegistry);
     }
 
     public Mono<JobRecord> insert(String idString, Instant jobAcceptedTimestamp, String processKey) {
 
         final long id = Tsid.from(idString).toLong();
-        return insert(id, jobAcceptedTimestamp, processKey, STATE_accepted, Instant.now(), null);
+        return insert(id, jobAcceptedTimestamp, processKey, STATE_accepted, jobAcceptedTimestamp, null);
     }
 
     public Mono<Integer> update(boolean checkTimestamp, String idString, String state, Instant lastEventTimestamp, String pausedBucketKey) {
@@ -67,13 +89,13 @@ public class StateRecordService {
                                 Instant lastEventTimestamp, String pausedBucketKey) {
 
         return update(false, idString, state, lastEventTimestamp, pausedBucketKey)
-            .doOnError(exception -> {
-                LOGGER.warn("UPDATE failed: {}", exception.getMessage());
+            .doOnError(throwable -> {
+                LOGGER.debug("UPDATE failed: Exception = {}", throwable.getMessage());
             })
             .onErrorReturn(0)
             .flatMap(count -> {
                 if (count == 0) {
-                    LOGGER.warn("UPDATE failed! Trying INSERT.");
+                    LOGGER.debug("UPDATE failed! Trying INSERT.");
                     return insert(idString, jobAcceptedTimestamp, processKey).map(jobRecord -> 1);
                 } else {
                     return Mono.just(1);
@@ -81,15 +103,23 @@ public class StateRecordService {
             });
     }
 
-    // Solution 3 - insertUpdate = insert, if duplicate key exception, then update
+    // Solution 3 - insertUpdate = insert, if duplicate key exception, then update with timestamp checking
     public Mono<Integer> insertUpdate(String idString, Instant jobAcceptedTimestamp, String processKey, String state,
                                       Instant lastEventTimestamp, String pausedBucketKey) {
 
         return insert(idString, jobAcceptedTimestamp, processKey)
+            .doOnError(throwable -> {
+                LOGGER.debug("INSERT failed! {} {}", throwable.getClass(), throwable.getMessage());
+            })
             .map(jobRecordStored -> 1)
-            .onErrorResume(R2dbcDataIntegrityViolationException.class, (exception) -> {
-                LOGGER.warn("INSERT failed! Trying UPDATE. Exception = {}", exception.getMessage());
-                return update(false, idString, state, lastEventTimestamp, pausedBucketKey);
+            .onErrorReturn(DataIntegrityViolationException.class, 0)
+            .flatMap(count -> {
+                if (count == 0) {
+                    LOGGER.info("INSERT failed! Trying UPDATE.");
+                    return update(true, idString, state, lastEventTimestamp, pausedBucketKey);
+                } else {
+                    return Mono.just(1);
+                }
             });
     }
 
@@ -118,7 +148,12 @@ public class StateRecordService {
         final JobRecord jobRecord = new JobRecord(id, jobAcceptedTimestamp, lastEventTimestamp, processId);
         jobRecord.setStatus(state);
         jobRecord.setPausedBucketKey(pausedBucketKey);
-        jobRecord.setLastRecordUpdateTimestamp(Instant.now());
+        final Instant lastRecordUpdateTimestamp = Instant.now();
+        jobRecord.setLastRecordUpdateTimestamp(lastRecordUpdateTimestamp);
+
+        final long latency = lastRecordUpdateTimestamp.toEpochMilli() - lastEventTimestamp.toEpochMilli();
+        this.latencyTimer.record(latency, TimeUnit.MILLISECONDS);
+
         return r2dbcEntityTemplate.insert(jobRecord);
     }
 
@@ -146,6 +181,10 @@ public class StateRecordService {
         if (checkTimestamp) {
             criteria = criteria.and(JobRecord.ATTRIBUTE_lastEventTimestamp).lessThan(lastEventTimestamp);
         }
+
+        final long latency = lastRecordUpdateTimestamp.toEpochMilli() - lastEventTimestamp.toEpochMilli();
+        this.latencyTimer.record(latency, TimeUnit.MILLISECONDS);
+
         return r2dbcEntityTemplate
             .update(JobRecord.class)
             .matching(Query.query(criteria))

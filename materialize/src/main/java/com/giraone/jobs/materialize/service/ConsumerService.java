@@ -8,9 +8,9 @@ import com.giraone.jobs.materialize.common.ObjectMapperBuilder;
 import com.giraone.jobs.materialize.model.DatabaseOperation;
 import com.giraone.jobs.materialize.model.DatabaseResult;
 import com.giraone.jobs.materialize.model.JobRecord;
-import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.r2dbc.spi.R2dbcDataIntegrityViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,7 +24,6 @@ import reactor.core.scheduler.Schedulers;
 import reactor.kafka.receiver.ReceiverRecord;
 
 import javax.annotation.PostConstruct;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +54,7 @@ public class ConsumerService implements CommandLineRunner {
     private Counter updateSuccessCounter;
     private Counter updateErrorCounter;
 
+
     public ConsumerService(
         StateRecordService stateRecordService,
         MeterRegistry meterRegistry,
@@ -72,16 +72,16 @@ public class ConsumerService implements CommandLineRunner {
     @PostConstruct
     private void init() {
         this.insertSuccessCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_INSERT_SUCCESS)
-            .description("Counter for all received jobs, that are successfully passed to Kafka.")
+            .description("Counter for all new jobs, that are successfully materialized to Postgres.")
             .register(meterRegistry);
         this.insertErrorCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_INSERT_FAILURE)
-            .description("Counter for all received jobs, that are successfully passed to Kafka.")
+            .description("Counter for all new jobs, that were not materialized to Postgres.")
             .register(meterRegistry);
-        this.updateSuccessCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_INSERT_SUCCESS)
-            .description("Counter for all received jobs, that are successfully passed to Kafka.")
+        this.updateSuccessCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_UPDATE_SUCCESS)
+            .description("Counter for all updated jobs, that are successfully materialized to Postgres.")
             .register(meterRegistry);
-        this.updateErrorCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_INSERT_FAILURE)
-            .description("Counter for all received jobs, that are successfully passed to Kafka.")
+        this.updateErrorCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_UPDATE_FAILURE)
+            .description("Counter for all updated jobs, that were not materialized to Postgres.")
             .register(meterRegistry);
     }
     
@@ -102,7 +102,6 @@ public class ConsumerService implements CommandLineRunner {
             .subscribe();
     }
 
-    @Timed(value = "materialize.jobs.new.time", description = "Time taken to store new jobs.")
     public Flux<DatabaseResult> consumeFromInsertTopicAndWriteToDatabase() {
 
         return reactiveKafkaConsumerTemplateInserts
@@ -118,7 +117,6 @@ public class ConsumerService implements CommandLineRunner {
             .concatMap(this::consumeNewEvent);
     }
 
-    @Timed(value = "materialize.jobs.update.time", description = "Time taken to update existing jobs.")
     public Flux<DatabaseResult> consumeFromUpdateTopicsAndWriteToDatabase() {
 
         return reactiveKafkaConsumerTemplateUpdates
@@ -139,9 +137,9 @@ public class ConsumerService implements CommandLineRunner {
     private Mono<DatabaseResult> consumeNewEvent(ReceiverRecord<String, String> consumerRecord) {
 
         final String messageKey = consumerRecord.key();
-        LOGGER.info("NEW TOPIC={}, KEY={}, MESSAGE={}", consumerRecord.topic(), messageKey, consumerRecord.value());
+        LOGGER.info(">>> NEW KEY={}, TOPIC={}, MESSAGE={}", messageKey, consumerRecord.topic(), consumerRecord.value());
         return parseNewEvent(consumerRecord.value())
-            .flatMap(event -> storeStateForNewJob(event, Instant.now(), event.getProcessKey()))
+            .flatMap(event -> storeStateForNewJob(event, event.getProcessKey()))
             .doOnSuccess(databaseResult -> {
                 this.insertSuccessCounter.increment();
                 logDatabaseResult(databaseResult, consumerRecord);
@@ -159,7 +157,7 @@ public class ConsumerService implements CommandLineRunner {
     private Mono<DatabaseResult> consumeUpdateEvent(ReceiverRecord<String, String> consumerRecord) {
 
         final String messageKey = consumerRecord.key();
-        LOGGER.info("UPD TOPIC={}, KEY={}, MESSAGE={}", consumerRecord.topic(), messageKey, consumerRecord.value());
+        LOGGER.info(">>> UPD KEY={}, TOPIC={}, MESSAGE={}", messageKey, consumerRecord.topic(), consumerRecord.value());
         return parseChangeEvent(consumerRecord.value())
             .flatMap(this::storeStateForExistingJob)
             .switchIfEmpty(logError(messageKey, consumerRecord, null))
@@ -191,8 +189,13 @@ public class ConsumerService implements CommandLineRunner {
             + "/" + consumerRecord.receiverOffset().topicPartition().partition();
         final Long offset = consumerRecord.receiverOffset().offset();
         offSetsPerPartition.put(topicPartition, offset);
-        LOGGER.warn("Error for {} with topic/partition={}, offset={}, error={}",
-            databaseResult.getOperation(), topicPartition, offset, throwable != null ? throwable.getMessage() : "-");
+        if (throwable == null ||throwable instanceof R2dbcDataIntegrityViolationException) {
+            LOGGER.debug("Error for {} with topic/partition={}, offset={}, error={}",
+                databaseResult.getOperation(), topicPartition, offset, throwable != null ? throwable.getMessage() : "?");
+        } else {
+            LOGGER.warn("Error for {} with topic/partition={}, offset={}, error={}",
+                databaseResult.getOperation(), topicPartition, offset, throwable.getMessage());
+        }
     }
 
     private void logDatabaseResult(DatabaseResult databaseResult, ReceiverRecord<String, String> consumerRecord) {
@@ -233,30 +236,19 @@ public class ConsumerService implements CommandLineRunner {
         }
     }
 
-    private Mono<DatabaseResult> storeStateForNewJob(JobAcceptedEvent jobAcceptedEvent, Instant now, String processKey) {
+    private Mono<DatabaseResult> storeStateForNewJob(JobAcceptedEvent jobAcceptedEvent, String processKey) {
 
-        if (LOGGER.isDebugEnabled()) {
-            long latency = jobAcceptedEvent.getEventTimestamp() != null
-                ? now.toEpochMilli() - jobAcceptedEvent.getEventTimestamp().toEpochMilli()
-                : -1;
-            LOGGER.debug("INSERT id={}, eventTimestamp={} to state={}, latency={}ms",
-                jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), JobRecord.STATE_accepted, latency);
-        }
+        LOGGER.debug("INSERT id={}, eventTimestamp={} to state={}",
+            jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), JobRecord.STATE_accepted);
         return stateRecordService.insert(jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), processKey)
             .map(stateRecord -> new DatabaseResult(jobAcceptedEvent.getId(), true, DatabaseOperation.insert));
     }
 
     private Mono<DatabaseResult> storeStateForExistingJob(JobStatusChangedEvent jobChangedEvent) {
 
-        if (LOGGER.isDebugEnabled()) {
-            long latency = jobChangedEvent.getEventTimestamp() != null
-                ? Instant.now().toEpochMilli() - jobChangedEvent.getEventTimestamp().toEpochMilli()
-                : -1;
-            LOGGER.debug("UPDATE id={}, eventTimestamp={} to state={}, latency={}ms",
-                jobChangedEvent.getId(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getStatus(), latency);
-        }
-
-        return stateRecordService.upsert(jobChangedEvent.getId(), jobChangedEvent.getJobAcceptedTimestamp(), jobChangedEvent.getProcessKey(),
+        LOGGER.debug("UPDATE id={}, eventTimestamp={} to state={}",
+            jobChangedEvent.getId(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getStatus());
+        return stateRecordService.findAndUpdateOrInsert(jobChangedEvent.getId(), jobChangedEvent.getJobAcceptedTimestamp(), jobChangedEvent.getProcessKey(),
                 jobChangedEvent.getStatus(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getPausedBucketKey())
             .map(updateCount -> new DatabaseResult(jobChangedEvent.getId(), updateCount != null && updateCount > 0, DatabaseOperation.update));
     }
