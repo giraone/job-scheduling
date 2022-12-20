@@ -14,7 +14,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: ['health', 'info', 'loggers', 'metrics']
+        include: ['health', 'loggers', 'metrics']
 
 server:
   port: 8090
