@@ -6,7 +6,6 @@ import com.giraone.jobs.events.JobPausedEvent;
 import com.giraone.jobs.events.JobScheduledEvent;
 import com.giraone.jobs.schedule.constants.UtilsAndConstants;
 import com.giraone.jobs.schedule.service.PausedDecider;
-import org.apache.kafka.clients.consumer.internals.ConsumerCoordinator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
