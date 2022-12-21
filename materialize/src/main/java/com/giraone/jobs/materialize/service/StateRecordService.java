@@ -143,7 +143,7 @@ public class StateRecordService {
     private Mono<JobRecord> insert(long id, Instant jobAcceptedTimestamp, String processKey, String state, Instant lastEventTimestamp, String pausedBucketKey) {
 
         // TODO: processKey ==> processId by DB query or DB view
-        final long processId = 1000L + Long.parseLong(processKey.substring(1), 10);
+        final long processId = Long.parseLong(processKey.substring(1), 10);
         final JobRecord jobRecord = new JobRecord(id, jobAcceptedTimestamp, lastEventTimestamp, processId);
         jobRecord.setStatus(state);
         jobRecord.setPausedBucketKey(pausedBucketKey);
