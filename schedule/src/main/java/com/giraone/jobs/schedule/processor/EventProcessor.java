@@ -16,6 +16,8 @@ import com.giraone.jobs.schedule.exceptions.DocumentedErrorOutput;
 import com.giraone.jobs.schedule.stopper.DefaultProcessingStopperImpl;
 import com.giraone.jobs.schedule.stopper.ProcessingStopper;
 import com.giraone.jobs.schedule.stopper.SwitchOnOff;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
@@ -30,7 +32,9 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -49,6 +53,12 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventProcessor.class);
     private static final ObjectMapper mapper = ObjectMapperBuilder.build(false, false);
+
+    private static final String METRICS_PREFIX = "schedule";
+    private static final String METRICS_PROCESSING = ".processing.";
+    private static final String METRICS_MESSAGES = ".messages.";
+    private static final String METRICS_SUCCESS = ".success";
+    private static final String METRICS_FAILURE = ".failure";
 
     public static final String PROCESS_schedule = "processSchedule";
     public static final String PROCESS_resume = "processResume";
@@ -70,6 +80,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
     );
 
     private final ApplicationProperties applicationProperties;
+    private final MeterRegistry meterRegistry;
     private final SwitchOnOff switchOnOff;
     private final BindingsEndpoint bindingsEndpoint;
     private final StreamBridge streamBridge;
@@ -78,7 +89,12 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
     private final ProcessorAgent processorAgent;
     private final ProcessorNotify processorNotify;
 
+    private final Map<String, Counter> processSuccessCounter = new HashMap<>();
+    private final Map<String, Counter> processFailureCounter = new HashMap<>();
+    private final Map<String, Counter> topicMessageCounter = new HashMap<>();
+
     public EventProcessor(ApplicationProperties applicationProperties,
+                          MeterRegistry meterRegistry,
                           SwitchOnOff switchOnOff,
                           BindingsEndpoint bindingsEndpoint,
                           StreamBridge streamBridge,
@@ -87,8 +103,8 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
                           ProcessorAgent processorAgent,
                           ProcessorNotify processorNotify
     ) {
-
         this.applicationProperties = applicationProperties;
+        this.meterRegistry = meterRegistry;
         this.switchOnOff = switchOnOff;
         this.bindingsEndpoint = bindingsEndpoint;
         this.streamBridge = streamBridge;
@@ -102,6 +118,22 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
     public void onApplicationEvent(ApplicationStartedEvent event) {
         this.switchOnOff.changeStateToPausedForProcessResume("B01", true);
         this.switchOnOff.changeStateToPausedForProcessResume("B02", true);
+    }
+
+    @PostConstruct
+    private void init() {
+
+        final String[] processorNames = applicationProperties.getProcessorNames().split(",");
+        for (String processorName: processorNames) {
+            initializeSuccessCounterForProcessor(processorName);
+            initializeFailureCounterForProcessor(processorName);
+        }
+        final String[] topics = applicationProperties.getTopicList();
+        for (String topic: topics) {
+            if (topic != null) {
+                initializeCounterForTopic(topic);
+            }
+        }
     }
 
     //- SCHEDULE -------------------------------------------------------------------------------------------------------
@@ -122,9 +154,11 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
             AbstractJobStatusChangedEvent event = processorSchedule.streamProcess(jobAcceptedEvent);
             sendToDynamicTarget(event, jobEvent -> {
                 if (event instanceof final JobScheduledEvent jobScheduledEvent) {
-                    return PROCESS_schedule + "-" + jobScheduledEvent.getAgentKey();
+                    // return PROCESS_schedule + "-" + jobScheduledEvent.getAgentKey();
+                    return applicationProperties.getTopics().getQueueScheduled(jobScheduledEvent.getAgentKey());
                 } else if (event instanceof final JobPausedEvent jobPausedEvent) {
-                    return PROCESS_schedule + "-" + jobPausedEvent.getPausedBucketKey();
+                    // return PROCESS_schedule + "-" + jobPausedEvent.getPausedBucketKey();
+                    return applicationProperties.getTopics().getQueuePaused(jobPausedEvent.getPausedBucketKey());
                 } else {
                     throw new IllegalArgumentException("Event returned by processorSchedule has invalid type " + event.getClass());
                 }
@@ -211,10 +245,12 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
             sendToDynamicTarget(event, jobEvent -> {
                 if (event instanceof JobCompletedEvent) {
                     LOGGER.info(">>> COMPLETED     {} of {} in agent '{}'", event.getMessageKey(), event.getProcessKey(), event.getAgentKey());
-                    return PROCESS_agent + event.getAgentKey() + "-out-0";
+                    // return PROCESS_agent + event.getAgentKey() + "-out-0";
+                    return applicationProperties.getTopics().getQueueCompleted();
                 } else if (event instanceof JobFailedEvent) {
                     LOGGER.warn(">>> FAILED        {} of {} in agent '{}'", event.getMessageKey(), event.getProcessKey(), event.getAgentKey());
-                    return PROCESS_agent + event.getAgentKey() + "-out-failed";
+                    // return PROCESS_agent + event.getAgentKey() + "-out-failed";
+                    return applicationProperties.getTopics().getQueueFailed(event.getAgentKey());
                 } else {
                     throw new IllegalArgumentException("Event returned by processorAgent has invalid type " + event.getClass());
                 }
@@ -287,17 +323,15 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
         try {
             jobInput = deserializer.apply(messageValue);
         } catch (Exception e) {
-            handleProcessingException(processName, "error", messageValue, e);
-            return false;
+            return handleProcessingException(processName, "error", messageValue, e);
         }
         final String messageKey = jobInput.getMessageKey();
         try {
             consumer.accept(jobInput);
         } catch (Exception e) {
-            handleProcessingException(processName, messageKey, messageValue, e);
-            return false;
+            return handleProcessingException(processName, messageKey, messageValue, e);
         }
-        return true;
+        return handleProcessingSuccess(processName, messageKey);
     }
 
     protected <T> T deserialize(byte[] messageInBody, Class<T> cls) {
@@ -324,7 +358,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
     protected Message<byte[]> serializeWithMessageKey(AbstractJobEvent jobEvent) {
         final byte[] messageOutBody = serialize(jobEvent);
         return MessageBuilder.withPayload(messageOutBody)
-            .setHeader(KafkaHeaders.MESSAGE_KEY, jobEvent.getMessageKey())
+            .setHeader(KafkaHeaders.KEY, jobEvent.getMessageKey())
             .build();
     }
 
@@ -335,7 +369,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
             return false;
         }
         final Message<AbstractJobEvent> message = MessageBuilder.withPayload(jobEvent)
-            .setHeader(KafkaHeaders.MESSAGE_KEY, jobEvent.getMessageKey())
+            .setHeader(KafkaHeaders.KEY, jobEvent.getMessageKey())
             .build();
 
         boolean ok = streamBridge.send(bindingName, message);
@@ -343,7 +377,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
             LOGGER.error("Cannot send event to out binding \"{}\"!", bindingName);
             return false;
         } else {
-            LOGGER.debug("SENT TO destination TOPIC of binding {}", bindingName);
+            increaseSentToBindingCounter(bindingName);
         }
         return true;
     }
@@ -363,6 +397,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
                 LOGGER.error("No process with name \"{}\"!", processName);
             }
         }
+        increaseProcessSuccessCounter(processName);
         return true;
     }
 
@@ -371,7 +406,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
         final DocumentedErrorOutput documentedErrorOutput = new DocumentedErrorOutput(messageKey, messageValue, exception);
         final Message<DocumentedErrorOutput> documentedErrorOutputMessage = MessageBuilder
             .withPayload(documentedErrorOutput)
-            .setHeader(KafkaHeaders.MESSAGE_KEY, messageKey).build();
+            .setHeader(KafkaHeaders.KEY, messageKey).build();
         final String bindingNameError = processName + "-out-error";
         final String bindingNameConsumer = processName + "-in-0";
         LOGGER.error("+++ EXCEPTION in process {} for message={}! Sending problem to out binding \"{}\".",
@@ -396,7 +431,59 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
                 LOGGER.error("+++ No process with name \"{}\"!", processName);
             }
         }
-
+        increaseSentToBindingCounter(processName);
         return false;
+    }
+
+    private void increaseProcessSuccessCounter(String processName) {
+        final Counter counter = processSuccessCounter.get(processName);
+        if (counter != null) {
+            counter.increment();
+        } else {
+            LOGGER.warn("No counter for {} defined!", processName);
+        }
+    }
+
+    private void increaseProcessErrorCounter(String processName) {
+        final Counter counter = processSuccessCounter.get(processName);
+        if (counter != null) {
+            counter.increment();
+        } else {
+            LOGGER.warn("No counter for {} defined!", processName);
+        }
+    }
+
+    private void increaseSentToBindingCounter(String bindingName) {
+        LOGGER.debug("SENT message TO destination TOPIC of binding {}", bindingName);
+        final Counter counter = topicMessageCounter.get(bindingName);
+        if (counter != null) {
+            counter.increment();
+        } else {
+            LOGGER.warn("No counter for {} defined!", bindingName);
+        }
+    }
+
+    private void initializeSuccessCounterForProcessor(String processorName) {
+        final Counter counter = Counter.builder(METRICS_PREFIX + METRICS_PROCESSING + processorName + METRICS_SUCCESS)
+            .description("Counter for all jobs, that are successfully processed by " + processorName  + ".")
+            .register(meterRegistry);
+        processSuccessCounter.put(processorName, counter);
+        LOGGER.info("Initialized success counter for processor '{}'", processorName);
+    }
+
+    private void initializeFailureCounterForProcessor(String processorName) {
+        final Counter counter = Counter.builder(METRICS_PREFIX + METRICS_PROCESSING + processorName + METRICS_FAILURE)
+            .description("Counter for all jobs, that are NOT successfully processed by " + processorName  + ".")
+            .register(meterRegistry);
+        processFailureCounter.put(processorName, counter);
+        LOGGER.info("Initialized failure counter for processor '{}'", processorName);
+    }
+
+    private void initializeCounterForTopic(String topic) {
+        final Counter topicErrCounter = Counter.builder(METRICS_PREFIX + METRICS_MESSAGES + topic)
+            .description("Counter for all jobs, that are NOT successfully SCHEDULED.")
+            .register(meterRegistry);
+        topicMessageCounter.put(topic, topicErrCounter);
+        LOGGER.info("Initialized counter for topic '{}'", topic);
     }
 }

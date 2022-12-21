@@ -5,18 +5,18 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.6</version>
+    <version>3.0.0</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
   <groupId>com.giraone.jobs</groupId>
   <artifactId>schedule</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>schedule</name>
-  <description>SCS based SEDA scheduler</description>
+  <description>SCS based SEDA job scheduler</description>
 
   <properties>
     <java.version>17</java.version>
-    <spring-cloud-stream.version>3.2.6</spring-cloud-stream.version>
+    <spring-cloud-stream.version>4.0.0</spring-cloud-stream.version>
     <jackson.version>2.14.1</jackson.version>
     <tsid.version>5.0.2</tsid.version>
     <!-- only for kafka-streams-test-utils - must match the spring kafka version -->

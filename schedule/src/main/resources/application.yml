@@ -51,101 +51,56 @@ spring:
         # PROCESSOR processSchedule - - - - - - - - - - - - - - - - - - - -
         processSchedule-in-0:
           group: ${application.id.processSchedule}
-          destination: ${application.topics.queueAccepted.topic}
+          destination: ${application.topics.queueAccepted}
           consumer: # consumer properties on each function (processor) level
             auto-startup: true
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
-        processSchedule-A01:
-          destination: ${application.topics.queueScheduledA01.topic}
-        processSchedule-A02:
-          destination: ${application.topics.queueScheduledA02.topic}
-        processSchedule-A03:
-          destination: ${application.topics.queueScheduledA03.topic}
-        processSchedule-B01:
-          destination: ${application.topics.queuePausedB01.topic}
-        processSchedule-B02:
-          destination: ${application.topics.queuePausedB02.topic}
-        processSchedule-out-error:
-          destination: ${application.topics.queueAccepted.error}
         # PROCESSOR processResumeB01 - - - - - - - - - - - - - - - - - - - -
         processResumeB01-in-0:
-          group: ${application.id.processResumeB01}
-          destination: ${application.topics.queuePausedB01.topic}
+          group: ${application.id.processResume}-B01
+          destination: ${application.topics.queuePaused}-B01
           consumer: # consumer properties on each function (processor) level
             auto-startup: false # !!! No auto startup
             auto-offset-reset: earliest
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
-        processResumeB01-A01:
-          destination: ${application.topics.queueScheduledA01.topic}
-        processResumeB01-A02:
-          destination: ${application.topics.queueScheduledA02.topic}
-        processResumeB01-A03:
-          destination: ${application.topics.queueScheduledA03.topic}
         # PROCESSOR processResumeB02 - - - - - - - - - - - - - - - - - - - -
         processResumeB02-in-0:
-          group: ${application.id.processResumeB02}
-          destination: ${application.topics.queuePausedB02.topic}
+          group: ${application.id.processResume}-B02
+          destination: ${application.topics.queuePaused}-B02
           consumer: # consumer properties on each function (processor) level
             auto-startup: false # !!! No auto startup
             auto-offset-reset: earliest
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
-        processResumeB02-A01:
-          destination: ${application.topics.queueScheduledA01.topic}
-        processResumeB02-A02:
-          destination: ${application.topics.queueScheduledA02.topic}
-        processResumeB02-A03:
-          destination: ${application.topics.queueScheduledA03.topic}
         # PROCESSOR processAgentA01 - - - - - - - - - - - - - - - - - - - -
         processAgentA01-in-0:
-          group: ${application.id.processAgentA01}
-          destination: ${application.topics.queueScheduledA01.topic}
+          group: ${application.id.processAgent}-A01
+          destination: ${application.topics.queueScheduled}-A01
           consumer: # consumer properties on each function (processor) level
             auto-startup: true
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
-        processAgentA01-out-0:
-          destination: ${application.topics.queueCompleted.topic}
-        processAgentA01-out-failed:
-          destination: ${application.topics.queueFailedA01.topic}
-        processAgentA01-out-error:
-          destination: ${application.topics.queueScheduledA01.error}
         # PROCESSOR processAgentA02 - - - - - - - - - - - - - - - - - - - -
         processAgentA02-in-0:
-          group: ${application.id.processAgentA02}
-          destination: ${application.topics.queueScheduledA02.topic}
+          group: ${application.id.processAgent}-A02
+          destination: ${application.topics.queueScheduled}-A02
           consumer: # consumer properties on each function (processor) level
             auto-startup: true
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
-        processAgentA02-out-0:
-          destination: ${application.topics.queueCompleted.topic}
-        processAgentA02-out-failed:
-          destination: ${application.topics.queueFailedA02.topic}
-        processAgentA02-out-error:
-          destination: ${application.topics.queueScheduledA02.error}
         # PROCESSOR processAgentA03 - - - - - - - - - - - - - - - - - - - -
         processAgentA03-in-0:
-          group: ${application.id.processAgentA03}
-          destination: ${application.topics.queueScheduledA03.topic}
+          group: ${application.id.processAgent}-A03
+          destination: ${application.topics.queueScheduled}-A03
           consumer: # consumer properties on each function (processor) level
             auto-startup: true
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
-        processAgentA03-out-0:
-          destination: ${application.topics.queueCompleted.topic}
-        processAgentA03-out-failed:
-          destination: ${application.topics.queueFailedA03.topic}
-        processAgentA03-out-error:
-          destination: ${application.topics.queueScheduledA03.error}
         # PROCESSOR processNotify - - - - - - - - - - - - - - - - - - - -
         processNotify-in-0:
           group: ${application.id.processNotify}
-          destination: ${application.topics.queueCompleted.topic}
+          destination: ${application.topics.queueCompleted}
           consumer: # consumer properties on each function (processor) level
             auto-startup: true
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
         processNotify-out-0:
-          destination: ${application.topics.queueNotified.topic}
-        processNotify-out-error:
-          destination: ${application.topics.queueCompleted.error}
-
+          destination: ${application.topics.queueNotified}
 management:
   endpoints:
     web:
@@ -166,44 +121,21 @@ application:
   job-admin-pathAll: '/api/processes'
 
   topics:
-    queueAccepted:
-      topic: job-accepted
-      error: job-accepted-err
-    queueScheduledA01:
-      topic: job-scheduled-A01
-      error: job-scheduled-err
-    queueScheduledA02:
-      topic: job-scheduled-A02
-      error: job-scheduled-err
-    queueScheduledA03:
-      topic: job-scheduled-A03
-      error: job-scheduled-err
-    queuePausedB01:
-      topic: job-paused-B01
-      error: job-paused-err
-    queuePausedB02:
-      topic: job-paused-B02
-      error: job-paused-err
-    queueCompleted:
-      topic: job-completed
-      error: job-completed-err
-    queueFailedA01:
-      topic: job-failed-A01
-      error: job-failed-err
-    queueFailedA02:
-      topic: job-failed-A03
-      error: job-failed-err
-    queueFailedA03:
-      topic: job-failed-A03
-      error: job-failed-err
-    queueNotified:
-      topic: job-notified
+    queueAccepted: job-accepted
+    queueAcceptedErr: job-accepted-err
+    queueScheduled: job-scheduled
+    queueScheduledErr: job-scheduled-err
+    queuePaused: job-paused
+    queuePausedErr: job-paused-err
+    queueCompleted: job-completed
+    queueCompletedErr: job-completed-err
+    queueFailed: job-failed
+    queueFailedErr: job-failed-err
+    queueNotified: job-notified
+    queueDelivered: job-delivered
   id:
     # the id is used as the consumer group id, so it has to be configurable
     processSchedule: processSchedule
-    processAgentA01: processAgentA01
-    processAgentA02: processAgentA02
-    processAgentA03: processAgentA03
-    processResumeB01: processResumeB01
-    processResumeB02: processResumeB02
+    processAgent: processAgent
+    processResume: processResume
     processNotify: processNotify

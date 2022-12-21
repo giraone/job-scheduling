@@ -37,6 +37,7 @@ public class ApplicationProperties {
 
     private static final int DEFAULT_RETRY_FIXED_DELAY_IN_MILLISECONDS = 500;
     private static final int RETRY_DEFAULT_NUMBER_OF_ATTEMPTS = 2;
+    private static final String DEFAULT_PROCESSOR_NAMES = "processSchedule,processResumeB01,processResumeB02,processAgentA01,processAgentA02,processAgentA02,processNotify";
 
     private boolean showConfigOnStartup;
     private boolean disableStopper;
@@ -51,12 +52,40 @@ public class ApplicationProperties {
     private String jobAdminPathAll;
     private int jobAdminBlockSeconds = 30;
 
+    /**
+     * Comma separated names of processors.
+     */
+    private String processorNames = DEFAULT_PROCESSOR_NAMES;
+    /**
+     * Comma separated names of topics.
+     */
+    private String[] topicList = new String[0];
+
     @PostConstruct
     private void startup() {
-        if (this.showConfigOnStartup) {
+        if (showConfigOnStartup) {
             LOGGER.info(this.toString());
         }
-        UtilsAndConstants.sleepTime = this.sleep;
+        UtilsAndConstants.sleepTime = sleep;
+        topicList = new String[] {
+            topics.queueAccepted,
+            topics.queueAcceptedErr,
+            topics.getQueueScheduled("A01"),
+            topics.getQueueScheduled("A02"),
+            topics.getQueueScheduled("A03"),
+            topics.queueScheduledErr,
+            topics.getQueuePaused("B01"),
+            topics.getQueuePaused("B02"),
+            topics.queuePausedErr,
+            topics.getQueueFailed("A01"),
+            topics.getQueueFailed("A02"),
+            topics.getQueueFailed("A03"),
+            topics.queueFailedErr,
+            topics.queueCompleted,
+            topics.queueCompletedErr,
+            topics.queueNotified,
+            topics.queueDelivered,
+        };
     }
 
     @Data
@@ -65,27 +94,29 @@ public class ApplicationProperties {
     @ToString
     @Generated
     public static class Topics {
-        private Topic queueAccepted;
-        private Topic queueScheduledA01;
-        private Topic queueScheduledA02;
-        private Topic queueScheduledA03;
-        private Topic queuePausedB01;
-        private Topic queuePausedB02;
-        private Topic queueFailedA01;
-        private Topic queueFailedA02;
-        private Topic queueFailedA03;
-        private Topic queueCompleted;
-        private Topic queueNotified;
-    }
+        private String queueAccepted;
+        private String queueAcceptedErr;
+        private String queueScheduled;
+        private String queueScheduledErr;
+        private String queuePaused;
+        private String queuePausedErr;
+        private String queueFailed;
+        private String queueFailedErr;
+        private String queueCompleted;
+        private String queueCompletedErr;
+        private String queueNotified;
+        private String queueDelivered;
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @ToString
-    @Generated
-    public static class Topic {
-        private String topic;
-        private String error;
+        public String getQueueScheduled(String agentKey) {
+            return queueScheduled + "-" + agentKey;
+        }
+        public String getQueueFailed(String agentKey) {
+            return queueFailed + "-" +  agentKey;
+        }
+
+        public String getQueuePaused(String pausedBucketKey) {
+            return queuePaused + "-" + pausedBucketKey;
+        }
     }
 
     /**
@@ -98,11 +129,8 @@ public class ApplicationProperties {
     @Generated
     public static class Id {
         private String processSchedule;
-        private String processAgentA01;
-        private String processAgentA02;
-        private String processAgentA03;
-        private String processResumeB01;
-        private String processResumeB02;
+        private String processAgent;
+        private String processResume;
         private String processNotify;
     }
 

@@ -67,6 +67,52 @@
   <li><a href="actuator/health">health</a></li>
   <li><a href="actuator/info">info</a></li>
   <li><a href="actuator/metrics">metrics</a></li>
+  <li>- - - </li>
+  <li><a href="actuator/metrics/spring.kafka.listener">spring.kafka.listener</a></li>
+  <li><a href="actuator/metrics/kafka.producer.request.total">kafka.producer.request.total</a></li>
+  <li><a href="actuator/metrics/kafka.producer.record.send.total">kafka.producer.record.send.total</a></li>
+  <li><a href="actuator/metrics/kafka.consumer.request.total">kafka.consumer.request.total</a></li>
+  <li><a href="actuator/metrics/kafka.consumer.request.size.avg">kafka.consumer.request.size.avg</a></li>
+  <li><a href="actuator/metrics/kafka.consumer.fetch.manager.bytes.consumed.total">kafka.consumer.fetch.manager.bytes.consumed.total</a></li>
+  <li><a href="actuator/metrics/kafka.consumer.fetch.manager.bytes.consumed.rate">kafka.consumer.fetch.manager.bytes.consumed.rate</a></li>
+  <li><a href="actuator/metrics/kafka.consumer.coordinator.rebalance.total">kafka.consumer.coordinator.rebalance.total</a></li>
+  <li>- - - </li>
+  <li><a href="actuator/metrics/schedule.processing.processSchedule.success">schedule.processing.processSchedule.success</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processAgentA01.success">schedule.processing.processAgentA01.success</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processAgentA02.success">schedule.processing.processAgentA02.success</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processAgentA03.success">schedule.processing.processAgentA03.success</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processResumeB01.success">schedule.processing.processResumeB01.success</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processResumeB02.success">schedule.processing.processResumeB02.success</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processNotify.success">schedule.processing.processNotify.success</a></li>
+  <li>- - - </li>
+  <li><a href="actuator/metrics/schedule.processing.processSchedule.failure">schedule.processing.processSchedule.failure</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processAgentA01.failure">schedule.processing.processAgentA01.failure</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processAgentA02.failure">schedule.processing.processAgentA02.failure</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processAgentA03.failure">schedule.processing.processAgentA03.failure</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processResumeB01.failure">schedule.processing.processResumeB01.failure</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processResumeB02.failure">schedule.processing.processResumeB02.failure</a></li>
+  <li><a href="actuator/metrics/schedule.processing.processNotify.failure">schedule.processing.processNotify.failure</a></li>
+
+  <li>- - - </li>
+  <li><a href="actuator/metrics/schedule.messages.job-accepted">schedule.messages.job-accepted</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-accepted-err">schedule.messages.job-accepted-err</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-scheduled-A01">schedule.messages.job-scheduled-A01</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-scheduled-A02">schedule.messages.job-scheduled-A02</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-scheduled-A03">schedule.messages.job-scheduled-A03</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-scheduled-err">schedule.messages.job-scheduled-err</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-paused-err">schedule.messages.job-paused-err</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-paused-B01">schedule.messages.job-paused-B01</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-paused-B02">schedule.messages.job-paused-B02</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-failed-A01">schedule.messages.job-failed-A01</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-failed-A02">schedule.messages.job-failed-A02</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-failed-A03">schedule.messages.job-failed-A03</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-failed-err">schedule.messages.job-failed-err</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-completed">schedule.messages.job-completed</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-completed-err">schedule.messages.job-completed-err</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-notified">schedule.messages.job-notified</a></li>
+  <li><a href="actuator/metrics/schedule.messages.job-delivered">schedule.messages.job-delivered</a></li>
+  <li><a href="actuator/metrics/schedule.jobs.latency">schedule.jobs.latency</a></li>
+  <li>- - - </li>
   <li><a href="actuator/metrics/jvm.threads.peak">jvm.threads.peak</a></li>
   <li><a href="actuator/metrics/jvm.threads.live">jvm.threads.live</a></li>
   <li><a href="actuator/metrics/jvm.memory.used">jvm.memory.used</a></li>
@@ -78,18 +124,11 @@
 <ul>
   <li><a href="actuator/bindings">bindings</a></li>
   <li><a href="actuator/bindings/processSchedule-in-0">bindings/processSchedule-in-0</a></li>
-  <li><a href="actuator/bindings/processSchedule-out-0">bindings/processSchedule-out-0</a></li>
-  <li><a href="actuator/bindings/processSchedule-out-1">bindings/processSchedule-out-1</a></li>
   <li><a href="actuator/bindings/processAgentA01-in-0">bindings/processAgentA01-in-0</a></li>
-  <li><a href="actuator/bindings/processAgentA01-out-0">bindings/processAgentA01-out-0</a></li>
   <li><a href="actuator/bindings/processAgentA02-in-0">bindings/processAgentA02-in-0</a></li>
-  <li><a href="actuator/bindings/processAgentA02-out-0">bindings/processAgentA02-out-0</a></li>
   <li><a href="actuator/bindings/processAgentA03-in-0">bindings/processAgentA03-in-0</a></li>
-  <li><a href="actuator/bindings/processAgentA03-out-0">bindings/processAgentA03-out-0</a></li>
   <li><a href="actuator/bindings/processResumeB01-in-0">bindings/processResumeB01-in-0</a></li>
-  <li><a href="actuator/bindings/processResumeB01-out-0">bindings/processResumeB01-out-0</a></li>
   <li><a href="actuator/bindings/processResumeB02-in-0">bindings/processResumeB02-in-0</a></li>
-  <li><a href="actuator/bindings/processResumeB02-out-0">bindings/processResumeB02-out-0</a></li>
   <li><a href="actuator/bindings/processNotify-in-0">bindings/processNotify-in-0</a></li>
   <li><a href="actuator/bindings/processNotify-out-0">bindings/processNotify-out-0</a></li>
 </ul>

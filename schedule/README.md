@@ -11,6 +11,29 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 - schedule: http://localhost:8092
 - jobadmin: http://localhost:8093
 
+### Topics
+
+```
+job-accepted
+job-accepted-err
+job-scheduled-A01
+job-scheduled-A02
+job-scheduled-A03
+job-scheduled-err
+job-paused-B01
+job-paused-B02
+job-paused-err
+job-completed
+job-completed-err
+job-delivered
+job-failed-A01
+job-failed-A02
+job-failed-A03
+job-failed-err
+job-notified
+job-notified-err
+```
+
 ## TODOs
 
 ### Java 17 / Spring Boot 3.0.0
@@ -19,7 +42,7 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 
 - [x] receiver
 - [ ] materialize - R2DBC-Migrate not yet ready
-- [ ] schedule - including Spring Cloud Stream 4.0.0
+- [x] schedule - including Spring Cloud Stream 4.0.0
 - [ ] jobadmin - Depends on JHipster
 
 ### Global
@@ -29,18 +52,18 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [x] JobAdmin has to manage the buckets, no only the active/paused boolean
 - [x] Processes use an n:m mapping to agents. For this there is an agentKey attribute in the process definition,
       which is delivered by the jobadmin service to the schedule service.
+- [x] Display buckets in JobAdmin (materialize must handle this).
 - [ ] Agent Key should be part of the events (done) and materialized database record.	  
 - [ ] Add a requester id (string) to the (accepted) event.
-- [ ] Display buckets in JobAdmin (materialize must handle this).
 - [ ] Measure consumer lag and expose it as metric.
 
 ### Receiver
 
-- [x] Metrics (success and failure counter, request time) for job request added
+- [x] Metrics (success and failure counter, request time) for all inbound REST requests to create new jobs.
 
 ### Materialize
 
-- [x] Metrics (success and failure counter for insert and update, latency timer) added
+- [x] Metrics (success and failure counter for insert and update, latency timer).
 - [ ] What is better: **one** ReactiveKafkaConsumerTemplate with all topics or **two** separated for insert and update?
 - [ ] Schedulers.parallel() vs Schedulers.boundedElastic() - see https://stackoverflow.com/questions/61304762/difference-between-boundedelastic-vs-parallel-scheduler
 - [ ] Analyze, if a priority for 'job-accepted' can be set, to prevent updates before inserts.
@@ -51,6 +74,7 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 
 ### Schedule
 
+- [x] Metrics (success and failure counter for all processors, counter per topic for all sent messages).
 - [x] The REST call to `jobadmin` for fetching the process states (paused, active) is tested with an integration test based on [WireMock](https://wiremock.org).
 - [x] Pausing is added in state *accepted*. Here the job event are either passed to topic `scheduled` or `paused`.
 - [x] The job states are fetched periodically using `@Schedule` in [PausedDecider.java](src/main/java/com/giraone/jobs/schedule/processor/PausedDecider.java)
@@ -59,6 +83,8 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [ ] How to start the processor Bxx in state `running=true, paused=true` correctly? Property `auto-startup: false` leads to `running=false, paused=false`.
       Currently, this handle twice: with `auto-startup: false` and additionally via `ApplicationStartedEvent` in
      [EventProcessor.java](src/main/java/com/giraone/jobs/schedule/processor/EventProcessor.java)
+- [ ] Fallback policy (`default=active` vs. `default=paused`) and fallback handling, when *jobadmin* is not reachable.
+- [ ] Stopper implementation (full-stop after n errors or m errors within limit).
 - [ ] Partition key - see https://spring.io/blog/2021/02/03/demystifying-spring-cloud-stream-producers-with-apache-kafka-partitions
 - [ ] Builder pattern for Job models.
 - [ ] auto-create-topics: false not working with StreamBridge
@@ -66,10 +92,11 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 ### JobAdmin
 
 - [x] The DTO uses the TSID String value, where the entity is a TSID long value.
-- [ ] Bug in sort by status
+- [x] During the database initialization 4 proccess definitions are automatically created: V001, V002, V003, V004.
+      If this is not wanted, remove "faker" from `application-prod.yml`.
+- [ ] Bug in sort by status.
 - [ ] Switch off JPA caching.
-- [ ] Automatic creation of V001, V002, V003, V004 process definitions.
-- [ ] Inverse filter
+- [ ] Inverse filtering, e.g. "all except NOTIFIED".
 
 ## Problems with "materialize"
 
@@ -109,7 +136,7 @@ Receiving example (notify before scheduled/completed):
 - Error-Topics: `job-paused-err`
 - Output-Topic: `job-scheduled-A??`
     - Payload: `JobScheduled`
-    - 
+  
 ### Step "processAgentA??"
 
 - Input-Topic:  `job-scheduled-A??`
@@ -135,25 +162,16 @@ Receiving example (notify before scheduled/completed):
 
 ## Hints on the solution
 
-### Disable Topic Auto Creation
+### Disable Topic Auto Creation (Does not work yet!)
 
 ````yaml
 spring:
   cloud:
     stream:
       kafka:
-        streams:
-          binder:
-            auto-create-topics: false # We do not want topic auto creation
+        binder:
+          auto-create-topics: false
 ````
-
-If the topics are not created, processing and application stops with the following output:
-
-```
-o.s.c.s.b.k.p.KafkaTopicProvisioner      : Auto creation of topics is disabled.
-...
-o.a.k.s.p.i.StreamsPartitionAssignor     : Source topic xxx is missing/unknown during rebalance, please make sure all source topics have been pre-created before starting the Streams application. Returning error INCOMPLETE_SOURCE_TOPIC_METADATA
-```
 
 ## Hints on Exception Handling
 
@@ -170,12 +188,12 @@ One have to distinguish between
 This can be done in the configuration on each function:
 
 ```yaml
-            functions:
-              processSchedule:
-                application-id: ${application.id.processSchedule}
-                configuration:
-                  # Define producer exception handler
-                  default.production.exception.handler: <package>:CustomProductionExceptionHandler
+functions:
+  processSchedule:
+    application-id: ${application.id.processSchedule}
+    configuration:
+      # Define producer exception handler
+      default.production.exception.handler: <package>:CustomProductionExceptionHandler
 ```
 
 or in the code
@@ -233,7 +251,7 @@ public interface ProcessingStopper {
 
 ### Global Uncaught Exception Handler
 
-This works, but if the application reaches the *UncaughtExcpetionHandler*, then the stream thread is already stopped
+This works, but if the application reaches the *UncaughtExceptionHandler*, then the stream thread is already stopped
 and it is too late to recover. See [sobychacko's answer on stackoverflow](https://stackoverflow.com/a/65743275/4404811).
 
 ```java
