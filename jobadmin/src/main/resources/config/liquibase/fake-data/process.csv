@@ -2,3 +2,4 @@ id;process_key;name;activation;agent_key;bucket_key_if_paused
 1;V001;Verfahren V001;ACTIVE;A01;
 2;V002;Verfahren V002;ACTIVE;A01;
 3;V003;Verfahren V003;ACTIVE;A02;
+4;V004;Verfahren V004;ACTIVE;A03;
