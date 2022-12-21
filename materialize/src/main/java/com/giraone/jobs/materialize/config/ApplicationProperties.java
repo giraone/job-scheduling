@@ -32,7 +32,7 @@ public class ApplicationProperties {
      */
     private String topicInsert = DEFAULT_JOB_ACCEPTED_TOPIC;
     /**
-     * Name of event topic with state updates for jobs/entries.
+     * Comma separated names of event topics with state updates for jobs/entries.
      */
     private String topicsUpdate = DEFAULT_JOB_SCHEDULED_TOPIC;
 
