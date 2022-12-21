@@ -128,7 +128,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
             initializeSuccessCounterForProcessor(processorName);
             initializeFailureCounterForProcessor(processorName);
         }
-        final String[] topics = applicationProperties.getTopicList();
+        final String[] topics = applicationProperties.getOutboundTopicList();
         for (String topic: topics) {
             if (topic != null) {
                 initializeCounterForTopic(topic);

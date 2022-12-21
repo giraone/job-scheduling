@@ -59,7 +59,7 @@ public class ApplicationProperties {
     /**
      * Comma separated names of topics.
      */
-    private String[] topicList = new String[0];
+    private String[] outboundTopicList = new String[0];
 
     @PostConstruct
     private void startup() {
@@ -67,8 +67,7 @@ public class ApplicationProperties {
             LOGGER.info(this.toString());
         }
         UtilsAndConstants.sleepTime = sleep;
-        topicList = new String[] {
-            topics.queueAccepted,
+        outboundTopicList = new String[] {
             topics.queueAcceptedErr,
             topics.getQueueScheduled("A01"),
             topics.getQueueScheduled("A02"),
