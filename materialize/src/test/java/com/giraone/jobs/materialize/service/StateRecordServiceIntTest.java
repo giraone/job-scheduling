@@ -40,13 +40,13 @@ class StateRecordServiceIntTest {
             .verifyComplete();
 
         // act - a newer event
-        stateRecordService.update(id.toString(), "NOTIFIED", notifyTimeStamp, null)
+        stateRecordService.update(true, id.toString(), "NOTIFIED", notifyTimeStamp, null)
             .as(StepVerifier::create)
             .expectNext(1)
             .verifyComplete();
 
         // act - an older event
-        stateRecordService.update(id.toString(), "COMPLETED", completedTimeStamp,  null)
+        stateRecordService.update(true, id.toString(), "COMPLETED", completedTimeStamp,  null)
             .as(StepVerifier::create)
             .expectNext(0)
             .verifyComplete();
