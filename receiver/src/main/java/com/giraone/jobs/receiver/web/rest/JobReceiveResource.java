@@ -23,7 +23,7 @@ public class JobReceiveResource {
     private static final String METRICS_JOBS_VALUE_FAILURE = "failure";
 
     private Counter successCounter;
-    private Counter errorCounter;
+    private Counter failureCounter;
 
     private final ProducerService producerService;
     private final MeterRegistry meterRegistry;
@@ -38,7 +38,7 @@ public class JobReceiveResource {
         this.successCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_VALUE_SUCCESS)
             .description("Counter for all received jobs, that are successfully passed to Kafka.")
             .register(meterRegistry);
-        this.errorCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_VALUE_FAILURE)
+        this.failureCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_VALUE_FAILURE)
             .description("Counter for all received jobs, that are successfully passed to Kafka.")
             .register(meterRegistry);
     }
@@ -54,7 +54,7 @@ public class JobReceiveResource {
         return this.producerService.send(event)
             .map(key -> Map.of("key", key))
             .doOnSuccess(any -> successCounter.increment())
-            .doOnError(any -> errorCounter.increment())
+            .doOnError(any -> failureCounter.increment())
             ;
     }
 }

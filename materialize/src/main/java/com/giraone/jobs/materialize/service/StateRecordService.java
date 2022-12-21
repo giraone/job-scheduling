@@ -4,7 +4,6 @@ import com.giraone.jobs.materialize.model.JobRecord;
 import com.github.f4b6a3.tsid.Tsid;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import io.r2dbc.spi.R2dbcDataIntegrityViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;

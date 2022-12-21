@@ -50,9 +50,9 @@ public class ConsumerService implements CommandLineRunner {
     private final Map<String, Long> offSetsPerPartition = new HashMap<>();
 
     private Counter insertSuccessCounter;
-    private Counter insertErrorCounter;
+    private Counter insertFailureCounter;
     private Counter updateSuccessCounter;
-    private Counter updateErrorCounter;
+    private Counter updateFailureCounter;
 
 
     public ConsumerService(
@@ -74,13 +74,13 @@ public class ConsumerService implements CommandLineRunner {
         this.insertSuccessCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_INSERT_SUCCESS)
             .description("Counter for all new jobs, that are successfully materialized to Postgres.")
             .register(meterRegistry);
-        this.insertErrorCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_INSERT_FAILURE)
+        this.insertFailureCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_INSERT_FAILURE)
             .description("Counter for all new jobs, that were not materialized to Postgres.")
             .register(meterRegistry);
         this.updateSuccessCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_UPDATE_SUCCESS)
             .description("Counter for all updated jobs, that are successfully materialized to Postgres.")
             .register(meterRegistry);
-        this.updateErrorCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_UPDATE_FAILURE)
+        this.updateFailureCounter = Counter.builder(METRICS_PREFIX + "." + METRICS_JOBS_UPDATE_FAILURE)
             .description("Counter for all updated jobs, that were not materialized to Postgres.")
             .register(meterRegistry);
     }
@@ -146,7 +146,7 @@ public class ConsumerService implements CommandLineRunner {
                 consumerRecord.receiverOffset().commit().then(Mono.just(databaseResult));
             })
             .onErrorResume(throwable -> {
-                this.insertErrorCounter.increment();
+                this.insertFailureCounter.increment();
                 final DatabaseResult databaseResult = new DatabaseResult(messageKey, false, DatabaseOperation.insert);
                 logError(databaseResult, consumerRecord, throwable);
                 consumerRecord.receiverOffset().commit();
@@ -167,7 +167,7 @@ public class ConsumerService implements CommandLineRunner {
                 consumerRecord.receiverOffset().commit().then(Mono.just(databaseResult));
             })
             .onErrorResume(throwable -> {
-                this.updateErrorCounter.increment();
+                this.updateFailureCounter.increment();
                 consumerRecord.receiverOffset().commit();
                 LOGGER.error("Erroneous message committed with partition={}, offset={}",
                     consumerRecord.receiverOffset().topicPartition(), consumerRecord.receiverOffset().offset());
