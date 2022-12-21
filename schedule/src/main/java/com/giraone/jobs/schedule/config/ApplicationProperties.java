@@ -37,7 +37,7 @@ public class ApplicationProperties {
 
     private static final int DEFAULT_RETRY_FIXED_DELAY_IN_MILLISECONDS = 500;
     private static final int RETRY_DEFAULT_NUMBER_OF_ATTEMPTS = 2;
-    private static final String DEFAULT_PROCESSOR_NAMES = "processSchedule,processResumeB01,processResumeB02,processAgentA01,processAgentA02,processAgentA02,processNotify";
+    private static final String DEFAULT_PROCESSOR_NAMES = "processSchedule,processResumeB01,processResumeB02,processAgentA01,processAgentA02,processAgentA03,processNotify";
 
     private boolean showConfigOnStartup;
     private boolean disableStopper;
