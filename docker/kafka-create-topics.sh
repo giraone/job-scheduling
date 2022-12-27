@@ -14,7 +14,7 @@ for topic in job-accepted job-accepted-err \
     --create \
     --topic $topic \
     --replication-factor 1 \
-    --partitions 8
+    --partitions 4
 done
 
 # kafka-configs --alter --topic job-accepted --add-config "cleanup.policy=compact" --add-config "delete.retention.ms=10000" --bootstrap-server kafka-1:9092
