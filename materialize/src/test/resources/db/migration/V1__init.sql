@@ -6,5 +6,5 @@ CREATE TABLE job_record (
  status VARCHAR(255),
  paused_bucket_key VARCHAR(255),
  process_id BIGINT,
- CONSTRAINT PK_DOCUMENT_OBJECT PRIMARY KEY (id)
+ CONSTRAINT pk_job_record PRIMARY KEY (id)
 );
