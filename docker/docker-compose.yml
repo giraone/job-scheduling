@@ -90,7 +90,7 @@ services:
       - PGDATA=/tmp
 
   pgadmin4:
-    image: dpage/pgadmin4:latest
+    image: dpage/pgadmin4:6.18
     hostname: pgadmin4
     container_name: pgadmin4
     volumes:
