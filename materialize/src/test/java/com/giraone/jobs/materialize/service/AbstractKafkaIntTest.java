@@ -10,8 +10,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -19,6 +17,8 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 import reactor.kafka.receiver.ReceiverOptions;
@@ -31,9 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -51,21 +49,22 @@ public abstract class AbstractKafkaIntTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractKafkaIntTest.class);
 
-    private static final int DEFAULT_TEST_TIMEOUT = 60_000;
+    private static final int DEFAULT_TEST_TIMEOUT_MS = 60_000;
 
     protected static final KafkaContainer KAFKA = new KafkaContainer(
-        DockerImageName.parse("confluentinc/cp-enterprise-kafka:7.3.0")
-            .asCompatibleSubstituteFor("confluentinc/cp-kafka"))
+        DockerImageName.parse("confluentinc/cp-kafka:7.3.0"))
+        // DockerImageName.parse("confluentinc/cp-enterprise-kafka:7.3.0")
+        //    .asCompatibleSubstituteFor("confluentinc/cp-kafka"))
         .withNetwork(null)
         .withEnv("KAFKA_TRANSACTION_STATE_LOG_MIN_ISR", "1")
         .withEnv("KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR", "1")
         .withReuse(true);
 
-    protected final int partitions = 2;
-    protected long receiveTimeoutMillis = DEFAULT_TEST_TIMEOUT;
+    protected int partitions = 2;
+    protected long receiveTimeoutMillis = DEFAULT_TEST_TIMEOUT_MS;
     protected long requestTimeoutMillis = 3000;
-    protected final long sessionTimeoutMillis = 12000;
-    protected final long heartbeatIntervalMillis = 3000;
+    protected long sessionTimeoutMillis = 12000;
+    protected long heartbeatIntervalMillis = 3000;
 
     protected ReceiverOptions<String, String> receiverOptions;
     protected SenderOptions<String, String> senderOptions;
@@ -75,18 +74,20 @@ public abstract class AbstractKafkaIntTest {
 
     @BeforeEach
     public final void setUpAbstractKafkaTest() {
-        LOGGER.info("STARTING Kafka broker");
-        KAFKA.start();
-        LOGGER.info("STARTED Kafka broker {}", KAFKA.getBootstrapServers());
+        waitForContainerStart();
         senderOptions = SenderOptions.create(producerProps());
         receiverOptions = createReceiverOptions(this.getClass().getSimpleName());
     }
 
-    protected String bootstrapServers() {
-        return KAFKA.getBootstrapServers();
+    @DynamicPropertySource
+    protected static void kafkaProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.kafka.bootstrap-servers", () -> {
+            waitForContainerStart();
+            return KAFKA.getBootstrapServers();
+        });
     }
 
-    public Map<String, Object> producerProps() {
+    protected Map<String, Object> producerProps() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers());
         props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, String.valueOf(requestTimeoutMillis));
@@ -187,31 +188,6 @@ public abstract class AbstractKafkaIntTest {
         }
     }
 
-    protected void waitForBrokers() {
-        int maxRetries = 50;
-        for (int i = 0; i < maxRetries; i++) {
-            try {
-                bootstrapServers();
-                break;
-            } catch (Exception e) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        }
-    }
-
-    protected void sendMessages(Stream<? extends ProducerRecord<String, String>> records) throws Exception {
-        try (KafkaProducer<String, String> producer = new KafkaProducer<>(producerProps())) {
-            List<Future<RecordMetadata>> futures = records.map(producer::send).toList();
-            for (Future<RecordMetadata> future : futures) {
-                future.get(5, TimeUnit.SECONDS);
-            }
-        }
-    }
-
     protected void onReceive(ConsumerRecord<String, String> record) {
         receivedMessages.get(record.partition()).add(record.key());
         receivedRecords.get(record.partition()).add(record);
@@ -232,5 +208,34 @@ public abstract class AbstractKafkaIntTest {
         assertThat(receivedCount).isEqualTo(expectedCount);
         ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
         assertThat(records.isEmpty()).isTrue();
+    }
+
+    protected static String bootstrapServers() {
+        return KAFKA.getBootstrapServers();
+    }
+
+    protected static void waitForBrokers() {
+        int maxRetries = 50;
+        for (int i = 0; i < maxRetries; i++) {
+            try {
+                bootstrapServers();
+                break;
+            } catch (Exception e) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+    }
+
+    protected static void waitForContainerStart() {
+
+        if (!KAFKA.isCreated() || !KAFKA.isRunning()) {
+            LOGGER.info("STARTING Kafka broker");
+            KAFKA.start();
+            LOGGER.info("STARTED Kafka broker {}", KAFKA.getBootstrapServers());
+        }
     }
 }

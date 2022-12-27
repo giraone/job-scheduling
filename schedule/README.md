@@ -69,7 +69,7 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [ ] Analyze, if a priority for 'job-accepted' can be set, to prevent updates before inserts.
 - [x] Prevent that older update events overwriting newer once - see StateRecordService.java.
 - [x] R2DBC Transactional for UPSERT.
-- [ ] ConsumerServiceIntTest with Kafka and R2DBC via *Test Containers* does not work.
+- [ ] ConsumerServiceIntTest/AbstractKafkaIntTest with Kafka and R2DBC via *Test Containers* does not work.
 - [ ] StateRecordService uses hard-coded '+ 1000L' for Process-ID (remove processId or map processKey to processId).
 
 ### Schedule

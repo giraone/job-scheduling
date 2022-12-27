@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) // because init() needs ConsumerService
 @AutoConfigureWebTestClient(timeout = "30000") // 30 seconds
 public class JobReceiveResourceIntTest extends AbstractKafkaIntTest {
 
@@ -81,13 +83,12 @@ public class JobReceiveResourceIntTest extends AbstractKafkaIntTest {
         assertThat(metrics.get("failed")).isNotNull();
     }
 
-    @Disabled
     @Test
     void addJobWorks() {
 
         // arrange
         Instant now = Instant.now();
-        long id = System.nanoTime();
+        String id = "JobReceiveResourceIntTest-" + System.nanoTime();
         Map<String, Object> body = Map.of(
             "requesterId", id,
             "eventTimestamp", DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault()).format(now)
@@ -116,7 +117,7 @@ public class JobReceiveResourceIntTest extends AbstractKafkaIntTest {
         receivedRecords.forEach(l -> {
             l.forEach(record -> {
                 assertThat(record.key()).isNotNull();
-                assertThat(record.value()).contains(Long.toString(id));
+                assertThat(record.value()).contains(id);
             });
         });
     }

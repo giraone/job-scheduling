@@ -9,7 +9,6 @@ import com.giraone.jobs.materialize.config.ApplicationProperties;
 import com.giraone.jobs.materialize.persistence.JobRecord;
 import com.github.f4b6a3.tsid.Tsid;
 import com.github.f4b6a3.tsid.TsidCreator;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -25,7 +24,6 @@ import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import reactor.test.StepVerifier;
 
-import javax.annotation.PostConstruct;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,17 +42,11 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
     ApplicationProperties applicationProperties;
     @Autowired
     R2dbcEntityTemplate r2dbcEntityTemplate;
-    @Autowired
-    ConsumerService consumerService;
 
-    @BeforeAll
-    void init() {
-        LOGGER.debug("Starting ConsumerService for ConsumerServiceIntTest");
-        try {
-            Thread.sleep(2000L);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    @BeforeEach
+    protected void setUp() {
+        LOGGER.debug("ConsumerServiceIntTest.setUp");
+        this.waitForTopic("job-accepted", true);
     }
 
     @Test
@@ -68,28 +60,20 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
         String topic = applicationProperties.getTopicInsert();
         String messageKey = event.getId();
 
-        // sendMessages(List.of(new ProducerRecord<>(topic, messageKey, jsonEvent)).stream());
-
         ReactiveKafkaProducerTemplate<String, String> template = new ReactiveKafkaProducerTemplate<>(senderOptions);
         template.send(topic, messageKey, jsonEvent)
             .doOnSuccess(senderResult -> LOGGER.info("Sent event {} to topic {} with offset : {}",
                 jsonEvent, topic, senderResult.recordMetadata().offset()))
             .block();
 
-        Thread.sleep(2000L);
-
         LOGGER.debug("Start selecting from StateRecord");
-
-        r2dbcEntityTemplate.select(JobRecord.class).all()
-            .as(StepVerifier::create)
-            .assertNext(record -> {
-                assertThat(record.getId()).isEqualTo(id.toLong());
-                assertThat(record.getStatus()).isEqualTo("accepted");
-                assertThat(record.getJobAcceptedTimestamp()).isEqualTo(event.getEventTimestamp());
-                assertThat(record.getLastEventTimestamp()).isNotNull();
-                assertThat(record.getLastRecordUpdateTimestamp()).isNotNull();
-            })
-            .verifyComplete();
+        JobRecord record = r2dbcEntityTemplate.select(JobRecord.class).all().blockFirst();
+        assertThat(record).isNotNull();
+        assertThat(record.getId()).isEqualTo(id.toLong());
+        assertThat(record.getStatus()).isEqualTo("ACCEPTED");
+        assertThat(record.getJobAcceptedTimestamp()).isEqualTo(event.getEventTimestamp());
+        assertThat(record.getLastEventTimestamp()).isNotNull();
+        assertThat(record.getLastRecordUpdateTimestamp()).isNotNull();
     }
 
     @Test

@@ -17,7 +17,7 @@ public class KafkaBrokerCli {
 
     public boolean createTopic(String topic) {
 
-        // the broker ist not is not "kafka.getBootstrapServers()" because it runs within the container - not outside from the host
+        // the broker is not "kafka.getBootstrapServers()" because it runs within the container - not outside from the host
         return runCmd("kafka-topics",
             "--bootstrap-server", "localhost:9092",
             "--create",

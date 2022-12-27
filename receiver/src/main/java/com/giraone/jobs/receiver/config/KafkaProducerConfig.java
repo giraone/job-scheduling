@@ -11,8 +11,6 @@ import reactor.kafka.sender.SenderOptions;
 @Configuration
 public class KafkaProducerConfig {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaProducerConfig.class);
-
     @Bean
     public SenderOptions<String, String> kafkaSenderOptions(KafkaProperties kafkaProperties) {
 
