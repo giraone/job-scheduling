@@ -43,6 +43,38 @@ done
 curl --silent 'http://localhost:8080/api/state-records?page=0&size=10&sort=ID,DESC' | jq . 
 ```
 
+## Design decision
+
+### UPSERT including overwrite prevention of newer jobs
+
+The job events may not arrive in the "natural" order:
+1. A job record state `UPDATE` (e.g. *JobScheduledEvent*) may arrive before the job record `INSERT` (*JobAcceptedEvent*).
+   In this case, the *JobScheduledEvent* must perform a database `UPDATE` and the *JobAcceptedEvent* must be skipped.
+2. A job record state `UPDATE` (e.g. *JobCompletedEvent*) may arrive before another job record state `UPDATE` (e.g. *JobScheduledEvent*),
+   which is older. In this case, the older event must not overwrite the newer event.
+
+Requirement 2. can be fulfilled by using a database UPDATE with a time check:
+`UPDATE job_record SET j.status = :newStatus WHERE id = :id AND j.lastEventTimestamp < :newEventTimestamp`
+
+For requirement 1. there are these approaches:
+
+1. Using *SELECT* and then INSERT/UPDATE*
+   - `SELECT * FROM job_record WHERE id = :id FOR UPDATE`
+   - If found: `UPDATE job_record SET j.status = :newStatus WHERE id = :id AND j.lastEventTimestamp < :newEventTimestamp`
+   - If not found: `INSERT INTO job_record VALUES (:id, :newStatus`
+   - **Result:**: The `FOR UPDATE` doesn't help on the `INSERT`'s `unique constraint violation`, because a not existent row cannot be locked.
+2. Using `INSERT`, duplicate check, then `UPDATE`
+   - **Result:**: Does not work, because of rollback on the insert: `current transaction is aborted, commands ignored until end of transaction block`.
+3. Using `INSERT ... ON CONFLICT DO NOTHING`, duplicate check, then `UPDATE`
+   - **Result: Works**
+4. Using `INSERT ... ON CONFLICT (id) DO UPDATE...`
+   - **Result: Works**
+5. Using `UPDATE`, count checked, then `INSERT`
+   - Cannot be used together with requirement 2. We can not distinguish between "ID does not exist" and "there is a newer timestamp".
+   - **Result:**: The `UPDATE` before `INSERT` doesn't help on the `INSERT`'s `unique constraint violation`.
+
+The above approaches were checked with the default **Isolation Level**.
+
 ## TODO
 
 - https://github.com/reactor/reactor-kafka/issues/227 and https://projectreactor.io/docs/kafka/release/reference/#kafka-source

@@ -69,7 +69,7 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [ ] Analyze, if a priority for 'job-accepted' can be set, to prevent updates before inserts.
 - [x] Prevent that older update events overwriting newer once - see StateRecordService.java.
 - [x] R2DBC Transactional for UPSERT.
-- [ ] ConsumerServiceIntTest with R2DBC does not work.
+- [ ] ConsumerServiceIntTest with Kafka and R2DBC via *Test Containers* does not work.
 - [ ] StateRecordService uses hard-coded '+ 1000L' for Process-ID (remove processId or map processKey to processId).
 
 ### Schedule
@@ -108,16 +108,6 @@ Receiving example (notify before scheduled/completed):
 2022-12-20 21:13:50.858 >>> UPD KEY=0AX5H6H8XG5CK, TOPIC=job-scheduled-A01, "eventTimestamp":"2022-12-20T20:13:47.252Z"
 2022-12-20 21:13:50.895 >>> UPD KEY=0AX5H6H8XG5CK, TOPIC=job-completed,     "eventTimestamp":"2022-12-20T20:13:47.260Z"
 ```
-
-### Solutions
-
-1. findAndUpdateOrInsert
-  - Duplicate insert still possible.
-  - Working, but theoretically not perfect.
-2. upsert
-  - The update must be performed with the timestamp check, so the update before insert is solved, but not the timing with the updates.
-3. insertUpdate
-  - Not working because of rollback on the insert: `current transaction is aborted, commands ignored until end of transaction block`.
 
 ## Topologie
 
