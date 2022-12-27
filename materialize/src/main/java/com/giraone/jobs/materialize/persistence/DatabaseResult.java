@@ -1,4 +1,4 @@
-package com.giraone.jobs.materialize.model;
+package com.giraone.jobs.materialize.persistence;
 
 import java.io.Serializable;
 

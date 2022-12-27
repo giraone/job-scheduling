@@ -6,13 +6,15 @@ import com.giraone.jobs.events.JobAcceptedEvent;
 import com.giraone.jobs.events.JobStatusChangedEvent;
 import com.giraone.jobs.materialize.common.ObjectMapperBuilder;
 import com.giraone.jobs.materialize.config.ApplicationProperties;
-import com.giraone.jobs.materialize.model.JobRecord;
+import com.giraone.jobs.materialize.persistence.JobRecord;
 import com.github.f4b6a3.tsid.Tsid;
 import com.github.f4b6a3.tsid.TsidCreator;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +25,14 @@ import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import reactor.test.StepVerifier;
 
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) // because init() needs ConsumerService
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class) // Need, so that new event is consumed before update event
 class ConsumerServiceIntTest extends AbstractKafkaIntTest {
 
@@ -40,15 +44,24 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
     ApplicationProperties applicationProperties;
     @Autowired
     R2dbcEntityTemplate r2dbcEntityTemplate;
+    @Autowired
+    ConsumerService consumerService;
 
-    @BeforeEach
-    void clean() {
-        r2dbcEntityTemplate.delete(JobRecord.class).all().then().subscribe();
+    @BeforeAll
+    void init() {
+        LOGGER.debug("Starting ConsumerService for ConsumerServiceIntTest");
+        try {
+            Thread.sleep(2000L);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
     @Order(1)
     void passOneNewEvent() throws Exception {
+
+        r2dbcEntityTemplate.delete(JobRecord.class).all().block();
 
         JobAcceptedEvent event = new JobAcceptedEvent(id.toString(), "V001", Instant.now(), Instant.now());
         String jsonEvent = objectMapper.writeValueAsString(event);
@@ -61,7 +74,9 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
         template.send(topic, messageKey, jsonEvent)
             .doOnSuccess(senderResult -> LOGGER.info("Sent event {} to topic {} with offset : {}",
                 jsonEvent, topic, senderResult.recordMetadata().offset()))
-            .subscribe();
+            .block();
+
+        Thread.sleep(2000L);
 
         LOGGER.debug("Start selecting from StateRecord");
 
@@ -80,6 +95,8 @@ class ConsumerServiceIntTest extends AbstractKafkaIntTest {
     @Test
     @Order(2)
     void passOneUpdateEvent() throws JsonProcessingException {
+
+        r2dbcEntityTemplate.delete(JobRecord.class).all().block();
 
         JobStatusChangedEvent event = new JobStatusChangedEvent(id.toString(), "V001", Instant.now(), Instant.now(),"SCHEDULED");
         String jsonEvent = objectMapper.writeValueAsString(event);

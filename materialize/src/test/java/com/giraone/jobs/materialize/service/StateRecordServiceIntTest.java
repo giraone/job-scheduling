@@ -1,9 +1,11 @@
 package com.giraone.jobs.materialize.service;
 
-import com.giraone.jobs.materialize.model.JobRecord;
+import com.giraone.jobs.materialize.persistence.JobRecord;
 import com.github.f4b6a3.tsid.Tsid;
 import com.github.f4b6a3.tsid.TsidCreator;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +13,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -45,69 +46,48 @@ class StateRecordServiceIntTest {
         Instant notifyTimeStamp = now.minusSeconds(1);
 
         // arrange - insert
-        stateRecordService.insert(id.toString(), createdTimeStamp, "V001")
-            .as(StepVerifier::create)
-            .verifyComplete();
+        JobRecord jobRecord = stateRecordService.insert(id.toString(), createdTimeStamp, "V001").block();
+        assertThat(jobRecord).isNotNull();
 
         // act - a newer event
-        stateRecordService.update(true, id.toString(), "NOTIFIED", notifyTimeStamp, null)
-            .as(StepVerifier::create)
-            .expectNext(1)
-            .verifyComplete();
+        Integer updateCount1 = stateRecordService.update(true, id.toString(), "NOTIFIED", notifyTimeStamp, null).block();
+        assertThat(updateCount1).isEqualTo(1);
 
         // act - an older event
-        stateRecordService.update(true, id.toString(), "COMPLETED", completedTimeStamp, null)
-            .as(StepVerifier::create)
-            .expectNext(0)
-            .verifyComplete();
+        Integer updateCount2 = stateRecordService.update(true, id.toString(), "COMPLETED", completedTimeStamp, null).block();
+        assertThat(updateCount2).isEqualTo(0);
 
         // assert
-        r2dbcEntityTemplate.select(JobRecord.class).count()
-            .as(StepVerifier::create)
-            .assertNext(count -> {
-                assertThat(count).isEqualTo(1L);
-            })
-            .verifyComplete();
+        Long countAll = r2dbcEntityTemplate.select(JobRecord.class).count().block();
+        assertThat(countAll).isEqualTo(1);
+
     }
 
-    @Test
-    void assertThat_findAndUpdateOrInsert_worksSingle() throws ExecutionException, InterruptedException {
+    //------------------------------------------------------------------------------------------------------------------
 
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        for (int i = 0; i < 2; i++) {
-            Tsid id = TsidCreator.getTsid256();
-            findAndUpdateOrInsert(executorService, id, "scheduled");
-        }
-    }
-
-    @Test
-    void assertThat_findAndUpdateOrInsert_worksConcurrent() throws ExecutionException, InterruptedException {
-
-        ExecutorService executorService = Executors.newFixedThreadPool(2);
-        for (int i = 0; i < 2; i++) {
-            Tsid id = TsidCreator.getTsid256();
-            findAndUpdateOrInsert(executorService, id, "scheduled", "completed");
-        }
-    }
-
-    private void findAndUpdateOrInsert(ExecutorService executorService, Tsid id,
-                                       String state1, String state2) throws ExecutionException, InterruptedException {
+    @ParameterizedTest
+    @CsvSource({
+        "insertIgnoreConflictThenUpdate",
+        "insertOnConflictUpdate",
+    })
+    void concurrentExecutionOfInsert(String method) throws ExecutionException, InterruptedException {
 
         // arrange
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        Tsid id = TsidCreator.getTsid256();
         String idString = id.toString();
         Instant now = Instant.now();
         Instant jobAcceptedTimestamp = now.minusSeconds(10);
         String processKey = "V001";
         String pausedBucketKey = null;
-
+        String state1 = "scheduled";
         Instant lastEventTimestamp1 = now.minusSeconds(2);
-        Mono<Integer> mono1 = stateRecordService.findAndUpdateOrInsert(idString, jobAcceptedTimestamp, processKey,
-            state1, lastEventTimestamp1, pausedBucketKey);
+        String state2 = "completed";
         Instant lastEventTimestamp2 = now.minusSeconds(1);
-        Mono<Integer> mono2 = stateRecordService.findAndUpdateOrInsert(idString, jobAcceptedTimestamp, processKey,
-            state2, lastEventTimestamp2, pausedBucketKey);
 
         // act
+        Mono<Integer> mono1 = getMethod(method, idString, jobAcceptedTimestamp, processKey, pausedBucketKey, state1, lastEventTimestamp1);
+        Mono<Integer> mono2 = getMethod(method, idString, jobAcceptedTimestamp, processKey, pausedBucketKey, state2, lastEventTimestamp2);
         Future<Integer> future1 = executorService.submit(() -> mono1.block());
         Future<Integer> future2 = executorService.submit(() -> mono2.block());
 
@@ -120,27 +100,61 @@ class StateRecordServiceIntTest {
         assertThat(future2.get()).isEqualTo(1);
     }
 
-    // to test single execution
-    private void findAndUpdateOrInsert(ExecutorService executorService, Tsid id,
-                                       String state1) throws ExecutionException, InterruptedException {
+    @ParameterizedTest
+    @CsvSource({
+        "findAndUpdateOrInsert",
+        "insertUpdate",
+        "insertIgnoreConflictThenUpdate",
+        "insertOnConflictUpdate",
+        "upsert"
+    })
+    void singleExecution(String method) throws Exception {
 
+        LOGGER.debug("singleExecution with {}", method);
         // arrange
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Tsid id = TsidCreator.getTsid256();
         String idString = id.toString();
         Instant now = Instant.now();
         Instant jobAcceptedTimestamp = now.minusSeconds(10);
         String processKey = "V001";
         String pausedBucketKey = null;
-
+        String state1 = "scheduled";
         Instant lastEventTimestamp1 = now.minusSeconds(2);
-        Mono<Integer> mono1 = stateRecordService.findAndUpdateOrInsert(idString, jobAcceptedTimestamp, processKey,
-            state1, lastEventTimestamp1, pausedBucketKey);
 
         // act
+        Mono<Integer> mono1 = getMethod(method, idString, jobAcceptedTimestamp, processKey, pausedBucketKey, state1, lastEventTimestamp1);
         Future<Integer> future1 = executorService.submit(() -> mono1.block());
 
         // assert
         assertThat(future1).succeedsWithin(Duration.ofSeconds(1));
         LOGGER.debug("Call for {}: {}", state1, future1.get());
         assertThat(future1.get()).isEqualTo(1);
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+
+    private Mono<Integer> getMethod(String method, String idString, Instant jobAcceptedTimestamp,
+                                    String processKey, String pausedBucketKey, String state, Instant lastEventTimestamp) {
+        Mono<Integer> mono;
+        if ("findAndUpdateOrInsert".equals(method)) {
+            mono = stateRecordService.findAndUpdateOrInsert(idString, jobAcceptedTimestamp, processKey,
+                state, lastEventTimestamp, pausedBucketKey);
+        } else if ("insertUpdate".equals(method)) {
+            mono = stateRecordService.insertUpdate(idString, jobAcceptedTimestamp, processKey,
+                state, lastEventTimestamp, pausedBucketKey);
+        } else if ("insertIgnoreConflictThenUpdate".equals(method)) {
+            mono = stateRecordService.insertIgnoreConflictThenUpdate(idString, jobAcceptedTimestamp, processKey,
+                state, lastEventTimestamp, pausedBucketKey);
+        } else if ("insertOnConflictUpdate".equals(method)) {
+            mono = stateRecordService.insertOnConflictUpdate(idString, jobAcceptedTimestamp, processKey,
+                state, lastEventTimestamp, pausedBucketKey);
+        } else if ("upsert".equals(method)) {
+            mono = stateRecordService.upsert(idString, jobAcceptedTimestamp, processKey,
+                state, lastEventTimestamp, pausedBucketKey);
+        } else {
+            throw new IllegalArgumentException("Invalid method \"" + method + "\"!");
+        }
+        return mono;
     }
 }

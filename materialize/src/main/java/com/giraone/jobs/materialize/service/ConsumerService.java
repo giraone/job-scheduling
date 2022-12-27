@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.giraone.jobs.events.JobAcceptedEvent;
 import com.giraone.jobs.events.JobStatusChangedEvent;
 import com.giraone.jobs.materialize.common.ObjectMapperBuilder;
-import com.giraone.jobs.materialize.model.DatabaseOperation;
-import com.giraone.jobs.materialize.model.DatabaseResult;
-import com.giraone.jobs.materialize.model.JobRecord;
+import com.giraone.jobs.materialize.persistence.DatabaseOperation;
+import com.giraone.jobs.materialize.persistence.DatabaseResult;
+import com.giraone.jobs.materialize.persistence.JobRecord;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.r2dbc.spi.R2dbcDataIntegrityViolationException;
@@ -240,7 +240,7 @@ public class ConsumerService implements CommandLineRunner {
 
         LOGGER.debug("INSERT id={}, eventTimestamp={} to state={}",
             jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), JobRecord.STATE_accepted);
-        return stateRecordService.insert(jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), processKey)
+        return stateRecordService.insertIgnoreConflict(jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), processKey)
             .map(stateRecord -> new DatabaseResult(jobAcceptedEvent.getId(), true, DatabaseOperation.insert));
     }
 
@@ -248,7 +248,7 @@ public class ConsumerService implements CommandLineRunner {
 
         LOGGER.debug("UPDATE id={}, eventTimestamp={} to state={}",
             jobChangedEvent.getId(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getStatus());
-        return stateRecordService.findAndUpdateOrInsert(jobChangedEvent.getId(), jobChangedEvent.getJobAcceptedTimestamp(), jobChangedEvent.getProcessKey(),
+        return stateRecordService.insertOnConflictUpdate(jobChangedEvent.getId(), jobChangedEvent.getJobAcceptedTimestamp(), jobChangedEvent.getProcessKey(),
                 jobChangedEvent.getStatus(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getPausedBucketKey())
             .map(updateCount -> new DatabaseResult(jobChangedEvent.getId(), updateCount != null && updateCount > 0, DatabaseOperation.update));
     }

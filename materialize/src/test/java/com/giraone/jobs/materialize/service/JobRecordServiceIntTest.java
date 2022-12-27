@@ -1,6 +1,6 @@
 package com.giraone.jobs.materialize.service;
 
-import com.giraone.jobs.materialize.model.JobRecord;
+import com.giraone.jobs.materialize.persistence.JobRecord;
 import com.github.f4b6a3.tsid.Tsid;
 import com.github.f4b6a3.tsid.TsidCreator;
 import org.assertj.core.api.Assertions;
