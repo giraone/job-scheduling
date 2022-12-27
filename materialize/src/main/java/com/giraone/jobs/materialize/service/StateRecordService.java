@@ -71,13 +71,14 @@ public class StateRecordService {
         return update(checkTimestamp, id, state, lastEventTimestamp, pausedBucketKey);
     }
 
-    // Solution 1 - findById, then update or insert
+    // Solution 1 - findById, then update or insert - return is always 1
     public Mono<Integer> findAndUpdateOrInsert(String idString, Instant jobAcceptedTimestamp, String processKey, String state,
                                                Instant lastEventTimestamp, String pausedBucketKey) {
 
         final long id = Tsid.from(idString).toLong();
         return findById(id)
-            .flatMap(found -> update(true, id, state, lastEventTimestamp, pausedBucketKey))
+            .flatMap(found ->
+                update(true, id, state, lastEventTimestamp, pausedBucketKey))
             .switchIfEmpty(
                 insert(id, jobAcceptedTimestamp, processKey, state, lastEventTimestamp, pausedBucketKey).map(j -> 1)
             );
@@ -201,8 +202,7 @@ public class StateRecordService {
 
         LOGGER.debug("findById {}", id);
         return r2dbcEntityTemplate
-            .select(Query.query(where(JobRecord.ATTRIBUTE_id).is(id)), JobRecord.class)
-            .next()
+            .selectOne(Query.query(where(JobRecord.ATTRIBUTE_id).is(id)), JobRecord.class)
             .doOnNext(jobRecord -> LOGGER.debug("findById id={} state={}", id, jobRecord.getStatus()))
             ;
     }
