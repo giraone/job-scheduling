@@ -238,18 +238,28 @@ public class ConsumerService implements CommandLineRunner {
 
     private Mono<DatabaseResult> storeStateForNewJob(JobAcceptedEvent jobAcceptedEvent, String processKey) {
 
-        LOGGER.debug("INSERT id={}, eventTimestamp={} to state={}",
+        LOGGER.debug("Mono for INSERT id={}, eventTimestamp={}, state={}",
             jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), JobRecord.STATE_accepted);
-        return stateRecordService.insertIgnoreConflict(jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), processKey)
+        return stateRecordService.insertIgnoreConflict(jobAcceptedEvent.getId(), jobAcceptedEvent.getJobAcceptedTimestamp(), processKey)
+            .doOnSuccess(stateRecord -> {
+                LOGGER.debug("INSERTED id={}, lastEventTimestamp={}, state={}",
+                    stateRecord.getId(), stateRecord.getLastEventTimestamp(), stateRecord.getStatus());
+            })
             .map(stateRecord -> new DatabaseResult(jobAcceptedEvent.getId(), true, DatabaseOperation.insert));
     }
 
     private Mono<DatabaseResult> storeStateForExistingJob(JobStatusChangedEvent jobChangedEvent) {
 
-        LOGGER.debug("UPDATE id={}, eventTimestamp={} to state={}",
+        LOGGER.debug("Mono for UPDATE id={}, eventTimestamp={}, state={}",
             jobChangedEvent.getId(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getStatus());
         return stateRecordService.insertOnConflictUpdate(jobChangedEvent.getId(), jobChangedEvent.getJobAcceptedTimestamp(), jobChangedEvent.getProcessKey(),
                 jobChangedEvent.getStatus(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getPausedBucketKey())
+            .doOnSuccess(updateCount -> {
+                if (updateCount != null && updateCount > 0) {
+                    LOGGER.debug("UPDATED id={}, lastEventTimestamp={}, state={}",
+                        jobChangedEvent.getId(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getStatus());
+                }
+            })
             .map(updateCount -> new DatabaseResult(jobChangedEvent.getId(), updateCount != null && updateCount > 0, DatabaseOperation.update));
     }
 }
