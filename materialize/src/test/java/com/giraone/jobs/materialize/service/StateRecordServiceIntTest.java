@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.test.annotation.DirtiesContext;
 import reactor.core.publisher.Mono;
 
@@ -22,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.relational.core.query.Query.query;
 
 @SpringBootTest
 @DirtiesContext
@@ -36,7 +38,10 @@ class StateRecordServiceIntTest {
     private R2dbcEntityTemplate r2dbcEntityTemplate;
 
     @Test
-    void assertThat_update_does_not_overwrite_newer_entries() {
+    void updateDoesNotOverwriteNewerJobs() {
+
+        r2dbcEntityTemplate.delete(JobRecord.class).matching(query(Criteria.empty())).all().block();
+        assertThat(r2dbcEntityTemplate.select(JobRecord.class).count().block()).isEqualTo(0L);
 
         // arrange
         Tsid id = TsidCreator.getTsid256();
@@ -60,7 +65,6 @@ class StateRecordServiceIntTest {
         // assert
         Long countAll = r2dbcEntityTemplate.select(JobRecord.class).count().block();
         assertThat(countAll).isEqualTo(1);
-
     }
 
     //------------------------------------------------------------------------------------------------------------------
