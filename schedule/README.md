@@ -10,6 +10,7 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 - materialize: http://localhost:8091
 - schedule: http://localhost:8092
 - jobadmin: http://localhost:8093
+- PGADMIN: http://localhost:8888
 
 ### Topics
 
