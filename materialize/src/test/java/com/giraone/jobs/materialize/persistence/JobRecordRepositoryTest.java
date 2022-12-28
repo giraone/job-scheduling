@@ -66,7 +66,7 @@ class JobRecordRepositoryTest {
         Instant lastRecordUpdateTimestamp = lastEventTimestamp.minusSeconds(1);
 
         // act
-        int inserted = jobRecordRepository.insert(id, jobAcceptedTimestamp, lastEventTimestamp,
+        Integer inserted = jobRecordRepository.insert(id, jobAcceptedTimestamp, lastEventTimestamp,
             lastRecordUpdateTimestamp, status, null, processId).block();
 
         // assert
