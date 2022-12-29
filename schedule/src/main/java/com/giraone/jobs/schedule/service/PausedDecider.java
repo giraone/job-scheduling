@@ -44,6 +44,9 @@ public class PausedDecider {
         final Map<String, String> newAgentMap = new HashMap<>();
 
         final List<ProcessDTO> newProcesses = loadProcesses();
+        if (newProcesses == null) {
+            return;
+        }
         for (ProcessDTO process: newProcesses) {
             final String processKey = process.getKey();
             // (1) Build the map of process keys to paused bucket keys
@@ -99,6 +102,11 @@ public class PausedDecider {
 
     protected List<ProcessDTO> loadProcesses() {
 
-        return jobAdminClient.getProcesses().collectList().block();
+        try {
+            return jobAdminClient.getProcesses().collectList().block();
+        } catch (Exception e) {
+            LOGGER.error("Cannot load processes: {}", e.getMessage());
+            return null;
+        }
     }
 }

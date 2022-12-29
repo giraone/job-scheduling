@@ -3,6 +3,7 @@ package com.giraone.jobs.materialize.service;
 import com.giraone.jobs.materialize.persistence.JobRecord;
 import com.github.f4b6a3.tsid.Tsid;
 import com.github.f4b6a3.tsid.TsidCreator;
+import org.assertj.core.data.TemporalUnitOffset;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -17,12 +18,14 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.springframework.data.relational.core.query.Query.query;
 
 @SpringBootTest
@@ -30,6 +33,7 @@ import static org.springframework.data.relational.core.query.Query.query;
 class StateRecordServiceIntTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StateRecordServiceIntTest.class);
+    private static final TemporalUnitOffset toleratedInstantOffset = within(1, ChronoUnit.MILLIS);
 
     @Autowired
     private StateRecordService stateRecordService;
@@ -46,20 +50,20 @@ class StateRecordServiceIntTest {
         // arrange
         Tsid id = TsidCreator.getTsid256();
         Instant now = Instant.now();
-        Instant createdTimeStamp = now.minusSeconds(10);
-        Instant completedTimeStamp = now.minusSeconds(5);
-        Instant notifyTimeStamp = now.minusSeconds(1);
+        Instant createdTimeStamp = now.minusMillis(10);
+        Instant completedTimeStamp = now.minusMillis(5);
+        Instant notifyTimeStamp = now.minusMillis(1);
 
         // arrange - insert
-        JobRecord jobRecord = stateRecordService.insert(id.toString(), createdTimeStamp, "V001").block();
+        JobRecord jobRecord = stateRecordService.insertAccepted(id.toString(), createdTimeStamp, "V001").block();
         assertThat(jobRecord).isNotNull();
 
         // act - a newer event
-        Integer updateCount1 = stateRecordService.update(true, id.toString(), "NOTIFIED", notifyTimeStamp, null).block();
+        Integer updateCount1 = stateRecordService.update(true, id.toLong(), "NOTIFIED", notifyTimeStamp, null).block();
         assertThat(updateCount1).isEqualTo(1);
 
         // act - an older event
-        Integer updateCount2 = stateRecordService.update(true, id.toString(), "COMPLETED", completedTimeStamp, null).block();
+        Integer updateCount2 = stateRecordService.update(true, id.toLong(), "COMPLETED", completedTimeStamp, null).block();
         assertThat(updateCount2).isEqualTo(0);
 
         // assert
@@ -72,11 +76,13 @@ class StateRecordServiceIntTest {
     @ParameterizedTest
     @CsvSource({
         "insertIgnoreConflictThenUpdate",
-        "insertOnConflictUpdate",
     })
     void concurrentExecutionOfInsert(String method) throws ExecutionException, InterruptedException {
 
         // arrange
+        r2dbcEntityTemplate.delete(JobRecord.class).matching(query(Criteria.empty())).all().block();
+        assertThat(r2dbcEntityTemplate.select(JobRecord.class).count().block()).isEqualTo(0L);
+
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         Tsid id = TsidCreator.getTsid256();
         String idString = id.toString();
@@ -84,9 +90,9 @@ class StateRecordServiceIntTest {
         Instant jobAcceptedTimestamp = now.minusSeconds(10);
         String processKey = "V001";
         String pausedBucketKey = null;
-        String state1 = "scheduled";
+        String state1 = "SCHEDULED";
         Instant lastEventTimestamp1 = now.minusSeconds(2);
-        String state2 = "completed";
+        String state2 = "COMPLETED";
         Instant lastEventTimestamp2 = now.minusSeconds(1);
 
         // act
@@ -100,8 +106,16 @@ class StateRecordServiceIntTest {
         assertThat(future2).succeedsWithin(Duration.ofSeconds(1));
         LOGGER.debug("Call for {}: {}", state1, future1.get());
         LOGGER.debug("Call for {}: {}", state2, future2.get());
-        assertThat(future1.get()).isEqualTo(1);
+        assertThat(future1.get()).isEqualTo(0);
         assertThat(future2.get()).isEqualTo(1);
+
+        JobRecord record = r2dbcEntityTemplate.select(query(Criteria.empty()), JobRecord.class).blockFirst();
+        assertThat(record).isNotNull();
+        assertThat(record.getId()).isEqualTo(id.toLong());
+        assertThat(record.getStatus()).isEqualTo("COMPLETED");
+        assertThat(record.getJobAcceptedTimestamp()).isCloseTo(jobAcceptedTimestamp, toleratedInstantOffset);
+        assertThat(record.getLastEventTimestamp()).isCloseTo(lastEventTimestamp2, toleratedInstantOffset);
+        assertThat(record.getLastRecordUpdateTimestamp()).isCloseTo(now, within(1000, ChronoUnit.MILLIS));
     }
 
     @ParameterizedTest
@@ -114,8 +128,10 @@ class StateRecordServiceIntTest {
     })
     void singleExecution(String method) throws Exception {
 
-        LOGGER.debug("singleExecution with {}", method);
         // arrange
+        r2dbcEntityTemplate.delete(JobRecord.class).matching(query(Criteria.empty())).all().block();
+        assertThat(r2dbcEntityTemplate.select(JobRecord.class).count().block()).isEqualTo(0L);
+
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Tsid id = TsidCreator.getTsid256();
         String idString = id.toString();
@@ -123,7 +139,7 @@ class StateRecordServiceIntTest {
         Instant jobAcceptedTimestamp = now.minusSeconds(10);
         String processKey = "V001";
         String pausedBucketKey = null;
-        String state1 = "scheduled";
+        String state1 = "SCHEDULED";
         Instant lastEventTimestamp1 = now.minusSeconds(2);
 
         // act
@@ -134,6 +150,14 @@ class StateRecordServiceIntTest {
         assertThat(future1).succeedsWithin(Duration.ofSeconds(1));
         LOGGER.debug("Call for {}: {}", state1, future1.get());
         assertThat(future1.get()).isEqualTo(1);
+
+        JobRecord record = r2dbcEntityTemplate.select(query(Criteria.empty()), JobRecord.class).blockFirst();
+        assertThat(record).isNotNull();
+        assertThat(record.getId()).isEqualTo(id.toLong());
+        assertThat(record.getStatus()).isEqualTo("SCHEDULED");
+        assertThat(record.getJobAcceptedTimestamp()).isCloseTo(jobAcceptedTimestamp, toleratedInstantOffset);
+        assertThat(record.getLastEventTimestamp()).isCloseTo(lastEventTimestamp1, toleratedInstantOffset);
+        assertThat(record.getLastRecordUpdateTimestamp()).isCloseTo(now, within(1000, ChronoUnit.MILLIS));
     }
 
     //------------------------------------------------------------------------------------------------------------------

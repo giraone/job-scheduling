@@ -38,14 +38,14 @@ public class ConsumerService implements CommandLineRunner {
     private static final String METRICS_JOBS_INSERT_FAILURE = "jobs.insert.failure";
     private static final String METRICS_JOBS_UPDATE_SUCCESS = "jobs.update.success";
     private static final String METRICS_JOBS_UPDATE_FAILURE = "jobs.update.failure";
-    
+
     private final StateRecordService stateRecordService;
     private final MeterRegistry meterRegistry;
     private final ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplateInserts;
     private final ReactiveKafkaConsumerTemplate<String, String> reactiveKafkaConsumerTemplateUpdates;
 
-    private final Scheduler schedulerInserts = Schedulers.newBoundedElastic(10, Integer.MAX_VALUE, "schedulerInserts");
-    private final Scheduler schedulerUpdates = Schedulers.newBoundedElastic(1, Integer.MAX_VALUE, "schedulerUpdates");
+    private final Scheduler scheduler = Schedulers.newBoundedElastic(
+        Runtime.getRuntime().availableProcessors() - 1, Integer.MAX_VALUE, "schedulers");
 
     private final Map<String, Long> offSetsPerPartition = new HashMap<>();
 
@@ -84,21 +84,21 @@ public class ConsumerService implements CommandLineRunner {
             .description("Counter for all updated jobs, that were not materialized to Postgres.")
             .register(meterRegistry);
     }
-    
+
     @Override
     public void run(String... args) {
 
-        LOGGER.info("STARTING ConsumerService for INSERTS on {}", schedulerInserts);
+        LOGGER.info("STARTING ConsumerService for INSERTS on {}", scheduler);
         // we have to trigger the consumption
         consumeFromInsertTopicAndWriteToDatabase()
             // publish on scheduler, because storeState uses block() and so receiver thread itself is not blocked
-            .publishOn(schedulerInserts)
+            .publishOn(scheduler)
             .subscribe();
 
-        LOGGER.info("STARTING ConsumerService for UPDATES on {}", schedulerUpdates);
+        LOGGER.info("STARTING ConsumerService for UPDATES on {}", scheduler);
         consumeFromUpdateTopicsAndWriteToDatabase()
             // publish on scheduler, because storeState uses block() and so receiver thread itself is not blocked
-            .publishOn(schedulerUpdates)
+            .publishOn(scheduler)
             .subscribe();
     }
 
@@ -137,7 +137,7 @@ public class ConsumerService implements CommandLineRunner {
     private Mono<DatabaseResult> consumeNewEvent(ReceiverRecord<String, String> consumerRecord) {
 
         final String messageKey = consumerRecord.key();
-        LOGGER.info(">>> NEW KEY={}, TOPIC={}, MESSAGE={}", messageKey, consumerRecord.topic(), consumerRecord.value());
+        LOGGER.debug(">>> NEW KEY={}, TOPIC={}, MESSAGE={}", messageKey, consumerRecord.topic(), consumerRecord.value());
         return parseNewEvent(consumerRecord.value())
             .flatMap(event -> storeStateForNewJob(event, event.getProcessKey()))
             .doOnSuccess(databaseResult -> {
@@ -150,17 +150,18 @@ public class ConsumerService implements CommandLineRunner {
                 final DatabaseResult databaseResult = new DatabaseResult(messageKey, false, DatabaseOperation.insert);
                 logError(databaseResult, consumerRecord, throwable);
                 consumerRecord.receiverOffset().commit();
-                return logError(messageKey, consumerRecord, throwable);
+                LOGGER.error("Erroneous message committed with partition={}, offset={}",
+                    consumerRecord.receiverOffset().topicPartition(), consumerRecord.receiverOffset().offset());
+                return Mono.just(databaseResult);
             });
     }
 
     private Mono<DatabaseResult> consumeUpdateEvent(ReceiverRecord<String, String> consumerRecord) {
 
         final String messageKey = consumerRecord.key();
-        LOGGER.info(">>> UPD KEY={}, TOPIC={}, MESSAGE={}", messageKey, consumerRecord.topic(), consumerRecord.value());
+        LOGGER.debug(">>> UPD KEY={}, TOPIC={}, MESSAGE={}", messageKey, consumerRecord.topic(), consumerRecord.value());
         return parseChangeEvent(consumerRecord.value())
             .flatMap(this::storeStateForExistingJob)
-            .switchIfEmpty(logError(messageKey, consumerRecord, null))
             .doOnSuccess(databaseResult -> {
                 this.updateSuccessCounter.increment();
                 logDatabaseResult(databaseResult, consumerRecord);
@@ -168,16 +169,18 @@ public class ConsumerService implements CommandLineRunner {
             })
             .onErrorResume(throwable -> {
                 this.updateFailureCounter.increment();
+                final DatabaseResult databaseResult = new DatabaseResult(messageKey, false, DatabaseOperation.update);
+                logError(databaseResult, consumerRecord, throwable);
                 consumerRecord.receiverOffset().commit();
                 LOGGER.error("Erroneous message committed with partition={}, offset={}",
                     consumerRecord.receiverOffset().topicPartition(), consumerRecord.receiverOffset().offset());
-                return logError(messageKey, consumerRecord, throwable);
+                return Mono.just(databaseResult);
             });
     }
 
     //------------------------------------------------------------------------------------------------------------------
 
-    private Mono<DatabaseResult> logError(String messageKey, ReceiverRecord<String,String> consumerRecord, Throwable throwable) {
+    private Mono<DatabaseResult> logError(String messageKey, ReceiverRecord<String, String> consumerRecord, Throwable throwable) {
         final DatabaseResult databaseResult = new DatabaseResult(messageKey, false, DatabaseOperation.update);
         logError(databaseResult, consumerRecord, throwable);
         consumerRecord.receiverOffset().commit();
@@ -189,7 +192,7 @@ public class ConsumerService implements CommandLineRunner {
             + "/" + consumerRecord.receiverOffset().topicPartition().partition();
         final Long offset = consumerRecord.receiverOffset().offset();
         offSetsPerPartition.put(topicPartition, offset);
-        if (throwable == null ||throwable instanceof R2dbcDataIntegrityViolationException) {
+        if (throwable == null || throwable instanceof R2dbcDataIntegrityViolationException) {
             LOGGER.debug("Error for {} with topic/partition={}, offset={}, error={}",
                 databaseResult.getOperation(), topicPartition, offset, throwable != null ? throwable.getMessage() : "?");
         } else {
@@ -202,19 +205,13 @@ public class ConsumerService implements CommandLineRunner {
         final String topicPartition = consumerRecord.receiverOffset().topicPartition().topic()
             + "/" + consumerRecord.receiverOffset().topicPartition().partition();
         final Long offset = consumerRecord.receiverOffset().offset();
-        // TODO
-        // final Long lastOffset = offSetsPerPartition.get(topicPartition);
-        //if (lastOffset == null || offset - lastOffset == 99) {
-        LOGGER.info("Commit % 100 with topic/partition={}, offset={}", topicPartition, offset);
-        //}
-        offSetsPerPartition.put(topicPartition, offset);
-        if (databaseResult.isSuccess()) {
-            LOGGER.debug("Successfully consumed and committed {} {}",
-                databaseResult.getOperation(), databaseResult.getEntityId());
-        } else {
-            LOGGER.error("Database failure for topic/partition={}, offset={}: databaseResult == null",
-                topicPartition, offset);
+        final Long lastOffset = offSetsPerPartition.get(topicPartition);
+        if (lastOffset == null || offset - lastOffset == 99) {
+            LOGGER.info("Committed 100 events at topic/partition={}, offset={}", topicPartition, offset);
         }
+        offSetsPerPartition.put(topicPartition, offset);
+        LOGGER.debug("Successfully consumed and committed {} {}",
+            databaseResult.getOperation(), databaseResult.getEntityId());
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -240,19 +237,21 @@ public class ConsumerService implements CommandLineRunner {
 
         LOGGER.debug("Mono for INSERT id={}, eventTimestamp={}, state={}",
             jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), JobRecord.STATE_accepted);
-        return stateRecordService.insertIgnoreConflict(jobAcceptedEvent.getId(), jobAcceptedEvent.getJobAcceptedTimestamp(), processKey)
-            .doOnSuccess(stateRecord -> {
-                LOGGER.debug("INSERTED id={}, lastEventTimestamp={}, state={}",
-                    stateRecord.getId(), stateRecord.getLastEventTimestamp(), stateRecord.getStatus());
+        return stateRecordService.insertAcceptedIgnoreConflict(jobAcceptedEvent.getId(), jobAcceptedEvent.getJobAcceptedTimestamp(), processKey)
+            .doOnSuccess(count -> {
+                if (count == 1) {
+                    LOGGER.debug("INSERTED id={}, lastEventTimestamp={}, state={}",
+                        jobAcceptedEvent.getId(), jobAcceptedEvent.getEventTimestamp(), jobAcceptedEvent.getStatus());
+                }
             })
-            .map(stateRecord -> new DatabaseResult(jobAcceptedEvent.getId(), true, DatabaseOperation.insert));
+            .map(count -> new DatabaseResult(jobAcceptedEvent.getId(), true, DatabaseOperation.insert));
     }
 
     private Mono<DatabaseResult> storeStateForExistingJob(JobStatusChangedEvent jobChangedEvent) {
 
         LOGGER.debug("Mono for UPDATE id={}, eventTimestamp={}, state={}",
             jobChangedEvent.getId(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getStatus());
-        return stateRecordService.insertOnConflictUpdate(jobChangedEvent.getId(), jobChangedEvent.getJobAcceptedTimestamp(), jobChangedEvent.getProcessKey(),
+        return stateRecordService.insertIgnoreConflictThenUpdate(jobChangedEvent.getId(), jobChangedEvent.getJobAcceptedTimestamp(), jobChangedEvent.getProcessKey(),
                 jobChangedEvent.getStatus(), jobChangedEvent.getEventTimestamp(), jobChangedEvent.getPausedBucketKey())
             .doOnSuccess(updateCount -> {
                 if (updateCount != null && updateCount > 0) {

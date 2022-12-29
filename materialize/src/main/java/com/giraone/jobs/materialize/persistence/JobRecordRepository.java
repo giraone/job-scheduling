@@ -41,4 +41,16 @@ public interface JobRecordRepository extends R2dbcRepository<JobRecord, String> 
     Mono<Integer> insertOnConflictUpdate(
         long id, Instant jobAcceptedTimestamp, Instant lastEventTimestamp,
         Instant lastRecordUpdateTimestamp, String status, String pausedBucketKey, long processId);
+
+    @Modifying
+    @Query("""
+        INSERT INTO job_record
+        VALUES(:id, :jobAcceptedTimestamp, :lastEventTimestamp, :lastRecordUpdateTimestamp, :status, :pausedBucketKey, :processId)
+        ON CONFLICT (id) DO UPDATE SET
+        last_event_timestamp=:lastEventTimestamp, last_record_update_timestamp=:lastRecordUpdateTimestamp, status=:status, paused_bucket_key=:pausedBucketKey
+        WHERE last_event_timestamp < :lastEventTimestamp AND id = :id
+        """)
+    Mono<Integer> insertOnConflictUpdateAndCheckTime(
+        long id, Instant jobAcceptedTimestamp, Instant lastEventTimestamp,
+        Instant lastRecordUpdateTimestamp, String status, String pausedBucketKey, long processId);
 }

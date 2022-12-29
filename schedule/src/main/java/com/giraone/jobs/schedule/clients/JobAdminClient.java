@@ -26,8 +26,8 @@ public class JobAdminClient extends AbstractClient {
             .uri(uriBuilder -> uriBuilder.path(applicationProperties.getJobAdminPathAll()).build())
             .retrieve()
             .bodyToFlux(ProcessDTO.class)
-            .doOnError(err ->
-                log.error("SUBSYSTEM CALL-ERROR [jobAdmin]", err)
+            .doOnError(error ->
+                log.error("SUBSYSTEM CALL-ERROR [jobAdmin]: {}", error.getMessage())
             );
     }
 }
