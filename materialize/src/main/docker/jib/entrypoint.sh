@@ -29,5 +29,8 @@ file_env() {
 }
 
 file_env 'SPRING_KAFKA_BOOTSTRAP_SERVERS'
+file_env 'SPRING_R2DBC_URL'
+file_env 'SPRING_R2DBC_USERNAME'
+file_env 'SPRING_R2DBC_PASSWORD'
 
-exec java ${JAVA_OPTS} -XX:+AlwaysPreTouch -Djava.security.egd=file:/dev/urandom -cp /app/resources/:/app/classes/:/app/libs/* "com.giraone.jobs.receiver.ReceiverApplication" "$@"
+exec java ${JAVA_OPTS} -XX:+AlwaysPreTouch -Djava.security.egd=file:/dev/urandom -cp /app/resources/:/app/classes/:/app/libs/* "com.giraone.jobs.materialize.EventToDatabaseApplication" "$@"

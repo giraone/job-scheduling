@@ -17,9 +17,6 @@ management:
       exposure:
         include: ['health', 'loggers', 'metrics']
 
-server:
-  port: 8091
-
 spring:
   application:
     name: materialize

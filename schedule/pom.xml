@@ -16,6 +16,7 @@
 
   <properties>
     <java.version>17</java.version>
+    <start-class>com.giraone.jobs.schedule.ProcessorApplication</start-class>
     <spring-cloud-stream.version>4.0.0</spring-cloud-stream.version>
     <jackson.version>2.14.1</jackson.version>
     <tsid.version>5.0.2</tsid.version>
@@ -24,6 +25,9 @@
     <wiremock.version>2.35.0</wiremock.version>
     <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
     <maven-versions-plugin.version>2.14.0</maven-versions-plugin.version>
+    <jib-maven-plugin.version>3.3.1</jib-maven-plugin.version>
+    <jib-maven-plugin.image>eclipse-temurin:17.0.5_8-jre@sha256:402c656f078bc116a6db1e2e23b08c6f4a78920a2c804ea4c2d3e197f1d6b47c</jib-maven-plugin.image>
+    <jib-maven-plugin.architecture>amd64</jib-maven-plugin.architecture>
   </properties>
 
   <dependencyManagement>
@@ -142,6 +146,20 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
+
+      <!-- add sources to build -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -152,6 +170,53 @@
           <reportsDirectory>${junit.utReportFolder}</reportsDirectory>
         </configuration>
       </plugin>
+
+      <!-- Build docker image -->
+      <plugin>
+        <groupId>com.google.cloud.tools</groupId>
+        <artifactId>jib-maven-plugin</artifactId>
+        <version>${jib-maven-plugin.version}</version>
+        <configuration>
+          <from>
+            <image>${jib-maven-plugin.image}</image>
+            <platforms>
+              <platform>
+                <architecture>${jib-maven-plugin.architecture}</architecture>
+                <os>linux</os>
+              </platform>
+            </platforms>
+          </from>
+          <to>
+            <image>${project.name}:latest</image>
+          </to>
+          <container>
+            <entrypoint>
+              <shell>bash</shell>
+              <option>-c</option>
+              <arg>/entrypoint.sh</arg>
+            </entrypoint>
+            <ports>
+              <port>8080</port>
+            </ports>
+            <environment>
+              <SPRING_OUTPUT_ANSI_ENABLED>ALWAYS</SPRING_OUTPUT_ANSI_ENABLED>
+              <STARTUP_SLEEP>0</STARTUP_SLEEP>
+            </environment>
+            <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+            <user>1000</user>
+          </container>
+          <extraDirectories>
+            <paths>src/main/docker/jib</paths>
+            <permissions>
+              <permission>
+                <file>/entrypoint.sh</file>
+                <mode>755</mode>
+              </permission>
+            </permissions>
+          </extraDirectories>
+        </configuration>
+      </plugin>
+
       <!-- Test coverage with Jacoco -->
       <plugin>
         <groupId>org.jacoco</groupId>
@@ -173,18 +238,7 @@
           </execution>
         </executions>
       </plugin>
-      <!-- add sources to artifactory build -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+
       <!-- mvn versions:update-parent && mvn versions:update-properties && mvn versions:use-latest-versions -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>

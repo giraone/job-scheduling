@@ -16,10 +16,6 @@ management:
       exposure:
         include: ['health', 'loggers', 'metrics']
 
-server:
-  port: 8090
-
-
 spring:
   application:
     name: receiver

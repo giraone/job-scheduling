@@ -30,4 +30,4 @@ file_env() {
 
 file_env 'SPRING_KAFKA_BOOTSTRAP_SERVERS'
 
-exec java ${JAVA_OPTS} -XX:+AlwaysPreTouch -Djava.security.egd=file:/dev/urandom -cp /app/resources/:/app/classes/:/app/libs/* "com.giraone.jobs.receiver.ReceiverApplication" "$@"
+exec java ${JAVA_OPTS} -XX:+AlwaysPreTouch -Djava.security.egd=file:/dev/urandom -cp /app/resources/:/app/classes/:/app/libs/* "com.giraone.jobs.schedule.ProcessorApplication" "$@"

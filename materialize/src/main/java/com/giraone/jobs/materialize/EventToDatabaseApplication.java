@@ -10,6 +10,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.util.StringUtils;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
@@ -58,16 +60,23 @@ public class EventToDatabaseApplication {
         } catch (UnknownHostException e) {
             LOGGER.warn("The host name could not be determined, using `localhost` as fallback");
         }
-        LOGGER.info("\n----------------------------------------------------------\n" +
-                "\t~~~ Application '{}' is running! Access URLs:\n" +
-                "\t~~~ - Local:      {}://localhost:{}{}\n" +
-                "\t~~~ - External:   {}://{}:{}{}\n" +
-                "\t~~~ Java version:      {} / {}\n" +
-                "\t~~~ Processors:        {}\n" +
-                "\t~~~ Profile(s):        {}\n" +
-                "\t~~~ Default charset:   {}\n" +
-                "\t~~~ File encoding:     {}\n" +
-                "----------------------------------------------------------",
+
+        MemoryUsage memoryUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+        long xmx = memoryUsage.getMax() / 0x10000;
+        long xms = memoryUsage.getInit() / 0x10000;
+
+        LOGGER.info("""
+                ----------------------------------------------------------
+                \t~~~ Application '{}' is running! Access URLs:
+                \t~~~ - Local:      {}://localhost:{}{}
+                \t~~~ - External:   {}://{}:{}{}
+                \t~~~ Java version:      {} / {}
+                \t~~~ Processors:        {}
+                \t~~~ Memory (xms/xmx):  {} MB / {} MB
+                \t~~~ Profile(s):        {}
+                \t~~~ Default charset:   {}
+                \t~~~ File encoding:     {}
+                ----------------------------------------------------------""",
             env.getProperty("spring.application.name"),
             protocol,
             serverPort,
@@ -78,6 +87,7 @@ public class EventToDatabaseApplication {
             contextPath,
             System.getProperty("java.version"), System.getProperty("java.vm.name"),
             Runtime.getRuntime().availableProcessors(),
+            xms, xmx,
             env.getActiveProfiles(),
             Charset.defaultCharset().displayName(),
             System.getProperty("file.encoding")

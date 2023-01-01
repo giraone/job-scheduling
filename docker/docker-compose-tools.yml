@@ -1,0 +1,47 @@
+version: "3.5"
+services:
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:7.3.0
+    hostname: control-center
+    container_name: control-center
+    restart: always
+    networks:
+      - jobs
+    depends_on:
+      - kafka-1    
+    ports:
+      - "9021:9021"
+    volumes:
+      - ${CONTAINER_DATA:-./data}/control-center:/data
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: kafka-1:9092
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: zk-1:2181
+      CONTROL_CENTER_DATA_DIR: "/data"
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_REPLICATION: 1
+      CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_NUM_STREAM_THREADS: 3
+      CONTROL_CENTER_STREAMS_CONSUMER_REQUEST_TIMEOUT_MS: "960032"
+      #CONTROL_CENTER_CONNECT_CLUSTER: "connect:8083"
+      #CONTROL_CENTER_KSQL_URL: "http://ksql-server:8088"
+      #CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://localhost:8088"
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+  pgadmin4:
+    image: dpage/pgadmin4:6.18
+    hostname: pgadmin4
+    container_name: pgadmin4
+    volumes:
+      - ${CONTAINER_DATA:-./data}/pgadmin4:/var/lib/pgadmin
+    networks:
+      - jobs
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@giraone.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - 8888:80
+
+networks:
+  jobs:

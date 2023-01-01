@@ -1,17 +1,27 @@
 #!/bin/bash
 
-cd receiver
-mvn -ntp verify -DskipTests -Pprod jib:dockerBuild
+docker rm receiver
+docker rmi receiver
+cd ../receiver
+mvn clean
+mvn -ntp verify -DskipTests jib:dockerBuild
 cd -
 
-cd materialize
-mvn -ntp verify -DskipTests -Pprod jib:dockerBuild
+docker rm materialize
+docker rmi materialize
+cd ../materialize
+mvn clean
+mvn -ntp verify -DskipTests jib:dockerBuild
 cd -
 
-cd schedule
-mvn -ntp verify -DskipTests -Pprod jib:dockerBuild
+docker rm schedule
+docker rmi schedule
+cd ../schedule
+mvn clean
+mvn -ntp verify -DskipTests jib:dockerBuild
 cd -
 
-cd jobadmin
+docker rmi jobadmin
+cd ../jobadmin
 mvn -ntp verify -DskipTests -Pprod jib:dockerBuild
 cd -

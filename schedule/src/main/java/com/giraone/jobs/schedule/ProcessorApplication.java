@@ -8,6 +8,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.StringUtils;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
@@ -41,6 +43,11 @@ public class ProcessorApplication {
         } catch (UnknownHostException e) {
             LOGGER.warn("The host name could not be determined, using `localhost` as fallback");
         }
+
+        MemoryUsage memoryUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+        long xmx = memoryUsage.getMax() / 0x10000;
+        long xms = memoryUsage.getInit() / 0x10000;
+
         LOGGER.info("""
                 ----------------------------------------------------------
                 \t~~~ Application '{}' is running! Access URLs:
@@ -48,6 +55,7 @@ public class ProcessorApplication {
                 \t~~~ - External:   {}://{}:{}{}
                 \t~~~ Java version:      {} / {}
                 \t~~~ Processors:        {}
+                \t~~~ Memory (xms/xmx):  {} MB / {} MB
                 \t~~~ Profile(s):        {}
                 \t~~~ Default charset:   {}
                 \t~~~ File encoding:     {}
@@ -62,6 +70,7 @@ public class ProcessorApplication {
             contextPath,
             System.getProperty("java.version"), System.getProperty("java.vm.name"),
             Runtime.getRuntime().availableProcessors(),
+            xms, xmx,
             env.getActiveProfiles(),
             Charset.defaultCharset().displayName(),
             System.getProperty("file.encoding")

@@ -84,7 +84,7 @@
         <modernizer-maven-plugin.version>2.4.0</modernizer-maven-plugin.version>
         <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
         <jib-maven-plugin.version>3.3.1</jib-maven-plugin.version>
-        <jib-maven-plugin.image>eclipse-temurin:17.0.5_8-jre-focal</jib-maven-plugin.image>
+        <jib-maven-plugin.image>eclipse-temurin:17.0.5_8-jre@sha256:402c656f078bc116a6db1e2e23b08c6f4a78920a2c804ea4c2d3e197f1d6b47c</jib-maven-plugin.image>
         <jib-maven-plugin.architecture>amd64</jib-maven-plugin.architecture>
         <lifecycle-mapping.version>1.0.0</lifecycle-mapping.version>
         <properties-maven-plugin.version>1.1.0</properties-maven-plugin.version>

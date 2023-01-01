@@ -2,8 +2,12 @@ package com.giraone.jobs;
 
 import com.giraone.jobs.config.ApplicationProperties;
 import com.giraone.jobs.config.CRLFLogConverter;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -84,13 +88,23 @@ public class JobadminApp {
         } catch (UnknownHostException e) {
             log.warn("The host name could not be determined, using `localhost` as fallback");
         }
-        log.info(
-            CRLFLogConverter.CRLF_SAFE_MARKER,
-            "\n----------------------------------------------------------\n\t" +
-            "Application '{}' is running! Access URLs:\n\t" +
-            "Local: \t\t{}://localhost:{}{}\n\t" +
-            "External: \t{}://{}:{}{}\n\t" +
-            "Profile(s): \t{}\n----------------------------------------------------------",
+
+        MemoryUsage memoryUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+        long xmx = memoryUsage.getMax() / 0x10000;
+        long xms = memoryUsage.getInit() / 0x10000;
+
+        log.info("""
+                ----------------------------------------------------------
+                \t~~~ Application '{}' is running! Access URLs:
+                \t~~~ - Local:      {}://localhost:{}{}
+                \t~~~ - External:   {}://{}:{}{}
+                \t~~~ Java version:      {} / {}
+                \t~~~ Processors:        {}
+                \t~~~ Memory (xms/xmx):  {} MB / {} MB
+                \t~~~ Profile(s):        {}
+                \t~~~ Default charset:   {}
+                \t~~~ File encoding:     {}
+                ----------------------------------------------------------""",
             env.getProperty("spring.application.name"),
             protocol,
             serverPort,
@@ -99,7 +113,12 @@ public class JobadminApp {
             hostAddress,
             serverPort,
             contextPath,
-            env.getActiveProfiles().length == 0 ? env.getDefaultProfiles() : env.getActiveProfiles()
+            System.getProperty("java.version"), System.getProperty("java.vm.name"),
+            Runtime.getRuntime().availableProcessors(),
+            xms, xmx,
+            env.getActiveProfiles(),
+            Charset.defaultCharset().displayName(),
+            System.getProperty("file.encoding")
         );
     }
 }
