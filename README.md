@@ -13,7 +13,7 @@ A service mesh for a job scheduling example based on Kafka with a materialized v
   - notify, when process completes
 - [jobadmin](jobadmin) - [JHipster](https://www.jhipster.tech/) application
   - to display the jobs from the materialized database
-  - set processey "on hold"
+  - set processes "on hold"
 
 ## Architecural and design decisions
 
