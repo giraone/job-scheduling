@@ -17,6 +17,9 @@ public interface JobRecordMapper extends EntityMapper<JobRecordDTO, JobRecord> {
     @Mapping(target = "id", source = "id", qualifiedByName = "tsid") // ADAPTED
     JobRecordDTO toDto(JobRecord s);
 
+    @Mapping(target = "id", source = "id", qualifiedByName = "tsid") // ADAPTED
+    JobRecord toEntity(JobRecordDTO s);
+
     @Named("processId")
     @BeanMapping(ignoreByDefault = true)
     @Mapping(target = "id", source = "id")

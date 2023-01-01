@@ -70,9 +70,7 @@ public class JobRecordResource {
     @PostMapping("/job-records")
     public ResponseEntity<JobRecordDTO> createJobRecord(@Valid @RequestBody JobRecordDTO jobRecordDTO) throws URISyntaxException {
         log.debug("REST request to save JobRecord : {}", jobRecordDTO);
-        if (jobRecordDTO.getId() != null) {
-            throw new BadRequestAlertException("A new jobRecord cannot already have an ID", ENTITY_NAME, "idexists");
-        }
+        // ADAPTED - create with ID is allowed
         JobRecordDTO result = jobRecordService.save(jobRecordDTO);
         return ResponseEntity
             .created(new URI("/api/job-records/" + result.getId()))
@@ -127,7 +125,7 @@ public class JobRecordResource {
      */
     @PatchMapping(value = "/job-records/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<JobRecordDTO> partialUpdateJobRecord(
-        @PathVariable(value = "id", required = false) final Long id,
+        @PathVariable(value = "id", required = false) final String id,
         @NotNull @RequestBody JobRecordDTO jobRecordDTO
     ) throws URISyntaxException {
         log.debug("REST request to partial update JobRecord partially : {}, {}", id, jobRecordDTO);
@@ -138,7 +136,7 @@ public class JobRecordResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        if (!jobRecordRepository.existsById(id)) {
+        if (!jobRecordRepository.existsById(Tsid.from(id).toLong())) {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
@@ -146,7 +144,7 @@ public class JobRecordResource {
 
         return ResponseUtil.wrapOrNotFound(
             result,
-            HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, jobRecordDTO.getId().toString())
+            HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, jobRecordDTO.getId())
         );
     }
 
