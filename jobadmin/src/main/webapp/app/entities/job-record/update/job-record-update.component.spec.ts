@@ -50,7 +50,7 @@ describe('JobRecord Management Update Component', () => {
 
   describe('ngOnInit', () => {
     it('Should call Process query and add missing value', () => {
-      const jobRecord: IJobRecord = { id: 456 };
+      const jobRecord: IJobRecord = { id: '456' };
       const process: IProcess = { id: 11438 };
       jobRecord.process = process;
 
@@ -72,7 +72,7 @@ describe('JobRecord Management Update Component', () => {
     });
 
     it('Should update editForm', () => {
-      const jobRecord: IJobRecord = { id: 456 };
+      const jobRecord: IJobRecord = { id: '456' };
       const process: IProcess = { id: 54237 };
       jobRecord.process = process;
 
@@ -155,8 +155,8 @@ describe('JobRecord Management Update Component', () => {
   describe('Compare relationships', () => {
     describe('compareProcess', () => {
       it('Should forward to processService', () => {
-        const entity = { id: '123' };
-        const entity2 = { id: '456' };
+        const entity = { id: 123 };
+        const entity2 = { id: 456 };
         jest.spyOn(processService, 'compareProcess');
         comp.compareProcess(entity, entity2);
         expect(processService.compareProcess).toHaveBeenCalledWith(entity, entity2);
