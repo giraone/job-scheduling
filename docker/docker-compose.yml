@@ -1,47 +1,48 @@
 version: "3.5"
 services:
-  # receiver:
-    # image: receiver:latest
-    # hostname: receiver
-    # ports:
-      # - "8090:8080"
-    # container_name: receiver
-    # networks:
-      # - jobs
-    # depends_on:
-      # - kafka-1
-    # environment:
-      # JAVA_OPTS: "-Xms256M -Xmx1G"
-      # SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092"
+  receiver:
+    image: receiver:latest
+    hostname: receiver
+    ports:
+      - "8090:8080"
+    container_name: receiver
+    networks:
+      - jobs
+    depends_on:
+      - kafka-1
+    environment:
+      JAVA_OPTS: "-Xms256M -Xmx1G"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092"
 
-  # materialize:
-    # image: materialize:latest
-    # hostname: materialize
-    # ports:
-      # - "8091:8080"
-    # container_name: materialize
-    # networks:
-      # - jobs
-    # environment:
-      # JAVA_OPTS: "-Xms256M -Xmx1G"
-      # SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092"
-      # SPRING_R2DBC_URL: "r2dbc:pool:postgresql://postgres:5432/states?initialSize=20&maxSize=50&poolName=pool&registerJmx=true"
-      # SPRING_R2DBC_USERNAME: "user"  
-      # SPRING_R2DBC_PASSWORD: "password"        
+  materialize:
+    image: materialize:latest
+    hostname: materialize
+    ports:
+      - "8091:8080"
+    container_name: materialize
+    networks:
+      - jobs
+    environment:
+      JAVA_OPTS: "-Xms256M -Xmx1G"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092"
+      SPRING_R2DBC_URL: "r2dbc:pool:postgresql://postgres:5432/states?initialSize=20&maxSize=50&poolName=pool&registerJmx=true"
+      SPRING_R2DBC_USERNAME: "user"  
+      SPRING_R2DBC_PASSWORD: "password"        
 
-  # schedule:
-    # image: schedule:latest
-    # hostname: schedule
-    # ports:
-      # - "8092:8080"
-    # container_name: schedule
-    # networks:
-      # - jobs
-    # depends_on:
-      # - kafka-1
-    # environment:
-      # JAVA_OPTS: "-Xms256M -Xmx1G"
-      # SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092"
+  schedule:
+    image: schedule:latest
+    hostname: schedule
+    ports:
+      - "8092:8080"
+    container_name: schedule
+    networks:
+      - jobs
+    depends_on:
+      - kafka-1
+    environment:
+      JAVA_OPTS: "-Xms256M -Xmx1G"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092"
+      APPLICATION_JOB_ADMIN_HOST: "jobadmin:8093"
 
   jobadmin:
     image: jobadmin:latest
