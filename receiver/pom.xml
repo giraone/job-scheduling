@@ -27,6 +27,9 @@
     <!-- Plugin versions and properties -->
     <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
     <maven-versions-plugin.version>2.14.0</maven-versions-plugin.version>
+    <jib-maven-plugin.version>3.3.1</jib-maven-plugin.version>
+    <jib-maven-plugin.image>eclipse-temurin:17.0.5_8-jre-focal</jib-maven-plugin.image>
+    <jib-maven-plugin.architecture>amd64</jib-maven-plugin.architecture>
     <!-- Plugin properties -->
     <junit.utReportFolder>target/test-results/test</junit.utReportFolder>
   </properties>
@@ -172,6 +175,52 @@
           <!-- Force alphabetical order to have a reproducible build -->
           <runOrder>alphabetical</runOrder>
           <reportsDirectory>${junit.utReportFolder}</reportsDirectory>
+        </configuration>
+      </plugin>
+
+      <!-- Build dockerfile -->
+      <plugin>
+        <groupId>com.google.cloud.tools</groupId>
+        <artifactId>jib-maven-plugin</artifactId>
+        <version>${jib-maven-plugin.version}</version>
+        <configuration>
+          <from>
+            <image>${jib-maven-plugin.image}</image>
+            <platforms>
+              <platform>
+                <architecture>${jib-maven-plugin.architecture}</architecture>
+                <os>linux</os>
+              </platform>
+            </platforms>
+          </from>
+          <to>
+            <image>receiver:latest</image>
+          </to>
+          <container>
+            <entrypoint>
+              <shell>bash</shell>
+              <option>-c</option>
+              <arg>/entrypoint.sh</arg>
+            </entrypoint>
+            <ports>
+              <port>8090</port>
+            </ports>
+            <environment>
+              <SPRING_OUTPUT_ANSI_ENABLED>ALWAYS</SPRING_OUTPUT_ANSI_ENABLED>
+              <JHIPSTER_SLEEP>0</JHIPSTER_SLEEP>
+            </environment>
+            <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+            <user>1000</user>
+          </container>
+          <extraDirectories>
+            <paths>src/main/docker/jib</paths>
+            <permissions>
+              <permission>
+                <file>/entrypoint.sh</file>
+                <mode>755</mode>
+              </permission>
+            </permissions>
+          </extraDirectories>
         </configuration>
       </plugin>
 
