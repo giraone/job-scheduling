@@ -43,6 +43,7 @@ services:
       - jobs
     depends_on:
       - kafka-1
+      - jobadmin
     environment:
       JAVA_OPTS: -XX:InitialRAMPercentage=5 -XX:MaxRAMPercentage=20
       SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092"
