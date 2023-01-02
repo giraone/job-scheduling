@@ -70,7 +70,7 @@ public class EventToDatabaseApplication {
                 \t~~~ Application '{}' is running! Access URLs:
                 \t~~~ - Local:      {}://localhost:{}{}
                 \t~~~ - External:   {}://{}:{}{}
-                \t~~~ Java version:      {} / {}
+                \t~~~ Java version:      {} / {} by {}
                 \t~~~ Processors:        {}
                 \t~~~ Memory (xms/xmx):  {} MB / {} MB
                 \t~~~ Profile(s):        {}
@@ -85,7 +85,7 @@ public class EventToDatabaseApplication {
             hostAddress,
             serverPort,
             contextPath,
-            System.getProperty("java.version"), System.getProperty("java.vm.name"),
+            System.getProperty("java.version"), System.getProperty("java.vm.name"), System.getProperty("java.vm.vendor"),
             Runtime.getRuntime().availableProcessors(),
             xms, xmx,
             env.getActiveProfiles(),
