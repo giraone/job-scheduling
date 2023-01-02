@@ -15,7 +15,9 @@
   <description>SCS based SEDA job scheduler</description>
 
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>17</java.version>
+    <!-- for Spring Boot maven plugin -->
     <start-class>com.giraone.jobs.schedule.ProcessorApplication</start-class>
     <spring-cloud-stream.version>4.0.0</spring-cloud-stream.version>
     <jackson.version>2.14.1</jackson.version>
