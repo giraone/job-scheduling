@@ -11,8 +11,11 @@ services:
     depends_on:
       - kafka-1
     environment:
-      JAVA_OPTS: "-Xms256M -Xmx1G"
+      # IMPORTANT: -Xms/-Xmx are ignored, when JVM detects that it running in a container
+      # Leads to 1600 MB / 6368 MB on a 32GB (including swap) machine
+      JAVA_OPTS: -XX:InitialRAMPercentage=5 -XX:MaxRAMPercentage=20 -XX:+PrintFlagsFinal -XshowSettings:vm
       SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092"
+      LOGGING_LEVEL: WARN
 
   materialize:
     image: materialize:latest
@@ -23,11 +26,12 @@ services:
     networks:
       - jobs
     environment:
-      JAVA_OPTS: "-Xms256M -Xmx1G"
+      JAVA_OPTS: -XX:InitialRAMPercentage=5 -XX:MaxRAMPercentage=20
       SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092"
       SPRING_R2DBC_URL: "r2dbc:pool:postgresql://postgres:5432/states?initialSize=20&maxSize=50&poolName=pool&registerJmx=true"
       SPRING_R2DBC_USERNAME: "user"  
-      SPRING_R2DBC_PASSWORD: "password"        
+      SPRING_R2DBC_PASSWORD: "password" 
+      LOGGING_LEVEL: WARN      
 
   schedule:
     image: schedule:latest
@@ -40,9 +44,10 @@ services:
     depends_on:
       - kafka-1
     environment:
-      JAVA_OPTS: "-Xms256M -Xmx1G"
+      JAVA_OPTS: -XX:InitialRAMPercentage=5 -XX:MaxRAMPercentage=20
       SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092"
       APPLICATION_JOB_ADMIN_HOST: "jobadmin:8093"
+      LOGGING_LEVEL: WARN
 
   jobadmin:
     image: jobadmin:latest
@@ -55,10 +60,11 @@ services:
     depends_on:
       - postgres
     environment:
-      JAVA_OPTS: "-Xms256M -Xmx1G"
+      JAVA_OPTS: -XX:InitialRAMPercentage=5 -XX:MaxRAMPercentage=20
       SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/states"
       SPRING_DATASOURCE_USERNAME: "user"  
-      SPRING_DATASOURCE_PASSWORD: "password"        
+      SPRING_DATASOURCE_PASSWORD: "password"
+      LOGGING_LEVEL: WARN      
 
   zk-1:
     image: confluentinc/cp-zookeeper:7.3.0
