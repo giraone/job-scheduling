@@ -72,7 +72,8 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
 
     public static final Map<String, ProcessingStopper> STOPPER = Map.of(
         PROCESS_schedule, new DefaultProcessingStopperImpl(),
-        PROCESS_resume, new DefaultProcessingStopperImpl(),
+        PROCESS_resume_B01, new DefaultProcessingStopperImpl(),
+        PROCESS_resume_B02, new DefaultProcessingStopperImpl(),
         PROCESS_agent_A01, new DefaultProcessingStopperImpl(),
         PROCESS_agent_A02, new DefaultProcessingStopperImpl(),
         PROCESS_agent_A03, new DefaultProcessingStopperImpl(),
@@ -195,7 +196,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
             Optional<JobScheduledEvent> jobScheduledEventOptional = processorResume.streamProcess(jobPausedEvent);
             if (jobScheduledEventOptional.isPresent()) {
                 final JobScheduledEvent jobScheduledEvent = jobScheduledEventOptional.get();
-                final String binding = processName + "-" + jobScheduledEvent.getAgentKey();
+                final String binding = applicationProperties.getTopics().getQueueScheduled(jobScheduledEvent.getAgentKey());
                 sendToDynamicTarget(jobScheduledEvent, jobEvent -> binding);
             } else {
                 LOGGER.warn(">>> STILL-PAUSED '{}'", processName);
@@ -408,11 +409,11 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
             .withPayload(documentedErrorOutput)
             .setHeader(KafkaHeaders.KEY, messageKey).build();
         final String bindingNameError = processName + "-out-error";
-        final String bindingNameConsumer = processName + "-in-0";
         LOGGER.error("+++ EXCEPTION in process {} for message={}! Sending problem to out binding \"{}\".",
             processName, messageValue, bindingNameError, exception);
         boolean ok = streamBridge.send(bindingNameError, documentedErrorOutputMessage);
         if (!ok) {
+            increaseProcessErrorCounter(processName);
             LOGGER.error("Cannot send problem to out binding \"{}\"!", bindingNameError);
         }
 
@@ -421,6 +422,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
             if (processingStopper != null) {
                 boolean stop = processingStopper.addErrorAndCheckStop();
                 if (stop) {
+                    final String bindingNameConsumer = processName + "-in-0";
                     LOGGER.error("+++ STOPPING {} - - - STOPPING - - - STOPPING - - -", bindingNameConsumer);
                     Binding<?> state = bindingsEndpoint.queryState(bindingNameConsumer);
                     if (state.isRunning()) {
@@ -440,16 +442,16 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
         if (counter != null) {
             counter.increment();
         } else {
-            LOGGER.warn("No counter for {} defined!", processName);
+            LOGGER.warn("No counter (processSuccessCounter) for {} defined!", processName);
         }
     }
 
     private void increaseProcessErrorCounter(String processName) {
-        final Counter counter = processSuccessCounter.get(processName);
+        final Counter counter = processFailureCounter.get(processName);
         if (counter != null) {
             counter.increment();
         } else {
-            LOGGER.warn("No counter for {} defined!", processName);
+            LOGGER.warn("No counter (processFailureCounter) for {} defined!", processName);
         }
     }
 
@@ -459,7 +461,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
         if (counter != null) {
             counter.increment();
         } else {
-            LOGGER.warn("No counter for {} defined!", bindingName);
+            LOGGER.warn("No counter (topicMessageCounter) for {} defined!", bindingName);
         }
     }
 

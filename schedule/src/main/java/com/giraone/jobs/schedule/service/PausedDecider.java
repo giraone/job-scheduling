@@ -58,8 +58,8 @@ public class PausedDecider {
                 if (!pausedMap.containsKey(processKey)) {
                     final String bucketKey = process.getBucketKeyIfPaused();
                     LOGGER.info("<-> SWITCHING {} from ACTIVE to PAUSED with bucket='{}'", processKey, bucketKey);
-                    boolean ok = switchOnOff.changeStateToPausedForProcessResume(bucketKey, true);
-                    if (!ok) {
+                    boolean paused = switchOnOff.changeStateToPausedForProcessResume(bucketKey, true);
+                    if (!paused) {
                         LOGGER.error("<-> SWITCHING {} from ACTIVE to PAUSED with bucket='{}' FAILED!", processKey, bucketKey);
                     }
                 }
@@ -74,9 +74,9 @@ public class PausedDecider {
             if (!newPausedMap.containsKey(processKey)) {
                 final String bucketKey = kv.getValue();
                 LOGGER.info("<-> SWITCHING {} from PAUSED with bucket '{}' to ACTIVE", processKey,bucketKey);
-                boolean ok = switchOnOff.changeStateToPausedForProcessResume(bucketKey, false);
-                if (!ok) {
-                    LOGGER.error("<-> SWITCHING {} from PAUSED with bucket '{}' to ACTIVE", processKey,bucketKey);
+                boolean paused = switchOnOff.changeStateToPausedForProcessResume(bucketKey, false);
+                if (paused) {
+                    LOGGER.error("<-> SWITCHING {} from PAUSED with bucket '{}' to ACTIVE FAILED!", processKey, bucketKey);
                 }
             }
         }
