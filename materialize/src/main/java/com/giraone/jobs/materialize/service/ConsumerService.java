@@ -207,7 +207,7 @@ public class ConsumerService implements CommandLineRunner {
         final Long offset = consumerRecord.receiverOffset().offset();
         final Long lastOffset = offSetsPerPartition.get(topicPartition);
         if (lastOffset == null || offset - lastOffset == 99) {
-            LOGGER.info("Committed 100 events at topic/partition={}, offset={}", topicPartition, offset);
+            LOGGER.info("Committed events at topic/partition={}, offset={}, lastOffset={}", topicPartition, offset, lastOffset);
         }
         offSetsPerPartition.put(topicPartition, offset);
         LOGGER.debug("Successfully consumed and committed {} {}",
