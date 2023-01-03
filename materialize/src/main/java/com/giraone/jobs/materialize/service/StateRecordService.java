@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +71,7 @@ public class StateRecordService {
         return insertFull(Tsid.from(idString).toLong(), jobAcceptedTimestamp, processKey, STATE_accepted, jobAcceptedTimestamp, null);
     }
 
-    public Mono<Integer> insertAcceptedIgnoreConflict(String idString, Instant jobAcceptedTimestamp, String processKey) {
+    public Mono<Long> insertAcceptedIgnoreConflict(String idString, Instant jobAcceptedTimestamp, String processKey) {
 
         return insertIgnoreConflict(Tsid.from(idString).toLong(), jobAcceptedTimestamp, processKey, STATE_accepted, jobAcceptedTimestamp, null);
     }
@@ -79,7 +79,7 @@ public class StateRecordService {
     //- UPDATE ---------------------------------------------------------------------------------------------------------
 
     // Solution 1 - findByIdForUpdate, then update or insert.
-    public Mono<Integer> findAndUpdateOrInsert(
+    public Mono<Long> findAndUpdateOrInsert(
         String idString, Instant jobAcceptedTimestamp, String processKey, String state, Instant lastEventTimestamp, String pausedBucketKey) {
 
         final long id = Tsid.from(idString).toLong();
@@ -87,12 +87,12 @@ public class StateRecordService {
             .flatMap(found ->
                 update(true, id, state, lastEventTimestamp, pausedBucketKey))
             .switchIfEmpty(
-                insertFull(id, jobAcceptedTimestamp, processKey, state, lastEventTimestamp, pausedBucketKey).map(j -> 1)
+                insertFull(id, jobAcceptedTimestamp, processKey, state, lastEventTimestamp, pausedBucketKey).map(j -> 1L)
             );
     }
 
     // Solution 2 - insertUpdate = insert, if duplicate key exception, then update with timestamp checking
-    public Mono<Integer> insertUpdate(
+    public Mono<Long> insertUpdate(
         String idString, Instant jobAcceptedTimestamp, String processKey, String state, Instant lastEventTimestamp, String pausedBucketKey) {
 
         final long id = Tsid.from(idString).toLong();
@@ -107,13 +107,13 @@ public class StateRecordService {
                     LOGGER.info("INSERT failed! Trying UPDATE.");
                     return update(true, id, state, lastEventTimestamp, pausedBucketKey);
                 } else {
-                    return Mono.just(1);
+                    return Mono.just(1L);
                 }
             });
     }
 
     // Solution 3 - insertIgnoreConflictThenUpdate = INSERT for each UPDATE ignoring errors, then UPDATE with timestamp checking
-    public Mono<Integer> insertIgnoreConflictThenUpdate(
+    public Mono<Long> insertIgnoreConflictThenUpdate(
         String idString, Instant jobAcceptedTimestamp, String processKey, String state, Instant lastEventTimestamp, String pausedBucketKey) {
 
         final long id = Tsid.from(idString).toLong();
@@ -122,20 +122,20 @@ public class StateRecordService {
                 LOGGER.warn("INSERT ON CONFLICT DO NOTHING failed! {} {}", throwable.getClass(), throwable.getMessage());
             })
             .flatMap(count -> {
-                if (count == 0) {
+                if (count == 0L) {
                     // This is the "normal" situation, when then INSERT arrived before the UPDATE
                     return update(true, id, state, lastEventTimestamp, pausedBucketKey);
                 } else {
                     // This is the "exceptional" situation, when then INSERT has not yet arrived
                     LOGGER.info("INSERT for UPDATE has not yet arrived! id={}, state={}, lastEventTimestamp={}",
                         idString, state, lastEventTimestamp);
-                    return Mono.just(1);
+                    return Mono.just(1L);
                 }
             });
     }
 
     // Solution 4 - insertOnConflictUpdate
-    public Mono<Integer> insertOnConflictUpdate(
+    public Mono<Long> insertOnConflictUpdate(
         String idString, Instant jobAcceptedTimestamp, String processKey, String state, Instant lastEventTimestamp, String pausedBucketKey) {
 
         final long id = Tsid.from(idString).toLong();
@@ -144,7 +144,7 @@ public class StateRecordService {
         final Instant lastRecordUpdateTimestamp = Instant.now();
         final long latency = lastRecordUpdateTimestamp.toEpochMilli() - lastEventTimestamp.toEpochMilli();
         this.latencyTimer.record(latency, TimeUnit.MILLISECONDS);
-        return jobRecordRepository.insertOnConflictUpdateAndCheckTime(id, jobAcceptedTimestamp, lastEventTimestamp,
+        return jobRecordRepository.insertOnConflictUpdate(id, jobAcceptedTimestamp, lastEventTimestamp,
                 lastRecordUpdateTimestamp, state, pausedBucketKey, processId)
             .doOnError(throwable -> {
                 LOGGER.debug("INSERT ON CONFLICT UPDATE failed! {} {}", throwable.getClass(), throwable.getMessage());
@@ -152,7 +152,7 @@ public class StateRecordService {
     }
 
     // Solution 5 - upsert = update, if update count = 0 or exception, then insert
-    public Mono<Integer> upsert(
+    public Mono<Long> upsert(
         String idString, Instant jobAcceptedTimestamp, String processKey, String state, Instant lastEventTimestamp, String pausedBucketKey) {
 
         final long id = Tsid.from(idString).toLong();
@@ -160,14 +160,14 @@ public class StateRecordService {
             .doOnError(throwable -> {
                 LOGGER.debug("UPDATE failed: Exception = {}", throwable.getMessage());
             })
-            .onErrorReturn(0)
+            .onErrorReturn(0L)
             .flatMap(count -> {
-                if (count == 0) {
+                if (count == 0L) {
                     LOGGER.debug("UPDATE failed! Trying INSERT.");
                     return insertFull(id, jobAcceptedTimestamp, processKey, state, lastEventTimestamp, pausedBucketKey)
-                        .map(jobRecord -> 1);
+                        .map(jobRecord -> 1L);
                 } else {
-                    return Mono.just(1);
+                    return Mono.just(1L);
                 }
             });
     }
@@ -209,7 +209,7 @@ public class StateRecordService {
         return r2dbcEntityTemplate.insert(jobRecord);
     }
 
-    private Mono<Integer> insertIgnoreConflict(long id, Instant jobAcceptedTimestamp, String processKey, String state,
+    private Mono<Long> insertIgnoreConflict(long id, Instant jobAcceptedTimestamp, String processKey, String state,
                                                Instant lastEventTimestamp, String pausedBucketKey) {
 
         // TODO: processKey ==> processId by DB query or DB view
@@ -233,7 +233,7 @@ public class StateRecordService {
      * @param lastEventTimestamp the lastEventTimestamp to be set
      * @return A Mono of 1 (update was made), 0 (no update was made) or an error
      */
-    protected Mono<Integer> update(boolean checkTimestamp, long id, String state, Instant lastEventTimestamp, String pausedBucketKey) {
+    protected Mono<Long> update(boolean checkTimestamp, long id, String state, Instant lastEventTimestamp, String pausedBucketKey) {
 
         LOGGER.debug("update {}", id);
         final Instant lastRecordUpdateTimestamp = Instant.now();

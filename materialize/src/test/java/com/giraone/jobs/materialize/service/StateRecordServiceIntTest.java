@@ -59,11 +59,11 @@ class StateRecordServiceIntTest {
         assertThat(jobRecord).isNotNull();
 
         // act - a newer event
-        Integer updateCount1 = stateRecordService.update(true, id.toLong(), "NOTIFIED", notifyTimeStamp, null).block();
+        Long updateCount1 = stateRecordService.update(true, id.toLong(), "NOTIFIED", notifyTimeStamp, null).block();
         assertThat(updateCount1).isEqualTo(1);
 
         // act - an older event
-        Integer updateCount2 = stateRecordService.update(true, id.toLong(), "COMPLETED", completedTimeStamp, null).block();
+        Long updateCount2 = stateRecordService.update(true, id.toLong(), "COMPLETED", completedTimeStamp, null).block();
         assertThat(updateCount2).isEqualTo(0);
 
         // assert
@@ -96,18 +96,18 @@ class StateRecordServiceIntTest {
         Instant lastEventTimestamp2 = now.minusSeconds(1);
 
         // act
-        Mono<Integer> mono1 = getMethod(method, idString, jobAcceptedTimestamp, processKey, pausedBucketKey, state1, lastEventTimestamp1);
-        Mono<Integer> mono2 = getMethod(method, idString, jobAcceptedTimestamp, processKey, pausedBucketKey, state2, lastEventTimestamp2);
-        Future<Integer> future1 = executorService.submit(() -> mono1.block());
-        Future<Integer> future2 = executorService.submit(() -> mono2.block());
+        Mono<Long> mono1 = getMethod(method, idString, jobAcceptedTimestamp, processKey, pausedBucketKey, state1, lastEventTimestamp1);
+        Mono<Long> mono2 = getMethod(method, idString, jobAcceptedTimestamp, processKey, pausedBucketKey, state2, lastEventTimestamp2);
+        Future<Long> future1 = executorService.submit(() -> mono1.block());
+        Future<Long> future2 = executorService.submit(() -> mono2.block());
 
         // assert
         assertThat(future1).succeedsWithin(Duration.ofSeconds(1));
         assertThat(future2).succeedsWithin(Duration.ofSeconds(1));
         LOGGER.debug("Call for {}: {}", state1, future1.get());
         LOGGER.debug("Call for {}: {}", state2, future2.get());
-        assertThat(future1.get()).isEqualTo(0);
         assertThat(future2.get()).isEqualTo(1);
+        assertThat(future1.get()).isEqualTo(0);
 
         JobRecord record = r2dbcEntityTemplate.select(query(Criteria.empty()), JobRecord.class).blockFirst();
         assertThat(record).isNotNull();
@@ -143,8 +143,8 @@ class StateRecordServiceIntTest {
         Instant lastEventTimestamp1 = now.minusSeconds(2);
 
         // act
-        Mono<Integer> mono1 = getMethod(method, idString, jobAcceptedTimestamp, processKey, pausedBucketKey, state1, lastEventTimestamp1);
-        Future<Integer> future1 = executorService.submit(() -> mono1.block());
+        Mono<Long> mono1 = getMethod(method, idString, jobAcceptedTimestamp, processKey, pausedBucketKey, state1, lastEventTimestamp1);
+        Future<Long> future1 = executorService.submit(() -> mono1.block());
 
         // assert
         assertThat(future1).succeedsWithin(Duration.ofSeconds(1));
@@ -162,9 +162,9 @@ class StateRecordServiceIntTest {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    private Mono<Integer> getMethod(String method, String idString, Instant jobAcceptedTimestamp,
+    private Mono<Long> getMethod(String method, String idString, Instant jobAcceptedTimestamp,
                                     String processKey, String pausedBucketKey, String state, Instant lastEventTimestamp) {
-        Mono<Integer> mono;
+        Mono<Long> mono;
         if ("findAndUpdateOrInsert".equals(method)) {
             mono = stateRecordService.findAndUpdateOrInsert(idString, jobAcceptedTimestamp, processKey,
                 state, lastEventTimestamp, pausedBucketKey);

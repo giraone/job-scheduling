@@ -42,7 +42,7 @@ job-notified-err
 All projects are build for Java 17. The Spring Boot 3.0.0 migration is only partially done:
 
 - [x] receiver
-- [ ] materialize - R2DBC-Migrate not yet ready
+- [x] materialize
 - [x] schedule - including Spring Cloud Stream 4.0.0
 - [ ] jobadmin - Depends on JHipster
 
@@ -70,7 +70,6 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [ ] Analyze, if a priority for 'job-accepted' can be set, to prevent updates before inserts.
 - [x] Prevent that older update events overwriting newer once - see StateRecordService.java.
 - [x] R2DBC Transactional for UPSERT.
-- [ ] ConsumerServiceIntTest/AbstractKafkaIntTest with Kafka and R2DBC via *Test Containers* does not work.
 - [ ] StateRecordService uses hard-coded '+ 1000L' for Process-ID (remove processId or map processKey to processId).
 
 ### Schedule

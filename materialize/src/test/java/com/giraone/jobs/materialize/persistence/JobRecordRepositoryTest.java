@@ -66,7 +66,7 @@ class JobRecordRepositoryTest {
         Instant lastRecordUpdateTimestamp = lastEventTimestamp.minusSeconds(1);
 
         // act
-        Integer inserted = jobRecordRepository.insert(id, jobAcceptedTimestamp, lastEventTimestamp,
+        Long inserted = jobRecordRepository.insert(id, jobAcceptedTimestamp, lastEventTimestamp,
             lastRecordUpdateTimestamp, status, null, processId).block();
 
         // assert
@@ -93,14 +93,14 @@ class JobRecordRepositoryTest {
         Instant lastRecordUpdateTimestamp = lastEventTimestamp.minusSeconds(1);
 
         // act
-        Integer inserted1 = jobRecordRepository.insertIgnoreConflict(id, jobAcceptedTimestamp, lastEventTimestamp,
+        Long inserted1 = jobRecordRepository.insertIgnoreConflict(id, jobAcceptedTimestamp, lastEventTimestamp,
             lastRecordUpdateTimestamp, status, null, processId).block();
 
         // assert
         assertThat(inserted1).isEqualTo(1);
 
         // act
-        Integer inserted2 = jobRecordRepository.insertIgnoreConflict(id, jobAcceptedTimestamp, lastEventTimestamp,
+        Long inserted2 = jobRecordRepository.insertIgnoreConflict(id, jobAcceptedTimestamp, lastEventTimestamp,
             lastRecordUpdateTimestamp, status, null, processId).block();
 
         // assert
@@ -121,14 +121,14 @@ class JobRecordRepositoryTest {
         Instant lastRecordUpdateTimestamp2 = lastEventTimestamp.minusSeconds(1);
 
         // act
-        Integer inserted1 = jobRecordRepository.insertOnConflictUpdate(id, jobAcceptedTimestamp, lastEventTimestamp,
+        Long inserted1 = jobRecordRepository.insertOnConflictUpdate(id, jobAcceptedTimestamp, lastEventTimestamp,
             lastRecordUpdateTimestamp1, status1, null, processId).block();
 
         // assert
         assertThat(inserted1).isEqualTo(1);
 
         // act
-        Integer inserted2 = jobRecordRepository.insertOnConflictUpdate(id, jobAcceptedTimestamp, lastEventTimestamp,
+        Long inserted2 = jobRecordRepository.insertOnConflictUpdate(id, jobAcceptedTimestamp, lastEventTimestamp,
             lastRecordUpdateTimestamp2, status2, null, processId).block();
 
         // assert
