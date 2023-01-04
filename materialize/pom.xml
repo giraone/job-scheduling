@@ -65,7 +65,7 @@
       <artifactId>spring-boot-starter-aop</artifactId>
     </dependency>
 
-    <!-- Connection pool for R2DBX - see https://github.com/r2dbc/r2dbc-pool -->
+    <!-- Connection pool for R2DBC - see https://github.com/r2dbc/r2dbc-pool -->
     <dependency>
       <groupId>io.r2dbc</groupId>
       <artifactId>r2dbc-pool</artifactId>
