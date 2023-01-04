@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
   <groupId>com.giraone.jobs</groupId>
@@ -21,12 +21,12 @@
     <start-class>com.giraone.jobs.schedule.ProcessorApplication</start-class>
     <spring-cloud-stream.version>4.0.0</spring-cloud-stream.version>
     <jackson.version>2.14.1</jackson.version>
-    <tsid.version>5.0.2</tsid.version>
+    <tsid.version>5.2.0</tsid.version>
     <!-- only for kafka-streams-test-utils - must match the spring kafka version -->
     <kafka.version>3.3.1</kafka.version>
     <wiremock.version>2.35.0</wiremock.version>
     <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
-    <maven-versions-plugin.version>2.14.0</maven-versions-plugin.version>
+    <maven-versions-plugin.version>2.14.1</maven-versions-plugin.version>
     <jib-maven-plugin.version>3.3.1</jib-maven-plugin.version>
     <jib-maven-plugin.image>eclipse-temurin:17.0.5_8-jre@sha256:402c656f078bc116a6db1e2e23b08c6f4a78920a2c804ea4c2d3e197f1d6b47c</jib-maven-plugin.image>
     <jib-maven-plugin.architecture>amd64</jib-maven-plugin.architecture>
