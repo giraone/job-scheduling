@@ -33,7 +33,7 @@ logging:
 management:
   endpoints:
     web:
-      base-path: /management
+      base-path: /actuator
       exposure:
         include:
           [
@@ -198,7 +198,7 @@ jhipster:
     from: jobadmin@localhost
   api-docs:
     default-include-pattern: ${server.servlet.context-path:}/api/**
-    management-include-pattern: ${server.servlet.context-path:}/management/**
+    management-include-pattern: ${server.servlet.context-path:}/actuator/**
     title: Jobadmin API
     description: Jobadmin API documentation
     version: 0.0.1

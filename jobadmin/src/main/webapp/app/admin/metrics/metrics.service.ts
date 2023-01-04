@@ -10,10 +10,10 @@ export class MetricsService {
   constructor(private http: HttpClient, private applicationConfigService: ApplicationConfigService) {}
 
   getMetrics(): Observable<Metrics> {
-    return this.http.get<Metrics>(this.applicationConfigService.getEndpointFor('management/jhimetrics'));
+    return this.http.get<Metrics>(this.applicationConfigService.getEndpointFor('actuator/jhimetrics'));
   }
 
   threadDump(): Observable<ThreadDump> {
-    return this.http.get<ThreadDump>(this.applicationConfigService.getEndpointFor('management/threaddump'));
+    return this.http.get<ThreadDump>(this.applicationConfigService.getEndpointFor('actuator/threaddump'));
   }
 }

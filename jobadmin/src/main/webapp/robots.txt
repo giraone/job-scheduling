@@ -6,5 +6,5 @@ Disallow: /api/account/change-password
 Disallow: /api/account/sessions
 Disallow: /api/logs/
 Disallow: /api/users/
-Disallow: /management/
+Disallow: /actuator/
 Disallow: /v3/api-docs/

@@ -11,7 +11,7 @@ export class ConfigurationService {
   constructor(private http: HttpClient, private applicationConfigService: ApplicationConfigService) {}
 
   getBeans(): Observable<Bean[]> {
-    return this.http.get<ConfigProps>(this.applicationConfigService.getEndpointFor('management/configprops')).pipe(
+    return this.http.get<ConfigProps>(this.applicationConfigService.getEndpointFor('actuator/configprops')).pipe(
       map(configProps =>
         Object.values(
           Object.values(configProps.contexts)
@@ -23,6 +23,6 @@ export class ConfigurationService {
   }
 
   getPropertySources(): Observable<PropertySource[]> {
-    return this.http.get<Env>(this.applicationConfigService.getEndpointFor('management/env')).pipe(map(env => env.propertySources));
+    return this.http.get<Env>(this.applicationConfigService.getEndpointFor('actuator/env')).pipe(map(env => env.propertySources));
   }
 }

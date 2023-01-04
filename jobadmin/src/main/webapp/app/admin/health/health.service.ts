@@ -10,6 +10,6 @@ export class HealthService {
   constructor(private http: HttpClient, private applicationConfigService: ApplicationConfigService) {}
 
   checkHealth(): Observable<Health> {
-    return this.http.get<Health>(this.applicationConfigService.getEndpointFor('management/health'));
+    return this.http.get<Health>(this.applicationConfigService.getEndpointFor('actuator/health'));
   }
 }

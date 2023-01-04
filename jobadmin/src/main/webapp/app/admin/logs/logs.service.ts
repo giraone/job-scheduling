@@ -10,10 +10,10 @@ export class LogsService {
   constructor(private http: HttpClient, private applicationConfigService: ApplicationConfigService) {}
 
   changeLevel(name: string, configuredLevel: Level): Observable<{}> {
-    return this.http.post(this.applicationConfigService.getEndpointFor(`management/loggers/${name}`), { configuredLevel });
+    return this.http.post(this.applicationConfigService.getEndpointFor(`actuator/loggers/${name}`), { configuredLevel });
   }
 
   findAll(): Observable<LoggersResponse> {
-    return this.http.get<LoggersResponse>(this.applicationConfigService.getEndpointFor('management/loggers'));
+    return this.http.get<LoggersResponse>(this.applicationConfigService.getEndpointFor('actuator/loggers'));
   }
 }

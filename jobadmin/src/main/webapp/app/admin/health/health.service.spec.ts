@@ -24,7 +24,7 @@ describe('HealthService Service', () => {
   });
 
   describe('Service methods', () => {
-    it('should call management/health endpoint with correct values', () => {
+    it('should call actuator/health endpoint with correct values', () => {
       // GIVEN
       let expectedResult;
       const checkHealth = {
@@ -37,7 +37,7 @@ describe('HealthService Service', () => {
       });
       const testRequest = httpMock.expectOne({
         method: 'GET',
-        url: applicationConfigService.getEndpointFor('management/health'),
+        url: applicationConfigService.getEndpointFor('actuator/health'),
       });
       testRequest.flush(checkHealth);
 

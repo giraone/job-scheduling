@@ -42,7 +42,7 @@
         let urls;
 
         if (!urls || urls.length === 0) {
-          const response = await axios.get('/management/jhiopenapigroups', axiosConfig);
+          const response = await axios.get('/actuator/jhiopenapigroups', axiosConfig);
           if (Array.isArray(response.data)) {
             urls = response.data.map(({ group, description }) => ({ name: description, url: `${baseUrl}/${group}` }));
           } else {
