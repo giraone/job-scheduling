@@ -39,7 +39,7 @@ public abstract class AbstractJobEvent implements Serializable {
 
     @JsonIgnore
     public String getMessageKey() {
-        return Tsid.from(id).toString();
+        return id != null ? Tsid.from(id).toString() : null;
     }
 
     public abstract String getStatus();
