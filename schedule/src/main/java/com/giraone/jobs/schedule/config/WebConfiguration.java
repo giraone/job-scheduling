@@ -53,7 +53,7 @@ public class WebConfiguration implements WebFluxConfigurer {
     }
 
     @Bean
-    public WebClient veraViewWebClient(ApplicationProperties applicationProperties) {
+    public WebClient jobadminWebClient(ApplicationProperties applicationProperties) {
 
         return prepareDefaultWebclient(MediaType.APPLICATION_JSON_VALUE,
             "http",
