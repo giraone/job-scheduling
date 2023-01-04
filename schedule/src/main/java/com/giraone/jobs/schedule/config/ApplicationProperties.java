@@ -48,6 +48,7 @@ public class ApplicationProperties {
     private Id id;
 
     private LoadProcessStatus loadProcessStatus;
+    private String jobAdminScheme = "http";
     private String jobAdminHost;
     private String jobAdminPathAll;
     private int jobAdminBlockSeconds = 30;
