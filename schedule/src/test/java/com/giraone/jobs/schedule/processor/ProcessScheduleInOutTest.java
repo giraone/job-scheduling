@@ -37,7 +37,7 @@ import static org.mockito.Mockito.when;
 )
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @DirtiesContext
-@ActiveProfiles({"test", "processSchedule"})
+@ActiveProfiles({"test", "processSchedule;processResume"}) // processResume is needed, because otherwise SwitchOff fails on onApplicationEvent
 // Thread.sleep
 @SuppressWarnings("java:S2925")
 class ProcessScheduleInOutTest extends AbstractInOutTest {
@@ -62,6 +62,7 @@ class ProcessScheduleInOutTest extends AbstractInOutTest {
 
         // arrange
         when(pausedDecider.getBucketIfProcessPaused(anyString())).thenReturn(paused ? "B01" : null);
+        when(pausedDecider.getAgentKeyForProcess(anyString())).thenReturn("A01");
 
         // act
         String id = TsidCreator.getTsid256().toString();

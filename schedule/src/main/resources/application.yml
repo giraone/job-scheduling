@@ -52,6 +52,8 @@ spring:
           consumer: # consumer properties on each function (processor) level
             auto-startup: true
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
+        processSchedule-out-error:
+          destination: ${application.topics.topic-job-accepted-err}
         # PROCESSOR processResumeB01 - - - - - - - - - - - - - - - - - - - -
         processResumeB01-in-0:
           group: ${application.id.processResume}-B01
@@ -96,6 +98,8 @@ spring:
             concurrency: 1 # See "2.19.4 Special note on concurrency" - translated to num.stream.thread
         processNotify-out-0:
           destination: ${application.topics.topic-job-notified}
+        processNotify-out-error:
+          destination: ${application.topics.topic-job-completed-err}
 management:
   endpoints:
     web:

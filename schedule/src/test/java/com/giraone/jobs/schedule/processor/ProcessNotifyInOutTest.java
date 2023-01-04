@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 )
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @DirtiesContext
-@ActiveProfiles({"test", "processNotify"})
+@ActiveProfiles({"test", "processNotify;processResume"}) // processResume is needed, because otherwise SwitchOff fails on onApplicationEvent
 // Thread.sleep
 @SuppressWarnings("java:S2925")
 class ProcessNotifyInOutTest extends AbstractInOutTest {
