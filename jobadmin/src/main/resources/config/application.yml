@@ -24,6 +24,12 @@ springdoc:
   api-docs:
     enabled: false
 ---
+logging:
+  level:
+    org.hibernate.SQL_SLOW: WARN
+    # Hikari CP settings
+    com.zaxxer.hikari.HikariConfig: DEBUG # Display Hikari Config on startup
+    # com.zaxxer.hikari.pool: DEBUG # Display pool status (will log status every 30 seconds)
 management:
   endpoints:
     web:
