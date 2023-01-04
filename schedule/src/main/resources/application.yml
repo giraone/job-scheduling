@@ -114,7 +114,7 @@ management:
 
 application:
   loadProcessStatus:
-    fixedRateMs: 30000
+    fixedRateMs: 20000
     initialDelayMs: 1000
   job-admin-scheme: 'http'
   job-admin-host: 'localhost:8093'
