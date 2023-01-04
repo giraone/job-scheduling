@@ -156,10 +156,10 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
             sendToDynamicTarget(event, jobEvent -> {
                 if (event instanceof final JobScheduledEvent jobScheduledEvent) {
                     // return PROCESS_schedule + "-" + jobScheduledEvent.getAgentKey();
-                    return applicationProperties.getTopics().getQueueScheduled(jobScheduledEvent.getAgentKey());
+                    return applicationProperties.getTopics().getTopicJobScheduled(jobScheduledEvent.getAgentKey());
                 } else if (event instanceof final JobPausedEvent jobPausedEvent) {
                     // return PROCESS_schedule + "-" + jobPausedEvent.getPausedBucketKey();
-                    return applicationProperties.getTopics().getQueuePaused(jobPausedEvent.getPausedBucketKey());
+                    return applicationProperties.getTopics().getTopicJobPaused(jobPausedEvent.getPausedBucketKey());
                 } else {
                     throw new IllegalArgumentException("Event returned by processorSchedule has invalid type " + event.getClass());
                 }
@@ -196,7 +196,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
             Optional<JobScheduledEvent> jobScheduledEventOptional = processorResume.streamProcess(jobPausedEvent);
             if (jobScheduledEventOptional.isPresent()) {
                 final JobScheduledEvent jobScheduledEvent = jobScheduledEventOptional.get();
-                final String binding = applicationProperties.getTopics().getQueueScheduled(jobScheduledEvent.getAgentKey());
+                final String binding = applicationProperties.getTopics().getTopicJobScheduled(jobScheduledEvent.getAgentKey());
                 sendToDynamicTarget(jobScheduledEvent, jobEvent -> binding);
             } else {
                 LOGGER.warn(">>> STILL-PAUSED '{}'", processName);
@@ -247,11 +247,11 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
                 if (event instanceof JobCompletedEvent) {
                     LOGGER.info(">>> COMPLETED     {} of {} in agent '{}'", event.getMessageKey(), event.getProcessKey(), event.getAgentKey());
                     // return PROCESS_agent + event.getAgentKey() + "-out-0";
-                    return applicationProperties.getTopics().getQueueCompleted();
+                    return applicationProperties.getTopics().getTopicJobCompleted();
                 } else if (event instanceof JobFailedEvent) {
                     LOGGER.warn(">>> FAILED        {} of {} in agent '{}'", event.getMessageKey(), event.getProcessKey(), event.getAgentKey());
                     // return PROCESS_agent + event.getAgentKey() + "-out-failed";
-                    return applicationProperties.getTopics().getQueueFailed(event.getAgentKey());
+                    return applicationProperties.getTopics().getTopicJobFailed(event.getAgentKey());
                 } else {
                     throw new IllegalArgumentException("Event returned by processorAgent has invalid type " + event.getClass());
                 }

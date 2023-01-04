@@ -68,22 +68,22 @@ public class ApplicationProperties {
         }
         UtilsAndConstants.sleepTime = sleep;
         outboundTopicList = new String[] {
-            topics.queueAcceptedErr,
-            topics.getQueueScheduled("A01"),
-            topics.getQueueScheduled("A02"),
-            topics.getQueueScheduled("A03"),
-            topics.queueScheduledErr,
-            topics.getQueuePaused("B01"),
-            topics.getQueuePaused("B02"),
-            topics.queuePausedErr,
-            topics.getQueueFailed("A01"),
-            topics.getQueueFailed("A02"),
-            topics.getQueueFailed("A03"),
-            topics.queueFailedErr,
-            topics.queueCompleted,
-            topics.queueCompletedErr,
-            topics.queueNotified,
-            topics.queueDelivered,
+            topics.topicJobAcceptedErr,
+            topics.getTopicJobScheduled("A01"),
+            topics.getTopicJobScheduled("A02"),
+            topics.getTopicJobScheduled("A03"),
+            topics.topicJobScheduledErr,
+            topics.getTopicJobPaused("B01"),
+            topics.getTopicJobPaused("B02"),
+            topics.topicJobPausedErr,
+            topics.getTopicJobFailed("A01"),
+            topics.getTopicJobFailed("A02"),
+            topics.getTopicJobFailed("A03"),
+            topics.topicJobFailedErr,
+            topics.topicJobCompleted,
+            topics.topicJobCompletedErr,
+            topics.topicJobNotified,
+            topics.topicJobDelivered,
         };
     }
 
@@ -93,28 +93,28 @@ public class ApplicationProperties {
     @ToString
     @Generated
     public static class Topics {
-        private String queueAccepted;
-        private String queueAcceptedErr;
-        private String queueScheduled;
-        private String queueScheduledErr;
-        private String queuePaused;
-        private String queuePausedErr;
-        private String queueFailed;
-        private String queueFailedErr;
-        private String queueCompleted;
-        private String queueCompletedErr;
-        private String queueNotified;
-        private String queueDelivered;
+        private String topicJobAccepted;
+        private String topicJobAcceptedErr;
+        private String topicJobScheduled;
+        private String topicJobScheduledErr;
+        private String topicJobPaused;
+        private String topicJobPausedErr;
+        private String topicJobFailed;
+        private String topicJobFailedErr;
+        private String topicJobCompleted;
+        private String topicJobCompletedErr;
+        private String topicJobNotified;
+        private String topicJobDelivered;
 
-        public String getQueueScheduled(String agentKey) {
-            return queueScheduled + "-" + agentKey;
+        public String getTopicJobScheduled(String agentKey) {
+            return topicJobScheduled + "-" + agentKey;
         }
-        public String getQueueFailed(String agentKey) {
-            return queueFailed + "-" +  agentKey;
+        public String getTopicJobFailed(String agentKey) {
+            return topicJobFailed + "-" +  agentKey;
         }
 
-        public String getQueuePaused(String pausedBucketKey) {
-            return queuePaused + "-" + pausedBucketKey;
+        public String getTopicJobPaused(String pausedBucketKey) {
+            return topicJobPaused + "-" + pausedBucketKey;
         }
     }
 
@@ -154,11 +154,11 @@ public class ApplicationProperties {
     @ToString
     public static final class LoadProcessStatus {
         /**
-         * Milliseconds to wait between each reload of process status (paused, active) from job-admin service
+         * Milliseconds to wait between each reload of process status (paused, active) from jobadmin service
          */
         private long fixedRateMs;
         /**
-         * Initial wait time after start to load process status (paused, active) from job-admin service
+         * Initial wait time after start to load process status (paused, active) from jobadmin service
          */
         private long initialDelayMs;
     }
