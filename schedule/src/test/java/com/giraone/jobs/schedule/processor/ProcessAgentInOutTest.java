@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EmbeddedKafka(
     controlledShutdown = true,
     topics = {
-        TOPIC_scheduled_A02,
+        TOPIC_scheduled_A01,
         TOPIC_scheduled_ERR,
         TOPIC_completed
     },
@@ -47,7 +47,7 @@ class ProcessAgentInOutTest extends AbstractInOutTest {
 
         // act
         String id = TsidCreator.getTsid256().toString();
-        JobScheduledEvent jobScheduledEvent = new JobScheduledEvent("12", "V001", Instant.now(), Instant.now(),"", "A01");
+        JobScheduledEvent jobScheduledEvent = new JobScheduledEvent(id, "V001", Instant.now(), Instant.now(),"", "A01");
         produce(jobScheduledEvent, TOPIC_scheduled_A01);
 
         // assert
@@ -59,7 +59,7 @@ class ProcessAgentInOutTest extends AbstractInOutTest {
 
         JobCompletedEvent JobCompletedEvent = objectMapper.readValue(consumerRecord.value(), JobCompletedEvent.class);
         assertThat(JobCompletedEvent.getMessageKey()).isNotNull();
-        assertThat(JobCompletedEvent.getPayload()).startsWith("https://link/00000012");
+        assertThat(JobCompletedEvent.getPayload()).startsWith("https://link/" + id);
     }
 
     @Test
