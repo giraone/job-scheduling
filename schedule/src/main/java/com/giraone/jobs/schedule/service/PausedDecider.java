@@ -1,6 +1,7 @@
 package com.giraone.jobs.schedule.service;
 
 import com.giraone.jobs.schedule.clients.JobAdminClient;
+import com.giraone.jobs.schedule.config.ApplicationProperties;
 import com.giraone.jobs.schedule.model.ActivationEnum;
 import com.giraone.jobs.schedule.model.ProcessDTO;
 import com.giraone.jobs.schedule.stopper.SwitchOnOff;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,13 +30,15 @@ public class PausedDecider {
 
     private final SwitchOnOff switchOnOff;
     private final JobAdminClient jobAdminClient;
+    private final ApplicationProperties applicationProperties;
 
     private Map<String, String> pausedMap = new HashMap<>();
     private Map<String, String> agentMap = new HashMap<>();
 
-    public PausedDecider(SwitchOnOff switchOnOff, JobAdminClient jobAdminClient) {
+    public PausedDecider(SwitchOnOff switchOnOff, JobAdminClient jobAdminClient, ApplicationProperties applicationProperties) {
         this.switchOnOff = switchOnOff;
         this.jobAdminClient = jobAdminClient;
+        this.applicationProperties = applicationProperties;
     }
 
     @Scheduled(fixedRateString = "${application.loadProcessStatus.fixedRateMs}", initialDelayString = "${application.loadProcessStatus.initialDelayMs}")
@@ -103,7 +107,8 @@ public class PausedDecider {
     protected List<ProcessDTO> loadProcesses() {
 
         try {
-            return jobAdminClient.getProcesses().collectList().block();
+            return jobAdminClient.getProcesses().collectList()
+                .block(Duration.ofSeconds(applicationProperties.getJobAdminBlockMaxSeconds()));
         } catch (Exception e) {
             LOGGER.error("Cannot load processes: {}", e.getMessage());
             return null;

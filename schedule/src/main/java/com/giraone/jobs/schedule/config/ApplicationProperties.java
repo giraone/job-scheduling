@@ -51,7 +51,7 @@ public class ApplicationProperties {
     private String jobAdminScheme = "http";
     private String jobAdminHost;
     private String jobAdminPathAll;
-    private int jobAdminBlockSeconds = 30;
+    private int jobAdminBlockMaxSeconds = 30;
 
     /**
      * Comma separated names of processors.
