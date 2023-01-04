@@ -56,7 +56,7 @@ public class WebConfiguration implements WebFluxConfigurer {
     public WebClient jobadminWebClient(ApplicationProperties applicationProperties) {
 
         return prepareDefaultWebclient(MediaType.APPLICATION_JSON_VALUE,
-            "http",
+            applicationProperties.getJobAdminScheme(),
             applicationProperties.getJobAdminHost())
             .build();
     }
