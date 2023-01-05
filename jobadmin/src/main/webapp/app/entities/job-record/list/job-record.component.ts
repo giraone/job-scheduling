@@ -18,6 +18,16 @@ import { JobStatusEnum } from '../../../entities/enumerations/job-status-enum.mo
 @Component({
   selector: 'jhi-job-record',
   templateUrl: './job-record.component.html',
+  styles: [
+    `
+      td {
+        padding: 1px;
+      }
+      th {
+        padding-left: 1px;
+      }
+    `
+  ]
 })
 export class JobRecordComponent implements OnInit {
   jobRecords?: IJobRecord[];
