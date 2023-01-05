@@ -85,6 +85,7 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [ ] Fallback policy (`default=active` vs. `default=paused`) and fallback handling, when *jobadmin* is not reachable.
 - [ ] Stopper implementation (full-stop after n errors or m errors within limit).
 - [ ] Partition key - see https://spring.io/blog/2021/02/03/demystifying-spring-cloud-stream-producers-with-apache-kafka-partitions
+- [ ] Is it possible to define processor using `destinationIsPattern=true` only once for all agents and paused buckets.
 - [ ] Builder pattern for Job models.
 - [ ] auto-create-topics: false not working with *StreamBridge*
 
