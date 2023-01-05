@@ -84,6 +84,11 @@
               <span>Duration (ms)</span>
             </div>
           </th>
+          <th scope="col">
+            <div class="d-flex">
+              <span>View Lag (ms)</span>
+            </div>
+          </th>
           <th scope="col" jhiSortBy="status">
             <div class="d-flex">
               <span jhiTranslate="jobadminApp.jobRecord.status">Status</span>
@@ -113,7 +118,8 @@
           <td>{{ jobRecord.jobAcceptedTimestamp | formatMediumDatetime }}</td>
           <td>{{ jobRecord.lastEventTimestamp | formatMediumDatetime }}</td>
           <td>{{ jobRecord.lastRecordUpdateTimestamp | formatMediumDatetime }}</td>
-          <td>{{ jobRecord.lastRecordUpdateTimestamp ? jobRecord.lastRecordUpdateTimestamp.diff(jobRecord.jobAcceptedTimestamp) : '-' }}</td>
+          <td>{{ jobRecord.lastEventTimestamp ? jobRecord.lastEventTimestamp.diff(jobRecord.jobAcceptedTimestamp) : '-' }}</td>
+          <td>{{ jobRecord.lastRecordUpdateTimestamp ? jobRecord.lastRecordUpdateTimestamp.diff(jobRecord.lastEventTimestamp) : '-' }}</td>
           <td jhiTranslate="{{ 'jobadminApp.JobStatusEnum.' + jobRecord.status }}">{{ jobRecord.status }}</td>
           <td>{{ jobRecord.pausedBucketKey }}</td>
           <td>
