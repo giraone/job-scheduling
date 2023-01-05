@@ -483,7 +483,7 @@ public class EventProcessor implements ApplicationListener<ApplicationStartedEve
 
     private void initializeCounterForTopic(String topic) {
         final Counter topicErrCounter = Counter.builder(METRICS_PREFIX + METRICS_MESSAGES + topic)
-            .description("Counter for all jobs, that are NOT successfully SCHEDULED.")
+            .description("Counter for all messages, that are sent to the topic.")
             .register(meterRegistry);
         topicMessageCounter.put(topic, topicErrCounter);
         LOGGER.info("Initialized counter for topic '{}'", topic);
