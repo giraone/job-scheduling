@@ -1,11 +1,11 @@
 package com.giraone.jobs.receiver.web.rest;
 
+import com.giraone.jobs.common.MetricsTestUtil;
 import com.giraone.jobs.receiver.config.ApplicationProperties;
 import com.giraone.jobs.receiver.service.AbstractKafkaIntTest;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -87,6 +88,9 @@ public class JobReceiveResourceIntTest extends AbstractKafkaIntTest {
     void addJobWorks() {
 
         // arrange
+        MetricsTestUtil metricsTestUtil = new MetricsTestUtil(webTestClient);
+        Double success = metricsTestUtil.counterExistsAndGet("/actuator/metrics/receiver.jobs.received.success");
+
         Instant now = Instant.now();
         String id = "JobReceiveResourceIntTest-" + System.nanoTime();
         Map<String, Object> body = Map.of(
@@ -120,5 +124,8 @@ public class JobReceiveResourceIntTest extends AbstractKafkaIntTest {
                 assertThat(record.value()).contains(id);
             });
         });
+
+        // assert metrics counter
+        metricsTestUtil.counterExistsAndIsGreaterThan("/actuator/metrics/receiver.jobs.received.success", success);
     }
 }
