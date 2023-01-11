@@ -45,6 +45,20 @@ curl --silent 'http://localhost:8080/api/state-records?page=0&size=10&sort=ID,DE
 
 ## Design decision
 
+### Commit handling
+
+Reactive Kafka supports multiple ways of acknowledging and committing offsets:
+
+1. acknowledging only and **periodic automatic commit** (based on commit interval and/or commit batch size)
+2. manual commits and disabling of automatic commit (`.commitInterval(Duration.ZERO)`and `.commitBatchSize(0)`)
+
+This code uses alternative 2.
+
+### Behaviour, when there are database errors
+
+1. Log and continue (commit event)
+2. Stop (DO NOT commit)
+
 ### UPSERT including overwrite prevention of newer jobs
 
 The job events may not arrive in the "natural" order:
