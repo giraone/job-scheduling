@@ -1,0 +1,22 @@
+# See https://grafana.com/docs/tempo/latest/configuration/
+
+server:
+  http_listen_port: 3200
+
+search_enabled: true
+
+distributor:
+  # Receivers for zipkin and otlp (we omit jaeger)
+  receivers:
+    zipkin:
+    otlp:
+      protocols:
+        grpc:
+  log_received_spans:
+    enabled: true
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo/blocks

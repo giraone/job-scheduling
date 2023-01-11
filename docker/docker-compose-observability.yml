@@ -1,0 +1,62 @@
+version: "3.5"
+
+services:
+
+  prometheus:
+    image: prom/prometheus
+    hostname: prometheus-jobs
+    container_name: prometheus-jobs
+    networks:
+      - jobs
+    command:
+      - --enable-feature=exemplar-storage
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./telemetry-config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    hostname: grafana-jobs
+    container_name: grafana-jobs
+    networks:
+      - jobs
+    volumes:
+      - ./telemetry-config/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+      - ./telemetry-config/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:rw
+      - ./telemetry-config/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:rw
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    ports:
+      - "3000:3000"
+
+  tempo:
+    image: grafana/tempo
+    hostname: tempo-jobs
+    container_name: tempo-jobs
+    command: [ "-search.enabled=true", "-config.file=/etc/tempo.yaml" ]
+    networks:
+      - jobs
+    volumes:
+      - ./telemetry-config/tempo/tempo-local.yaml:/etc/tempo.yaml:ro
+      - ${CONTAINER_DATA:-./data}/tempo:/tmp/tempo
+    ports:
+      # for testing apps running in the host, we expose zipkin and otlp ingest ports of tempo to the host
+      - "9411:9411" # zipkin ingest
+      - "4317:4317" # otlp grpc ingest
+      - "4318:4318" # otlp http ingest
+      # and the UI
+      - "3200:3200" # grafana and admin API
+
+  loki:
+    image: grafana/loki
+    hostname: loki-jobs
+    container_name: loki-jobs
+    command: [ "-config.file=/etc/loki/local-config.yaml" ]
+    networks:
+      - jobs
+    ports:
+      - "3100:3100" # log ingest
