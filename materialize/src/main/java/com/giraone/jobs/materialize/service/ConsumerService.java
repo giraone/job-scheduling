@@ -149,10 +149,7 @@ public class ConsumerService implements CommandLineRunner {
                 this.insertFailureCounter.increment();
                 final DatabaseResult databaseResult = new DatabaseResult(messageKey, false, DatabaseOperation.insert);
                 logError(databaseResult, consumerRecord, throwable);
-                consumerRecord.receiverOffset().commit();
-                LOGGER.error("Erroneous message committed with partition={}, offset={}",
-                    consumerRecord.receiverOffset().topicPartition(), consumerRecord.receiverOffset().offset());
-                return Mono.just(databaseResult);
+                return consumerRecord.receiverOffset().commit().then(Mono.just(databaseResult));
             });
     }
 
@@ -171,10 +168,7 @@ public class ConsumerService implements CommandLineRunner {
                 this.updateFailureCounter.increment();
                 final DatabaseResult databaseResult = new DatabaseResult(messageKey, false, DatabaseOperation.update);
                 logError(databaseResult, consumerRecord, throwable);
-                consumerRecord.receiverOffset().commit();
-                LOGGER.error("Erroneous message committed with partition={}, offset={}",
-                    consumerRecord.receiverOffset().topicPartition(), consumerRecord.receiverOffset().offset());
-                return Mono.just(databaseResult);
+                return consumerRecord.receiverOffset().commit().then(Mono.just(databaseResult));
             });
     }
 
