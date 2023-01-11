@@ -104,7 +104,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: ['health', 'info', 'bindings', 'logfile', 'metrics', 'configprops', 'env', 'kafkastreamstopology']
+        include: ['health', 'info', 'bindings', 'logfile', 'metrics', 'prometheus', 'configprops', 'env', 'kafkastreamstopology']
   endpoint:
     health:
       show-details: ALWAYS

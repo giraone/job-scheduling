@@ -14,7 +14,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: ['health', 'loggers', 'metrics']
+        include: ['health', 'loggers', 'metrics', 'prometheus']
 
 spring:
   application:
