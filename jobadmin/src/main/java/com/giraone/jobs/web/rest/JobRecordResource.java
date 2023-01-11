@@ -14,6 +14,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import com.github.f4b6a3.tsid.Tsid;
+import com.github.f4b6a3.tsid.TsidCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.api.annotations.ParameterObject;
