@@ -6,11 +6,18 @@ SCS based solution for job scheduler based on Staged Event Driven Architecture(S
 
 ### Ports
 
+Services:
+
 - receiver: http://localhost:8090
 - materialize: http://localhost:8091
 - schedule: http://localhost:8092
 - jobadmin: http://localhost:8093
-- PGADMIN: http://localhost:8888
+
+Admin Tools and Observability Tools:
+
+- PGADMIN: http://localhost:8888 - when [docker-compose-tools.yml](../docker/docker-compose-tools.yml) is used
+
+- Prometheus: http://localhost:9090 - when [docker-compose-observability.yml](../docker/docker-compose-observability.yml) is used
 
 ### Topics
 
