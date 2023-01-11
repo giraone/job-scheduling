@@ -37,7 +37,7 @@ job-notified-err
 
 ## TODOs
 
-### Java 17 / Spring Boot 3.0.0
+### Java 17 / Spring Boot 3.X
 
 All projects are build for Java 17. The Spring Boot 3.0.0 migration is only partially done:
 
@@ -55,8 +55,8 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
       which is delivered by the jobadmin service to the schedule service.
 - [x] Display buckets in JobAdmin (materialize must handle this).
 - [ ] Agent Key should be part of the events (done) and materialized database record.	  
-- [ ] Add a requester id (string) to the (accepted) event.
-- [ ] Measure consumer lag and expose it as metric.
+- [ ] Add a requester id (string) to the (accepted) event and route it through all events and into the materialized view.
+- [ ] Measure processing lag (already done in materialized view) and expose it as metric. Can be provided by *schedule* or *materialize* service.
 
 ### Receiver
 
@@ -67,9 +67,8 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [x] Metrics (success and failure counter for insert and update, latency timer).
 - [ ] What is better: **one** ReactiveKafkaConsumerTemplate with all topics or **two** separated for insert and update?
 - [ ] Schedulers.parallel() vs Schedulers.boundedElastic() - see https://stackoverflow.com/questions/61304762/difference-between-boundedelastic-vs-parallel-scheduler
-- [ ] Analyze, if a priority for 'job-accepted' can be set, to prevent updates before inserts.
 - [x] Prevent that older update events overwriting newer once - see StateRecordService.java.
-- [x] R2DBC Transactional for UPSERT.
+- [x] Transactional safe solution for UPSERT (implemented with PostgreSQL's `INSERT ... ON CONFLICT IGNORE`).
 - [ ] StateRecordService uses hard-coded '+ 1000L' for Process-ID (remove processId or map processKey to processId).
 
 ### Schedule
@@ -86,27 +85,19 @@ All projects are build for Java 17. The Spring Boot 3.0.0 migration is only part
 - [ ] Fallback policy (`default=active` vs. `default=paused`) and fallback handling, when *jobadmin* is not reachable.
 - [ ] Stopper implementation (full-stop after n errors or m errors within limit).
 - [ ] Partition key - see https://spring.io/blog/2021/02/03/demystifying-spring-cloud-stream-producers-with-apache-kafka-partitions
+- [ ] Is it possible to define processor using `destinationIsPattern=true` only once for all agents and paused buckets.
 - [ ] Builder pattern for Job models.
-- [ ] auto-create-topics: false not working with StreamBridge
+- [ ] auto-create-topics: false not working with *StreamBridge*
 
 ### JobAdmin
 
 - [x] The DTO uses the TSID String value, where the entity is a TSID long value.
-- [x] During the database initialization 4 proccess definitions are automatically created: V001, V002, V003, V004.
+- [x] During the database initialization 4 process definitions are automatically created: V001, V002, V003, V004.
       If this is not wanted, remove "faker" from `application-prod.yml`.
 - [ ] Bug in sort by status.
 - [ ] Switch off JPA caching.
 - [ ] Inverse filtering, e.g. "all except NOTIFIED".
 
-## Problems with "materialize"
-
-Receiving example (notify before scheduled/completed):
-
-```
-2022-12-20 21:13:48.962 >>> NEW KEY=0AX5H6H8XG5CK, TOPIC=job-accepted,      "eventTimestamp":"2022-12-20T20:13:47.205Z"
-2022-12-20 21:13:50.797 >>> UPD KEY=0AX5H6H8XG5CK, TOPIC=job-notified,      "eventTimestamp":"2022-12-20T20:13:47.300Z"
-2022-12-20 21:13:50.858 >>> UPD KEY=0AX5H6H8XG5CK, TOPIC=job-scheduled-A01, "eventTimestamp":"2022-12-20T20:13:47.252Z"
-2022-12-20 21:13:50.895 >>> UPD KEY=0AX5H6H8XG5CK, TOPIC=job-completed,     "eventTimestamp":"2022-12-20T20:13:47.260Z"
 ```
 
 ## Topologie

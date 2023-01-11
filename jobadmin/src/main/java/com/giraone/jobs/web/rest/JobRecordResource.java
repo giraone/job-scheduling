@@ -71,6 +71,9 @@ public class JobRecordResource {
     public ResponseEntity<JobRecordDTO> createJobRecord(@Valid @RequestBody JobRecordDTO jobRecordDTO) throws URISyntaxException {
         log.debug("REST request to save JobRecord : {}", jobRecordDTO);
         // ADAPTED - create with ID is allowed
+        if (jobRecordDTO.getId() == null) {
+            jobRecordDTO.setId(TsidCreator.getTsid256().toString());
+        }
         JobRecordDTO result = jobRecordService.save(jobRecordDTO);
         return ResponseEntity
             .created(new URI("/api/job-records/" + result.getId()))

@@ -35,9 +35,9 @@ spring:
   cloud:
     stream:
       default:
-        # this setting dictates whether to commit the offset after each record is processed.
+        # this setting dictates whether to commit the offset after each record is processed in autoCommitOffset=true mode (default)
         ack-each-record: true
-        # Whether to reset offsets on the consumer to the value provided by startOffset.
+        # Whether to reset offsets on the consumer to the value provided by startOffset (null=earliest).
         reset-offsets: true
       kafka:
         binder:
