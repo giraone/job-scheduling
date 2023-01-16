@@ -17,8 +17,10 @@ public class KafkaProducerConfig {
         SenderOptions<String, String> basicSenderOptions = SenderOptions
             .create(kafkaProperties.buildProducerProperties());
 
+        // set some properties programmatically
         basicSenderOptions = basicSenderOptions
-            .maxInFlight(128);
+            .maxInFlight(1) // to keep ordering, prevent duplicate messages (and avoid data loss )
+        ;
 
         return basicSenderOptions;
     }
