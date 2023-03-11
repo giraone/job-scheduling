@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -90,6 +89,7 @@ public class JobReceiveResourceIntTest extends AbstractKafkaIntTest {
         // arrange
         MetricsTestUtil metricsTestUtil = new MetricsTestUtil(webTestClient);
         Double success = metricsTestUtil.counterExistsAndGet("/actuator/metrics/receiver.jobs.received.success");
+        Double failure = metricsTestUtil.counterExistsAndGet("/actuator/metrics/receiver.jobs.received.failure");
 
         Instant now = Instant.now();
         String id = "JobReceiveResourceIntTest-" + System.nanoTime();
@@ -114,12 +114,14 @@ public class JobReceiveResourceIntTest extends AbstractKafkaIntTest {
         // assert
         assertThat(response).isNotNull();
         assertThat(response.get("key")).isNotNull();
+        assertThat(response.get("detection")).isEqualTo(false);
 
         LOGGER.debug("Got message key \"{}\".", response.get("key"));
 
         waitForMessages(consumer, 1);
         receivedRecords.forEach(l -> {
             l.forEach(record -> {
+                LOGGER.info(record.key() + " -> " + record.value());
                 assertThat(record.key()).isNotNull();
                 assertThat(record.value()).contains(id);
             });
@@ -127,5 +129,45 @@ public class JobReceiveResourceIntTest extends AbstractKafkaIntTest {
 
         // assert metrics counter
         metricsTestUtil.counterExistsAndIsGreaterThan("/actuator/metrics/receiver.jobs.received.success", success);
+        metricsTestUtil.counterExistsAndIsEqualTo("/actuator/metrics/receiver.jobs.received.failure", failure);
+    }
+
+    @Test
+    void addJobWithPattern() {
+
+        // arrange
+        MetricsTestUtil metricsTestUtil = new MetricsTestUtil(webTestClient);
+        Double success = metricsTestUtil.counterExistsAndGet("/actuator/metrics/receiver.jobs.received.success");
+        Double failure = metricsTestUtil.counterExistsAndGet("/actuator/metrics/receiver.jobs.received.failure");
+
+        Instant now = Instant.now();
+        String id = "JobReceiveResourceIntTest-" + System.nanoTime();
+        Map<String, Object> body = Map.of(
+            "requesterId", id,
+            "test","PATTERN-X",
+            "eventTimestamp", DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault()).format(now)
+        );
+
+        // act
+        Map<String, Object> response = webTestClient
+            .post()
+            .uri("/api/jobs")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(BodyInserters.fromValue(body))
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isBadRequest()
+            .expectBody(MAP)
+            .returnResult()
+            .getResponseBody();
+
+        // assert
+        assertThat(response).isNotNull();
+        assertThat(response.get("key")).isNull();
+        assertThat(response.get("detection")).isEqualTo(true);
+
+        // assert metrics counter
+        metricsTestUtil.counterExistsAndIsEqualTo("/actuator/metrics/receiver.jobs.received.success", success);
+        metricsTestUtil.counterExistsAndIsGreaterThan("/actuator/metrics/receiver.jobs.received.failure", failure);
     }
 }
