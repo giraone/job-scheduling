@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 
 import java.io.ByteArrayOutputStream;
@@ -67,10 +68,14 @@ public class JobReceiveResource {
     @PostMapping("/jobs")
     public Mono<ResponseEntity<Map<String, Object>>> create(@RequestBody Flux<ByteBuffer> body) {
 
-        Mono<String> mono1 = deserialize(body)
+        Flux<ByteBuffer> cached = body.cache();
+
+        Mono<String> mono1 = deserialize(cached)
             .flatMap(producerService::send);
 
-        Mono<Boolean> mono2 = stopOnPatternDetection(body);
+        // Mono<String> mono1 = doSomethingWithTheContent(cached);
+
+        Mono<Boolean> mono2 = stopOnPatternDetection(cached.subscribeOn(Schedulers.boundedElastic()));
 
         Mono<Tuple2<String, Boolean>> zippedMono = mono1.zipWith(mono2);
 
@@ -109,6 +114,11 @@ public class JobReceiveResource {
                 }
                 return true;
             });
+    }
+
+    Mono<String> doSomethingWithTheContent(Flux<ByteBuffer> content) {
+        return readContent(content)
+            .map(bytes -> new String(bytes));
     }
 
     Mono<Map<String, Object>> deserialize(Flux<ByteBuffer> content) {

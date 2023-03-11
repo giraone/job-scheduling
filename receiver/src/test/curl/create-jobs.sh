@@ -10,6 +10,6 @@ typeset -i from=$1
 typeset -i to=$2
 
 while ((from < to)); do
-  ./create-job.sh "{\"id\":${from},\"eventTimestamp\":\"$(date +'%Y-%m-%dT%H:%M:%S.%NZ')\"}"
+  ./create-job.sh "{\"id\":${from},\"eventTimestamp\":\"$(date +'%Y-%m-%dT%H:%M:%S.%NZ')\",\"test\":\"PATTERN-OK\"}"
   ((from+=1))
 done
