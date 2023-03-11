@@ -21,7 +21,7 @@ public class ProducerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProducerService.class);
 
-    private static final ObjectMapper objectMapper = ObjectMapperBuilder.build(true, false);
+    private static final ObjectMapper objectMapper = ObjectMapperBuilder.build(false, false);
 
     private final String topic;
     private final ReactiveKafkaProducerTemplate<String, String> reactiveKafkaProducerTemplate;
