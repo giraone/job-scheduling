@@ -6,6 +6,7 @@ import com.giraone.jobs.common.ObjectMapperBuilder;
 import com.giraone.jobs.receiver.config.ApplicationProperties;
 import com.github.f4b6a3.tsid.Tsid;
 import com.github.f4b6a3.tsid.TsidCreator;
+import io.micrometer.observation.annotation.Observed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+@Observed(name = "ProducerService")
 @Service
 public class ProducerService {
 

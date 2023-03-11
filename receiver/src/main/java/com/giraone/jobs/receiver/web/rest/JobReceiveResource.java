@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Map;
 
+@Observed(name = "JobReceiveResource")
 @RestController()
 @RequestMapping(value = "/api")
 public class JobReceiveResource {
@@ -64,11 +65,11 @@ public class JobReceiveResource {
     }
 
     // @Timed(value = "receiver.jobs.time", description = "Time taken to pass job to Kafka")
-    @Observed
     @PostMapping("/jobs")
     public Mono<ResponseEntity<Map<String, Object>>> create(@RequestBody Flux<ByteBuffer> body) {
 
-        Flux<ByteBuffer> cached = body.cache();
+        // Flux<ByteBuffer> cached = body.replay(0).autoConnect();
+        Flux<ByteBuffer> cached = body.cache(0);
 
         Mono<String> mono1 = deserialize(cached)
             .flatMap(producerService::send);
@@ -133,6 +134,7 @@ public class JobReceiveResource {
             });
     }
 
+    @Observed
     Mono<byte[]> readContent(Flux<ByteBuffer> content) {
 
         return content
