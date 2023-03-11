@@ -46,4 +46,9 @@ public class MetricsTestUtil {
         Double actual = counterExistsAndGet(path);
         assertThat(actual).isGreaterThan(expected);
     }
+
+    public void counterExistsAndIsEqualTo(String path, double expected) {
+        Double actual = counterExistsAndGet(path);
+        assertThat(actual).isEqualTo(expected);
+    }
 }
