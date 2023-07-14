@@ -62,8 +62,8 @@ public class EventToDatabaseApplication {
         }
 
         MemoryUsage memoryUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
-        long xmx = memoryUsage.getMax() / 0x10000;
-        long xms = memoryUsage.getInit() / 0x10000;
+        long xmx = memoryUsage.getMax() / 1024 / 1024;
+        long xms = memoryUsage.getInit() / 1024 / 1024;
 
         LOGGER.info("""
                 ----------------------------------------------------------
